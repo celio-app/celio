@@ -456,16 +456,14 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         </div>
         <div id="hdr-actions"></div>
       </header>
-      <div class="nav-tabs" id="nav-tabs" style="display:none">
+        <div class="nav-tabs" id="nav-tabs" style="display:none">
         <div class="nav-tab active" onclick="showTab('schedule')">Schedule</div>
         <div class="nav-tab" onclick="showTab('calendar')">Calendar</div>
         <div class="nav-tab" onclick="showTab('gantt')">Gantt Chart</div>
         <div class="nav-tab" onclick="showTab('deps')">&#128209; Dependencies</div>
         <div class="nav-tab" onclick="showTab('shotprog')">&#127916; Shot Progression</div>
         <div class="nav-tab" onclick="showTab('milestones')">&#128203; Milestones</div>
-        <div class="nav-tab" onclick="showTab('shotprog')">&#127916; Shot Progression</div>
-        <div class="nav-tab" onclick="showTab('milestones')">&#128203; Milestones</div>
-      </div>
+        </div>
       <div id="no-proj" class="no-project" style="display:flex">
         <div style="font-size:2.5rem">&#128203;</div>
         <h3>No project selected</h3>
@@ -1393,12 +1391,7 @@ async function loadTasks(){
   tasks=r.data||[];
   var active=document.querySelector(".tab-content.active");
   var name=active?active.id.replace("tab-",""):"schedule";
-  if(name==="schedule")renderSchedule();
-  else if(name==="calendar")renderCalendar();
-  else if(name==="gantt")renderGantt();
-  else if(name==="deps")renderDependencies();
-  else if(name==="shotprog")renderShotProgression();
-  else if(name==="milestones")renderMilestones();
+  if(name==="schedule")renderSchedule();else if(name==="calendar")renderCalendar();else if(name==="gantt")renderGantt();else if(name==="deps")renderDependencies();else if(name==="shotprog")renderShotProgression();else if(name==="milestones")renderMilestones();
   renderSidebar();
 }
 
