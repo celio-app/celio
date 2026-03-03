@@ -27,7 +27,7 @@ body { font-family: "Segoe UI", system-ui, sans-serif; background: #0f1117; colo
 .auth-msg.error { color: #f87171; }
 .auth-msg.success { color: #34d399; }
 #app-screen { display: none; }
-header { background: linear-gradient(135deg,#1a1d2e,#252840); border-bottom: 1px solid #2d3154; padding: 16px 28px; display: flex; align-items: center; justify-content: space-between; }
+header { background: linear-gradient(135deg,#1a1d2e,#252840); border-bottom: 1px solid #2d3154; padding: 14px 28px; display: flex; align-items: center; justify-content: space-between; }
 .hlogo { font-size: 1.3rem; font-weight: 900; }
 .hlogo .e { color: #a78bfa; }
 .hdr { display: flex; align-items: center; gap: 12px; }
@@ -39,6 +39,17 @@ header { background: linear-gradient(135deg,#1a1d2e,#252840); border-bottom: 1px
 .btn-ghost:hover { background: #252840; }
 .btn-sm { padding: 4px 10px; font-size: .72rem; border-radius: 5px; }
 .btn-del { background: #450a0a; color: #f87171; border: none; }
+
+/* NAV TABS */
+.nav-tabs { display: flex; gap: 4px; padding: 16px 28px 0; border-bottom: 1px solid #2d3154; }
+.nav-tab { padding: 8px 18px; border-radius: 8px 8px 0 0; font-size: .83rem; font-weight: 600; cursor: pointer; color: #64748b; border: 1px solid transparent; border-bottom: none; transition: all .2s; }
+.nav-tab.active { background: #1a1d2e; color: #a78bfa; border-color: #2d3154; }
+.nav-tab:hover:not(.active) { color: #94a3b8; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+
+/* STATS */
 .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; padding: 20px 28px; }
 .stat-card { background: #1a1d2e; border: 1px solid #2d3154; border-radius: 10px; padding: 14px 18px; }
 .sval { font-size: 1.8rem; font-weight: 800; }
@@ -82,11 +93,60 @@ td { padding: 11px 14px; font-size: .83rem; }
 .pfill { height: 100%; border-radius: 99px; background: linear-gradient(90deg,#7c3aed,#a78bfa); transition: width .4s; }
 .modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.7); z-index: 100; align-items: center; justify-content: center; }
 .modal-bg.open { display: flex; }
-.modal { background: #1a1d2e; border: 1px solid #2d3154; border-radius: 14px; padding: 24px; width: 460px; max-width: 95vw; }
+.modal { background: #1a1d2e; border: 1px solid #2d3154; border-radius: 14px; padding: 24px; width: 460px; max-width: 95vw; max-height: 90vh; overflow-y: auto; }
 .modal h3 { font-size: 1rem; font-weight: 700; margin-bottom: 18px; color: #c4b5fd; }
 .form-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 18px; }
 .loading { text-align: center; padding: 40px; color: #475569; font-size: .85rem; }
 .empty { text-align: center; padding: 24px; color: #475569; font-size: .83rem; }
+
+/* CALENDAR */
+.calendar-wrap { padding: 20px 28px 28px; }
+.cal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.cal-header h2 { font-size: 1.1rem; font-weight: 700; color: #c4b5fd; }
+.cal-nav { display: flex; gap: 8px; align-items: center; }
+.cal-month-label { font-size: .9rem; font-weight: 600; min-width: 140px; text-align: center; }
+.cal-grid { display: grid; grid-template-columns: repeat(7,1fr); gap: 2px; }
+.cal-day-header { text-align: center; font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: #475569; padding: 8px 0; }
+.cal-day { background: #1a1d2e; border: 1px solid #2d3154; border-radius: 8px; min-height: 100px; padding: 6px; transition: border-color .15s; }
+.cal-day.today { border-color: #7c3aed; }
+.cal-day.other-month { opacity: .4; }
+.cal-day.drag-over { border-color: #a78bfa; background: #1e1a35; }
+.cal-day-num { font-size: .75rem; font-weight: 700; color: #64748b; margin-bottom: 4px; }
+.cal-day.today .cal-day-num { color: #a78bfa; }
+.cal-task-chip { font-size: .68rem; padding: 2px 6px; border-radius: 4px; margin-bottom: 2px; cursor: grab; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: none; }
+.cal-task-chip:active { cursor: grabbing; opacity: .7; }
+.ct-todo { background: #1e293b; color: #94a3b8; }
+.ct-inprogress { background: #1e3a5f; color: #60a5fa; }
+.ct-review { background: #3b2f00; color: #fbbf24; }
+.ct-done { background: #064e3b; color: #34d399; }
+.ct-late { background: #450a0a; color: #f87171; }
+
+/* GANTT */
+.gantt-wrap { padding: 20px 28px 28px; overflow-x: auto; }
+.gantt-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.gantt-header h2 { font-size: 1.1rem; font-weight: 700; color: #c4b5fd; }
+.gantt-container { background: #1a1d2e; border: 1px solid #2d3154; border-radius: 12px; overflow: hidden; }
+.gantt-inner { display: flex; min-width: 800px; }
+.gantt-labels { min-width: 200px; border-right: 1px solid #2d3154; }
+.gantt-label-header { height: 40px; border-bottom: 1px solid #2d3154; display: flex; align-items: center; padding: 0 14px; font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: #475569; background: #13151f; }
+.gantt-label-row { height: 44px; border-bottom: 1px solid #1e2235; display: flex; align-items: center; padding: 0 14px; font-size: .8rem; }
+.gantt-label-row:last-child { border-bottom: none; }
+.gantt-chart { flex: 1; overflow-x: auto; }
+.gantt-dates { height: 40px; display: flex; border-bottom: 1px solid #2d3154; background: #13151f; }
+.gantt-date-cell { flex-shrink: 0; width: 36px; display: flex; align-items: center; justify-content: center; font-size: .62rem; color: #475569; border-right: 1px solid #1e2235; }
+.gantt-date-cell.today-col { background: #1e1a35; color: #a78bfa; font-weight: 700; }
+.gantt-rows { position: relative; }
+.gantt-row { height: 44px; border-bottom: 1px solid #1e2235; display: flex; position: relative; }
+.gantt-row:last-child { border-bottom: none; }
+.gantt-cell { flex-shrink: 0; width: 36px; border-right: 1px solid #1e2235; }
+.gantt-cell.today-col { background: rgba(124,58,237,.08); }
+.gantt-bar { position: absolute; height: 26px; top: 9px; border-radius: 6px; display: flex; align-items: center; padding: 0 8px; font-size: .7rem; font-weight: 600; white-space: nowrap; overflow: hidden; z-index: 1; cursor: pointer; }
+.gb-todo { background: #1e3a5f; color: #60a5fa; }
+.gb-inprogress { background: #7c3aed; color: #fff; }
+.gb-review { background: #854d0e; color: #fbbf24; }
+.gb-done { background: #065f46; color: #34d399; }
+.gb-late { background: #7f1d1d; color: #f87171; }
+
 @media(max-width:900px) { .main { grid-template-columns: 1fr; } .stats { grid-template-columns: repeat(2,1fr); } }
 </style>
 </head>
@@ -125,43 +185,97 @@ td { padding: 11px 14px; font-size: .83rem; }
       <button class="btn btn-primary" onclick="openModal(null)">+ Add Task</button>
     </div>
   </header>
-  <div class="stats">
-    <div class="stat-card"><div class="sval blue" id="s-total">0</div><div class="slbl">Total Tasks</div></div>
-    <div class="stat-card"><div class="sval green" id="s-done">0</div><div class="slbl">Completed</div></div>
-    <div class="stat-card"><div class="sval yellow" id="s-prog">0</div><div class="slbl">In Progress</div></div>
-    <div class="stat-card"><div class="sval red" id="s-late">0</div><div class="slbl">Overdue</div></div>
+
+  <div class="nav-tabs">
+    <div class="nav-tab active" onclick="showTab('schedule')">Schedule</div>
+    <div class="nav-tab" onclick="showTab('calendar')">Calendar</div>
+    <div class="nav-tab" onclick="showTab('gantt')">Gantt Chart</div>
   </div>
-  <div class="main">
-    <div class="panel">
-      <div class="panel-header">
-        <h2>Production Tasks</h2>
-        <select id="fstatus" class="btn btn-ghost" style="padding:5px 10px;font-size:.78rem" onchange="renderTable()">
-          <option value="">All Status</option>
-          <option value="todo">To Do</option>
-          <option value="inprogress">In Progress</option>
-          <option value="review">In Review</option>
-          <option value="done">Done</option>
-        </select>
+
+  <!-- SCHEDULE TAB -->
+  <div class="tab-content active" id="tab-schedule">
+    <div class="stats">
+      <div class="stat-card"><div class="sval blue" id="s-total">0</div><div class="slbl">Total Tasks</div></div>
+      <div class="stat-card"><div class="sval green" id="s-done">0</div><div class="slbl">Completed</div></div>
+      <div class="stat-card"><div class="sval yellow" id="s-prog">0</div><div class="slbl">In Progress</div></div>
+      <div class="stat-card"><div class="sval red" id="s-late">0</div><div class="slbl">Overdue</div></div>
+    </div>
+    <div class="main">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Production Tasks</h2>
+          <select id="fstatus" class="btn btn-ghost" style="padding:5px 10px;font-size:.78rem" onchange="renderTable()">
+            <option value="">All Status</option>
+            <option value="todo">To Do</option>
+            <option value="inprogress">In Progress</option>
+            <option value="review">In Review</option>
+            <option value="done">Done</option>
+          </select>
+        </div>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Task</th><th>Lead</th><th>Due</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="task-tbody"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody>
+          </table>
+        </div>
+        <div class="prog-wrap">
+          <div class="prog-lbl"><span>Overall Progress</span><span id="prog-pct">0%</span></div>
+          <div class="pbar"><div class="pfill" id="prog-fill" style="width:0%"></div></div>
+        </div>
       </div>
-      <div style="overflow-x:auto">
-        <table>
-          <thead><tr><th>Task</th><th>Lead</th><th>Due</th><th>Priority</th><th>Status</th><th>Actions</th></tr></thead>
-          <tbody id="task-tbody"><tr><td colspan="6" class="loading">Loading...</td></tr></tbody>
-        </table>
-      </div>
-      <div class="prog-wrap">
-        <div class="prog-lbl"><span>Overall Progress</span><span id="prog-pct">0%</span></div>
-        <div class="pbar"><div class="pfill" id="prog-fill" style="width:0%"></div></div>
+      <div class="sidebar">
+        <div class="panel">
+          <div class="panel-header"><h2>Handoffs</h2></div>
+          <div id="handoff-list"><div class="empty">No handoffs yet</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><h2>Final Assets</h2></div>
+          <div id="asset-list"><div class="empty">No assets tracked</div></div>
+        </div>
       </div>
     </div>
-    <div class="sidebar">
-      <div class="panel">
-        <div class="panel-header"><h2>Handoffs</h2></div>
-        <div id="handoff-list"><div class="empty">No handoffs yet</div></div>
+  </div>
+
+  <!-- CALENDAR TAB -->
+  <div class="tab-content" id="tab-calendar">
+    <div class="calendar-wrap">
+      <div class="cal-header">
+        <h2>Calendar View</h2>
+        <div class="cal-nav">
+          <button class="btn btn-ghost btn-sm" onclick="calPrev()">&#8592;</button>
+          <span class="cal-month-label" id="cal-month-label"></span>
+          <button class="btn btn-ghost btn-sm" onclick="calNext()">&#8594;</button>
+          <button class="btn btn-ghost btn-sm" onclick="calToday()">Today</button>
+        </div>
       </div>
-      <div class="panel">
-        <div class="panel-header"><h2>Final Assets</h2></div>
-        <div id="asset-list"><div class="empty">No assets tracked</div></div>
+      <div class="cal-grid" id="cal-grid">
+        <div class="cal-day-header">Sun</div>
+        <div class="cal-day-header">Mon</div>
+        <div class="cal-day-header">Tue</div>
+        <div class="cal-day-header">Wed</div>
+        <div class="cal-day-header">Thu</div>
+        <div class="cal-day-header">Fri</div>
+        <div class="cal-day-header">Sat</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GANTT TAB -->
+  <div class="tab-content" id="tab-gantt">
+    <div class="gantt-wrap">
+      <div class="gantt-header">
+        <h2>Gantt Chart</h2>
+        <div class="cal-nav">
+          <button class="btn btn-ghost btn-sm" onclick="ganttPrev()">&#8592;</button>
+          <span class="cal-month-label" id="gantt-label"></span>
+          <button class="btn btn-ghost btn-sm" onclick="ganttNext()">&#8594;</button>
+          <button class="btn btn-ghost btn-sm" onclick="ganttToday()">Today</button>
+        </div>
+      </div>
+      <div class="gantt-container">
+        <div class="gantt-inner" id="gantt-inner">
+          <div class="loading">Loading...</div>
+        </div>
       </div>
     </div>
   </div>
@@ -205,237 +319,329 @@ td { padding: 11px 14px; font-size: .83rem; }
   var currentUser = null;
   var tasks = [];
   var editId = null;
+  var calYear, calMonth, ganttStart;
   var today = new Date();
-  today.setHours(0, 0, 0, 0);
+  today.setHours(0,0,0,0);
 
-  function daysUntil(d) {
-    var dt = new Date(d + "T00:00:00");
-    dt.setHours(0, 0, 0, 0);
-    return Math.round((dt - today) / 86400000);
-  }
+  // ── UTILS ──
+  function daysUntil(d) { var dt = new Date(d+"T00:00:00"); dt.setHours(0,0,0,0); return Math.round((dt-today)/86400000); }
+  function fmtDate(d) { return new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"}); }
+  function fmtYMD(dt) { var y=dt.getFullYear(),m=String(dt.getMonth()+1).padStart(2,"0"),d=String(dt.getDate()).padStart(2,"0"); return y+"-"+m+"-"+d; }
+  function dueClass(t) { if(t.status==="done") return "d-ok"; var d=daysUntil(t.due_date); return d<0?"d-late":d<=2?"d-soon":"d-ok"; }
+  function mkBadge(s) { var cls={todo:"b-todo",inprogress:"b-inprogress",review:"b-review",done:"b-done"}; var lbl={todo:"To Do",inprogress:"In Progress",review:"In Review",done:"Done"}; return '<span class="badge '+(cls[s]||"b-todo")+'">'+(lbl[s]||s)+"</span>"; }
+  function calChipClass(t) { if(t.status==="done") return "ct-done"; if(t.status!=="done"&&daysUntil(t.due_date)<0) return "ct-late"; var m={todo:"ct-todo",inprogress:"ct-inprogress",review:"ct-review"}; return m[t.status]||"ct-todo"; }
+  function ganttBarClass(t) { if(t.status==="done") return "gb-done"; if(t.status!=="done"&&daysUntil(t.due_date)<0) return "gb-late"; var m={todo:"gb-todo",inprogress:"gb-inprogress",review:"gb-review"}; return m[t.status]||"gb-todo"; }
 
-  function fmtDate(d) {
-    return new Date(d + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  }
+  // ── AUTH ──
+  function setMsg(msg,type) { var el=document.getElementById("auth-msg"); el.textContent=msg; el.className="auth-msg"+(type?" "+type:""); }
+  window.switchTab = function(n) { document.getElementById("login-form").style.display=n===0?"block":"none"; document.getElementById("signup-form").style.display=n===1?"block":"none"; document.getElementById("tab0").classList.toggle("active",n===0); document.getElementById("tab1").classList.toggle("active",n===1); setMsg("",""); };
+  window.doSignIn = async function() { var e=document.getElementById("li-email").value.trim(),p=document.getElementById("li-pass").value; if(!e||!p){setMsg("Please enter email and password.","error");return;} setMsg("Signing in...",""); var r=await sb.auth.signInWithPassword({email:e,password:p}); if(r.error) setMsg(r.error.message,"error"); };
+  window.doSignUp = async function() { var e=document.getElementById("su-email").value.trim(),p=document.getElementById("su-pass").value; if(!e||!p){setMsg("Please enter email and password.","error");return;} if(p.length<6){setMsg("Password must be at least 6 characters.","error");return;} setMsg("Creating account...",""); var r=await sb.auth.signUp({email:e,password:p}); if(r.error) setMsg(r.error.message,"error"); else setMsg("Account created! Check your email to confirm, then sign in.","success"); };
+  window.doSignOut = async function() { await sb.auth.signOut(); };
 
-  function dueClass(t) {
-    if (t.status === "done") return "d-ok";
-    var d = daysUntil(t.due_date);
-    return d < 0 ? "d-late" : d <= 2 ? "d-soon" : "d-ok";
-  }
-
-  function mkBadge(s) {
-    var cls = { todo: "b-todo", inprogress: "b-inprogress", review: "b-review", done: "b-done" };
-    var lbl = { todo: "To Do", inprogress: "In Progress", review: "In Review", done: "Done" };
-    return '<span class="badge ' + (cls[s] || "b-todo") + '">' + (lbl[s] || s) + "</span>";
-  }
-
-  function setMsg(msg, type) {
-    var el = document.getElementById("auth-msg");
-    el.textContent = msg;
-    el.className = "auth-msg" + (type ? " " + type : "");
-  }
-
-  window.switchTab = function (n) {
-    document.getElementById("login-form").style.display = n === 0 ? "block" : "none";
-    document.getElementById("signup-form").style.display = n === 1 ? "block" : "none";
-    document.getElementById("tab0").classList.toggle("active", n === 0);
-    document.getElementById("tab1").classList.toggle("active", n === 1);
-    setMsg("", "");
-  };
-
-  window.doSignIn = async function () {
-    var email = document.getElementById("li-email").value.trim();
-    var pass = document.getElementById("li-pass").value;
-    if (!email || !pass) { setMsg("Please enter email and password.", "error"); return; }
-    setMsg("Signing in...", "");
-    var r = await sb.auth.signInWithPassword({ email: email, password: pass });
-    if (r.error) setMsg(r.error.message, "error");
-  };
-
-  window.doSignUp = async function () {
-    var email = document.getElementById("su-email").value.trim();
-    var pass = document.getElementById("su-pass").value;
-    if (!email || !pass) { setMsg("Please enter email and password.", "error"); return; }
-    if (pass.length < 6) { setMsg("Password must be at least 6 characters.", "error"); return; }
-    setMsg("Creating account...", "");
-    var r = await sb.auth.signUp({ email: email, password: pass });
-    if (r.error) setMsg(r.error.message, "error");
-    else setMsg("Account created! Check your email to confirm, then sign in.", "success");
-  };
-
-  window.doSignOut = async function () {
-    await sb.auth.signOut();
-  };
-
-  sb.auth.onAuthStateChange(function (event, session) {
-    if (session) {
-      currentUser = session.user;
-      document.getElementById("auth-screen").style.display = "none";
-      document.getElementById("app-screen").style.display = "block";
-      document.getElementById("user-chip").textContent = currentUser.email;
+  sb.auth.onAuthStateChange(function(event,session) {
+    if(session) {
+      currentUser=session.user;
+      document.getElementById("auth-screen").style.display="none";
+      document.getElementById("app-screen").style.display="block";
+      document.getElementById("user-chip").textContent=currentUser.email;
+      calYear=today.getFullYear(); calMonth=today.getMonth();
+      ganttStart=new Date(today.getFullYear(),today.getMonth(),1);
       loadTasks();
     } else {
-      currentUser = null;
-      document.getElementById("auth-screen").style.display = "flex";
-      document.getElementById("app-screen").style.display = "none";
-      tasks = [];
+      currentUser=null;
+      document.getElementById("auth-screen").style.display="flex";
+      document.getElementById("app-screen").style.display="none";
+      tasks=[];
     }
   });
 
+  // ── TASKS ──
   async function loadTasks() {
-    document.getElementById("task-tbody").innerHTML = '<tr><td colspan="6" class="loading">Loading tasks...</td></tr>';
-    var r = await sb.from("tasks").select("*").eq("user_id", currentUser.id).order("due_date", { ascending: true });
-    if (r.error) { console.error(r.error); return; }
-    tasks = r.data || [];
-    renderTable();
+    document.getElementById("task-tbody").innerHTML='<tr><td colspan="6" class="loading">Loading tasks...</td></tr>';
+    var r=await sb.from("tasks").select("*").eq("user_id",currentUser.id).order("due_date",{ascending:true});
+    if(r.error){console.error(r.error);return;}
+    tasks=r.data||[];
+    renderTable(); renderCalendar(); renderGantt();
   }
 
-  window.saveTask = async function () {
-    var name = document.getElementById("f-name").value.trim();
-    var lead = document.getElementById("f-lead").value.trim();
-    var due = document.getElementById("f-due").value;
-    if (!name || !lead || !due) { alert("Please fill in Task Name, Lead, and Due Date."); return; }
-    var payload = {
-      name: name, lead: lead, due_date: due,
-      priority: document.getElementById("f-priority").value,
-      status: document.getElementById("f-status").value,
-      handoff_to: document.getElementById("f-handoff").value.trim(),
-      asset: document.getElementById("f-asset").value.trim(),
-      user_id: currentUser.id
-    };
-    if (editId) {
-      await sb.from("tasks").update(payload).eq("id", editId);
-    } else {
-      await sb.from("tasks").insert(payload);
-    }
-    closeModal();
-    loadTasks();
+  window.saveTask = async function() {
+    var name=document.getElementById("f-name").value.trim();
+    var lead=document.getElementById("f-lead").value.trim();
+    var due=document.getElementById("f-due").value;
+    if(!name||!lead||!due){alert("Please fill in Task Name, Lead, and Due Date.");return;}
+    var payload={name:name,lead:lead,due_date:due,priority:document.getElementById("f-priority").value,status:document.getElementById("f-status").value,handoff_to:document.getElementById("f-handoff").value.trim(),asset:document.getElementById("f-asset").value.trim(),user_id:currentUser.id};
+    if(editId){await sb.from("tasks").update(payload).eq("id",editId);}
+    else{await sb.from("tasks").insert(payload);}
+    closeModal(); loadTasks();
   };
 
-  window.deleteTask = async function (id) {
-    if (!confirm("Remove this task?")) return;
-    await sb.from("tasks").delete().eq("id", id);
-    loadTasks();
-  };
+  window.deleteTask = async function(id) { if(!confirm("Remove this task?")) return; await sb.from("tasks").delete().eq("id",id); loadTasks(); };
+  window.editTask = function(id) { openModal(id); };
 
-  window.editTask = function (id) { openModal(id); };
-
-  window.renderTable = function () {
-    var fs = document.getElementById("fstatus").value;
-    var filtered = tasks.filter(function (t) { return !fs || t.status === fs; });
-    var tbody = document.getElementById("task-tbody");
-    if (!filtered.length) {
-      tbody.innerHTML = '<tr><td colspan="6" class="empty">No tasks yet. Click + Add Task to get started.</td></tr>';
-    } else {
-      var rows = "";
-      for (var i = 0; i < filtered.length; i++) {
-        var t = filtered[i];
-        var d = daysUntil(t.due_date);
-        var dl = t.status === "done" ? fmtDate(t.due_date) : (d < 0 ? Math.abs(d) + "d late" : d === 0 ? "Today" : fmtDate(t.due_date));
-        var tid = t.id;
-        rows += "<tr>";
-        rows += "<td><strong>" + t.name + "</strong></td>";
-        rows += '<td><span class="chip">' + t.lead + "</span></td>";
-        rows += '<td><span class="' + dueClass(t) + '">' + dl + "</span></td>";
-        rows += '<td><span class="pdot p-' + t.priority + '"></span>' + t.priority.charAt(0).toUpperCase() + t.priority.slice(1) + "</td>";
-        rows += "<td>" + mkBadge(t.status) + "</td>";
-        rows += '<td><button class="btn btn-ghost btn-sm" onclick="editTask(\'' + tid + '\')">Edit</button> ';
-        rows += '<button class="btn btn-sm btn-del" onclick="deleteTask(\'' + tid + '\')">Remove</button></td>';
-        rows += "</tr>";
+  // ── SCHEDULE TAB ──
+  window.renderTable = function() {
+    var fs=document.getElementById("fstatus").value;
+    var filtered=tasks.filter(function(t){return !fs||t.status===fs;});
+    var tbody=document.getElementById("task-tbody");
+    if(!filtered.length){tbody.innerHTML='<tr><td colspan="6" class="empty">No tasks yet. Click + Add Task to get started.</td></tr>';}
+    else {
+      var rows="";
+      for(var i=0;i<filtered.length;i++){
+        var t=filtered[i];
+        var d=daysUntil(t.due_date);
+        var dl=t.status==="done"?fmtDate(t.due_date):(d<0?Math.abs(d)+"d late":d===0?"Today":fmtDate(t.due_date));
+        var tid=t.id;
+        rows+="<tr><td><strong>"+t.name+"</strong></td>";
+        rows+='<td><span class="chip">'+t.lead+"</span></td>";
+        rows+='<td><span class="'+dueClass(t)+'">'+dl+"</span></td>";
+        rows+='<td><span class="pdot p-'+t.priority+'"></span>'+t.priority.charAt(0).toUpperCase()+t.priority.slice(1)+"</td>";
+        rows+="<td>"+mkBadge(t.status)+"</td>";
+        rows+='<td><button class="btn btn-ghost btn-sm" onclick="editTask(\''+tid+'\')">Edit</button> ';
+        rows+='<button class="btn btn-sm btn-del" onclick="deleteTask(\''+tid+'\')">Remove</button></td></tr>';
       }
-      tbody.innerHTML = rows;
+      tbody.innerHTML=rows;
     }
-    updateStats();
-    renderHandoffs();
-    renderAssets();
+    updateStats(); renderHandoffs(); renderAssets();
   };
 
   function updateStats() {
-    var total = tasks.length;
-    var done = tasks.filter(function (t) { return t.status === "done"; }).length;
-    var inprog = tasks.filter(function (t) { return t.status === "inprogress" || t.status === "review"; }).length;
-    var late = tasks.filter(function (t) { return t.status !== "done" && daysUntil(t.due_date) < 0; }).length;
-    document.getElementById("s-total").textContent = total;
-    document.getElementById("s-done").textContent = done;
-    document.getElementById("s-prog").textContent = inprog;
-    document.getElementById("s-late").textContent = late;
-    var pct = total ? Math.round(done / total * 100) : 0;
-    document.getElementById("prog-pct").textContent = pct + "%";
-    document.getElementById("prog-fill").style.width = pct + "%";
+    var total=tasks.length,done=tasks.filter(function(t){return t.status==="done";}).length;
+    var inprog=tasks.filter(function(t){return t.status==="inprogress"||t.status==="review";}).length;
+    var late=tasks.filter(function(t){return t.status!=="done"&&daysUntil(t.due_date)<0;}).length;
+    document.getElementById("s-total").textContent=total;
+    document.getElementById("s-done").textContent=done;
+    document.getElementById("s-prog").textContent=inprog;
+    document.getElementById("s-late").textContent=late;
+    var pct=total?Math.round(done/total*100):0;
+    document.getElementById("prog-pct").textContent=pct+"%";
+    document.getElementById("prog-fill").style.width=pct+"%";
   }
 
   function renderHandoffs() {
-    var h = tasks.filter(function (t) { return t.handoff_to; });
-    var el = document.getElementById("handoff-list");
-    if (!h.length) { el.innerHTML = '<div class="empty">No handoffs configured.</div>'; return; }
-    var html = "";
-    for (var i = 0; i < h.length; i++) {
-      var t = h[i];
-      var conf = t.status === "done";
-      html += '<div class="hitem"><div class="hrow">';
-      html += '<span class="chip">' + t.lead + "</span>";
-      html += '<span style="color:#7c3aed;margin:0 6px">&#8594;</span>';
-      html += '<span class="chip" style="color:#60a5fa">' + t.handoff_to + "</span>";
-      html += '<span style="margin-left:auto" class="' + (conf ? "conf" : "pend") + '">' + (conf ? "Done" : "Pending") + "</span>";
-      html += '</div><div class="htask">' + t.name + "</div></div>";
+    var h=tasks.filter(function(t){return t.handoff_to;});
+    var el=document.getElementById("handoff-list");
+    if(!h.length){el.innerHTML='<div class="empty">No handoffs configured.</div>';return;}
+    var html="";
+    for(var i=0;i<h.length;i++){
+      var t=h[i],conf=t.status==="done";
+      html+='<div class="hitem"><div class="hrow"><span class="chip">'+t.lead+'</span><span style="color:#7c3aed;margin:0 6px">&#8594;</span><span class="chip" style="color:#60a5fa">'+t.handoff_to+'</span><span style="margin-left:auto" class="'+(conf?"conf":"pend")+'">'+(conf?"Done":"Pending")+'</span></div><div class="htask">'+t.name+"</div></div>";
     }
-    el.innerHTML = html;
+    el.innerHTML=html;
   }
 
   function renderAssets() {
-    var a = tasks.filter(function (t) { return t.asset; });
-    var el = document.getElementById("asset-list");
-    if (!a.length) { el.innerHTML = '<div class="empty">No assets tracked.</div>'; return; }
-    var html = "";
-    for (var i = 0; i < a.length; i++) {
-      var t = a[i];
-      var ready = t.status === "done";
-      var missing = t.status !== "done" && daysUntil(t.due_date) < 0;
-      var cls = ready ? "a-ready" : missing ? "a-late" : "a-pend";
-      var lbl = ready ? "Ready" : missing ? "Late" : "Pending";
-      html += '<div class="aitem"><div>';
-      html += '<div class="aname">' + t.asset + "</div>";
-      html += '<div class="ameta">' + t.lead + " &middot; " + fmtDate(t.due_date) + "</div>";
-      html += '</div><div class="' + cls + '">' + lbl + "</div></div>";
+    var a=tasks.filter(function(t){return t.asset;});
+    var el=document.getElementById("asset-list");
+    if(!a.length){el.innerHTML='<div class="empty">No assets tracked.</div>';return;}
+    var html="";
+    for(var i=0;i<a.length;i++){
+      var t=a[i],ready=t.status==="done",missing=t.status!=="done"&&daysUntil(t.due_date)<0;
+      var cls=ready?"a-ready":missing?"a-late":"a-pend",lbl=ready?"Ready":missing?"Late":"Pending";
+      html+='<div class="aitem"><div><div class="aname">'+t.asset+'</div><div class="ameta">'+t.lead+" &middot; "+fmtDate(t.due_date)+'</div></div><div class="'+cls+'">'+lbl+"</div></div>";
     }
-    el.innerHTML = html;
+    el.innerHTML=html;
   }
 
-  window.openModal = function (id) {
-    editId = id;
-    document.getElementById("modal-title").textContent = id ? "Edit Task" : "Add Task";
-    if (id) {
-      var t = null;
-      for (var i = 0; i < tasks.length; i++) { if (tasks[i].id === id) { t = tasks[i]; break; } }
-      if (t) {
-        document.getElementById("f-name").value = t.name;
-        document.getElementById("f-lead").value = t.lead;
-        document.getElementById("f-due").value = t.due_date;
-        document.getElementById("f-priority").value = t.priority;
-        document.getElementById("f-status").value = t.status;
-        document.getElementById("f-handoff").value = t.handoff_to || "";
-        document.getElementById("f-asset").value = t.asset || "";
+  // ── CALENDAR ──
+  function renderCalendar() {
+    var months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+    document.getElementById("cal-month-label").textContent=months[calMonth]+" "+calYear;
+    var grid=document.getElementById("cal-grid");
+    // remove old day cells but keep headers
+    var cells=grid.querySelectorAll(".cal-day");
+    cells.forEach(function(c){c.remove();});
+    var first=new Date(calYear,calMonth,1);
+    var startDay=first.getDay();
+    var daysInMonth=new Date(calYear,calMonth+1,0).getDate();
+    var daysInPrev=new Date(calYear,calMonth,0).getDate();
+    // prev month padding
+    for(var i=startDay-1;i>=0;i--){
+      var day=daysInPrev-i;
+      var cell=makeCalCell(calYear,calMonth-1,day,true);
+      grid.appendChild(cell);
+    }
+    // current month
+    for(var d=1;d<=daysInMonth;d++){
+      var cell=makeCalCell(calYear,calMonth,d,false);
+      grid.appendChild(cell);
+    }
+    // next month padding
+    var total=startDay+daysInMonth;
+    var remaining=(7-total%7)%7;
+    for(var d=1;d<=remaining;d++){
+      var cell=makeCalCell(calYear,calMonth+1,d,true);
+      grid.appendChild(cell);
+    }
+  }
+
+  function makeCalCell(year,month,day,otherMonth) {
+    var dt=new Date(year,month,day);
+    var ymd=fmtYMD(dt);
+    var cell=document.createElement("div");
+    cell.className="cal-day"+(otherMonth?" other-month":"");
+    var isToday=dt.getTime()===today.getTime();
+    if(isToday) cell.classList.add("today");
+    cell.dataset.date=ymd;
+    var num=document.createElement("div");
+    num.className="cal-day-num";
+    num.textContent=day;
+    cell.appendChild(num);
+    // tasks for this day
+    var dayTasks=tasks.filter(function(t){return t.due_date===ymd;});
+    dayTasks.forEach(function(t){
+      var chip=document.createElement("div");
+      chip.className="cal-task-chip "+calChipClass(t);
+      chip.textContent=t.name;
+      chip.title=t.name+" ("+t.lead+")";
+      chip.draggable=true;
+      chip.dataset.taskId=t.id;
+      chip.addEventListener("dragstart",function(e){ e.dataTransfer.setData("taskId",t.id); });
+      chip.addEventListener("click",function(e){ e.stopPropagation(); openModal(t.id); });
+      cell.appendChild(chip);
+    });
+    // drop target
+    cell.addEventListener("dragover",function(e){ e.preventDefault(); cell.classList.add("drag-over"); });
+    cell.addEventListener("dragleave",function(){ cell.classList.remove("drag-over"); });
+    cell.addEventListener("drop",async function(e){
+      e.preventDefault();
+      cell.classList.remove("drag-over");
+      var taskId=e.dataTransfer.getData("taskId");
+      if(!taskId) return;
+      await sb.from("tasks").update({due_date:ymd}).eq("id",taskId);
+      loadTasks();
+    });
+    return cell;
+  }
+
+  window.calPrev = function(){ calMonth--; if(calMonth<0){calMonth=11;calYear--;} renderCalendar(); };
+  window.calNext = function(){ calMonth++; if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); };
+  window.calToday = function(){ calYear=today.getFullYear(); calMonth=today.getMonth(); renderCalendar(); };
+
+  // ── GANTT ──
+  function renderGantt() {
+    var months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+    var endDate=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,0);
+    var numDays=endDate.getDate();
+    document.getElementById("gantt-label").textContent=months[ganttStart.getMonth()]+" "+ganttStart.getFullYear();
+    var inner=document.getElementById("gantt-inner");
+    if(!tasks.length){inner.innerHTML='<div class="empty" style="padding:40px">No tasks yet.</div>';return;}
+    // build date array
+    var dates=[];
+    for(var i=0;i<numDays;i++){
+      var d=new Date(ganttStart.getFullYear(),ganttStart.getMonth(),i+1);
+      dates.push(d);
+    }
+    // labels col
+    var labelsDiv=document.createElement("div");
+    labelsDiv.className="gantt-labels";
+    var lh=document.createElement("div");
+    lh.className="gantt-label-header";
+    lh.textContent="Task";
+    labelsDiv.appendChild(lh);
+    tasks.forEach(function(t){
+      var lr=document.createElement("div");
+      lr.className="gantt-label-row";
+      lr.innerHTML='<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px" title="'+t.name+'">'+t.name+"</span>";
+      labelsDiv.appendChild(lr);
+    });
+    // chart col
+    var chartDiv=document.createElement("div");
+    chartDiv.className="gantt-chart";
+    // dates header
+    var datesRow=document.createElement("div");
+    datesRow.className="gantt-dates";
+    dates.forEach(function(d){
+      var dc=document.createElement("div");
+      dc.className="gantt-date-cell"+(d.getTime()===today.getTime()?" today-col":"");
+      dc.textContent=d.getDate();
+      datesRow.appendChild(dc);
+    });
+    chartDiv.appendChild(datesRow);
+    // rows
+    var rowsDiv=document.createElement("div");
+    rowsDiv.className="gantt-rows";
+    tasks.forEach(function(t){
+      var row=document.createElement("div");
+      row.className="gantt-row";
+      dates.forEach(function(d){
+        var cell=document.createElement("div");
+        cell.className="gantt-cell"+(d.getTime()===today.getTime()?" today-col":"");
+        row.appendChild(cell);
+      });
+      // bar
+      var due=new Date(t.due_date+"T00:00:00");
+      due.setHours(0,0,0,0);
+      var startOfMonth=new Date(ganttStart.getFullYear(),ganttStart.getMonth(),1);
+      // find day index of due date in this month
+      var dueDayIdx=Math.round((due-startOfMonth)/86400000);
+      if(dueDayIdx>=0&&dueDayIdx<numDays){
+        // show bar from day 0 to due date (or just a 1-day marker if no start)
+        var barStart=0;
+        var barEnd=dueDayIdx;
+        var bar=document.createElement("div");
+        bar.className="gantt-bar "+ganttBarClass(t);
+        bar.style.left=(barStart*36)+"px";
+        bar.style.width=((barEnd-barStart+1)*36-4)+"px";
+        bar.textContent=t.name;
+        bar.title=t.name+" — Due "+fmtDate(t.due_date);
+        bar.addEventListener("click",function(){ openModal(t.id); });
+        row.appendChild(bar);
+      }
+      rowsDiv.appendChild(row);
+    });
+    chartDiv.appendChild(rowsDiv);
+    inner.innerHTML="";
+    inner.appendChild(labelsDiv);
+    inner.appendChild(chartDiv);
+  }
+
+  window.ganttPrev = function(){ ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()-1,1); renderGantt(); };
+  window.ganttNext = function(){ ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,1); renderGantt(); };
+  window.ganttToday = function(){ ganttStart=new Date(today.getFullYear(),today.getMonth(),1); renderGantt(); };
+
+  // ── TABS ──
+  window.showTab = function(name) {
+    document.querySelectorAll(".tab-content").forEach(function(el){el.classList.remove("active");});
+    document.querySelectorAll(".nav-tab").forEach(function(el){el.classList.remove("active");});
+    document.getElementById("tab-"+name).classList.add("active");
+    var tabs=document.querySelectorAll(".nav-tab");
+    var map={schedule:0,calendar:1,gantt:2};
+    tabs[map[name]].classList.add("active");
+    if(name==="calendar") renderCalendar();
+    if(name==="gantt") renderGantt();
+  };
+
+  // ── MODAL ──
+  window.openModal = function(id) {
+    editId=id;
+    document.getElementById("modal-title").textContent=id?"Edit Task":"Add Task";
+    if(id){
+      var t=null;
+      for(var i=0;i<tasks.length;i++){if(tasks[i].id===id){t=tasks[i];break;}}
+      if(t){
+        document.getElementById("f-name").value=t.name;
+        document.getElementById("f-lead").value=t.lead;
+        document.getElementById("f-due").value=t.due_date;
+        document.getElementById("f-priority").value=t.priority;
+        document.getElementById("f-status").value=t.status;
+        document.getElementById("f-handoff").value=t.handoff_to||"";
+        document.getElementById("f-asset").value=t.asset||"";
       }
     } else {
-      document.getElementById("f-name").value = "";
-      document.getElementById("f-lead").value = "";
-      document.getElementById("f-due").value = "";
-      document.getElementById("f-priority").value = "med";
-      document.getElementById("f-status").value = "todo";
-      document.getElementById("f-handoff").value = "";
-      document.getElementById("f-asset").value = "";
+      document.getElementById("f-name").value="";
+      document.getElementById("f-lead").value="";
+      document.getElementById("f-due").value="";
+      document.getElementById("f-priority").value="med";
+      document.getElementById("f-status").value="todo";
+      document.getElementById("f-handoff").value="";
+      document.getElementById("f-asset").value="";
     }
     document.getElementById("modal").classList.add("open");
   };
 
-  window.closeModal = function () {
-    document.getElementById("modal").classList.remove("open");
-  };
-
-  document.getElementById("modal").addEventListener("click", function (e) {
-    if (e.target === document.getElementById("modal")) window.closeModal();
-  });
+  window.closeModal = function() { document.getElementById("modal").classList.remove("open"); };
+  document.getElementById("modal").addEventListener("click",function(e){ if(e.target===document.getElementById("modal")) window.closeModal(); });
 })();
 </script>
 </body>
