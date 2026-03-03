@@ -936,9 +936,9 @@ function renderSidebar(){
     var isActive=activeProject&&activeProject.id===p.id;
     var isExpanded=!!projExpanded[p.id];
     var projSeqs=sequences.filter(function(s){return s.project_id===p.id;});
-    html+='<div class="proj-row'+(isActive?" active":'">')+'>';
+    html+='<div class="proj-row'+(isActive?' active':'')+'">';
     html+='<div class="proj-row-main" onclick="selectProject(\''+p.id+'\')"><span class="proj-dot" style="background:'+p.color+'"></span><span class="proj-row-name">'+p.name+'</span></div>';
-    html+='<span class="proj-chevron'+(isExpanded?" open":'")+'" onclick="toggleProjExpand(\''+p.id+'\',event)">&#9658;</span></div>';
+    html+='<span class="proj-chevron'+(isExpanded?' open':'')+'" onclick="toggleProjExpand(\''+p.id+'\',event)">&#9658;</span></div>';
     if(isExpanded){
       html+='<div class="proj-tree">';
       if(!projSeqs.length)html+='<div style="padding:4px 14px 4px 22px;font-size:.69rem;color:var(--text4)">No sequences yet</div>';
