@@ -165,6 +165,15 @@ td{padding:11px 14px;font-size:.83rem;color:var(--text);}
 .empty{text-align:center;padding:24px;color:var(--text3);font-size:.83rem;}
 .save-indicator{position:fixed;bottom:20px;right:20px;background:#10b981;color:#fff;padding:8px 18px;border-radius:99px;font-size:.8rem;font-weight:700;opacity:0;transition:opacity .3s;pointer-events:none;z-index:200;}
 .save-indicator.show{opacity:1;}
+.status-cell{position:relative;display:inline-block;}
+.status-badge-btn{cursor:pointer;border:none;background:none;padding:0;font:inherit;display:inline-flex;align-items:center;gap:5px;}
+.status-badge-btn .arr{font-size:.6rem;opacity:.6;}
+.status-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;background:var(--bg2);border:1px solid var(--border);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.2);z-index:50;min-width:140px;overflow:hidden;}
+.status-dropdown.open{display:block;}
+.status-option{padding:9px 14px;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;color:var(--text);}
+.status-option:hover{background:var(--bg3);}
+.status-option .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-todo{background:#94a3b8;} .dot-inprogress{background:#3b82f6;} .dot-review{background:#f59e0b;} .dot-done{background:#10b981;}
 @media(max-width:900px){.main{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
@@ -342,6 +351,26 @@ td{padding:11px 14px;font-size:.83rem;color:var(--text);}
   function fmtTime(t){if(!t)return"";var parts=t.split(":");var h=parseInt(parts[0]),m=parts[1],ampm=h>=12?"PM":"AM";h=h%12||12;return h+":"+m+" "+ampm;}
   function dueClass(t){if(t.status==="done")return"d-ok";var d=daysUntil(t.due_date);return d<0?"d-late":d<=2?"d-soon":"d-ok";}
   function mkBadge(s){var cls={todo:"b-todo",inprogress:"b-inprogress",review:"b-review",done:"b-done"};var lbl={todo:"To Do",inprogress:"In Progress",review:"In Review",done:"Done"};return'<span class="badge '+(cls[s]||"b-todo")+'">'+(lbl[s]||s)+"</span>";}
+  function mkStatusCell(t){
+    var cls={todo:"b-todo",inprogress:"b-inprogress",review:"b-review",done:"b-done"};
+    var lbl={todo:"To Do",inprogress:"In Progress",review:"In Review",done:"Done"};
+    var opts=[{v:"todo",l:"To Do",d:"dot-todo"},{v:"inprogress",l:"In Progress",d:"dot-inprogress"},{v:"review",l:"In Review",d:"dot-review"},{v:"done",l:"Done",d:"dot-done"}];
+    var optHtml=opts.map(function(o){return'<div class="status-option" onclick="setStatus(\''+t.id+'\',\''+o.v+'\',event)"><span class="dot '+o.d+'"></span>'+o.l+"</div>";}).join("");
+    return '<td><div class="status-cell"><button class="status-badge-btn" onclick="toggleStatusDrop(\''+t.id+'\',event)"><span class="badge '+(cls[t.status]||"b-todo")+'">'+(lbl[t.status]||t.status)+'</span><span class="arr">&#9660;</span></button><div class="status-dropdown" id="sdrop-'+t.id+'">'+optHtml+"</div></div></td>";
+  }
+  window.toggleStatusDrop=function(id,e){
+    e.stopPropagation();
+    var drop=document.getElementById("sdrop-"+id);
+    document.querySelectorAll(".status-dropdown.open").forEach(function(d){if(d!==drop)d.classList.remove("open");});
+    drop.classList.toggle("open");
+  };
+  window.setStatus=async function(id,status,e){
+    e.stopPropagation();
+    document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});
+    await sb.from("tasks").update({status:status}).eq("id",id).eq("user_id",currentUser.id);
+    showSaved();loadTasks();
+  };
+  document.addEventListener("click",function(){document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});});
   function calChipCls(t){if(t.status==="done")return"ct-done";if(t.status!=="done"&&daysUntil(t.due_date)<0)return"ct-late";return{todo:"ct-todo",inprogress:"ct-inprogress",review:"ct-review"}[t.status]||"ct-todo";}
   function ganttBarCls(t){if(t.status==="done")return"gb-done";if(t.status!=="done"&&daysUntil(t.due_date)<0)return"gb-late";return{todo:"gb-todo",inprogress:"gb-inprogress",review:"gb-review"}[t.status]||"gb-todo";}
   function showSaved(){var el=document.getElementById("save-indicator");el.classList.add("show");setTimeout(function(){el.classList.remove("show");},1800);}
@@ -432,7 +461,7 @@ td{padding:11px 14px;font-size:.83rem;color:var(--text);}
         rows+="<td>"+fmtDate(t.start_date)+"</td>";
         rows+='<td><span class="'+dueClass(t)+'">'+dl+"</span></td>";
         rows+='<td><span class="pdot p-'+t.priority+'"></span>'+t.priority.charAt(0).toUpperCase()+t.priority.slice(1)+"</td>";
-        rows+="<td>"+mkBadge(t.status)+"</td>";
+        rows+=mkStatusCell(t);
         rows+='<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="editTask(\''+tid+'\')">Edit</button> <button class="btn btn-sm btn-del" onclick="deleteTask(\''+tid+'\')">Remove</button></td></tr>';
       }
       tbody.innerHTML=rows;
