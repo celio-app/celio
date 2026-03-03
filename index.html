@@ -323,7 +323,10 @@ td{padding:11px 14px;font-size:.83rem;color:var(--text);}
       </select>
     </div>
     <div class="form-row"><label>Handoff To (optional)</label><input id="f-handoff" placeholder="e.g. Alex"></div>
-    <div class="form-row"><label>Asset Name (optional)</label><input id="f-asset" placeholder="e.g. Final_Ep3.mp4"></div>
+    <div class="form-row-2">
+      <div><label style="display:block;font-size:.73rem;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Asset Name (optional)</label><input id="f-asset" placeholder="e.g. Final_Ep3.mp4" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.87rem;outline:none;"></div>
+      <div><label style="display:block;font-size:.73rem;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Asset URL (optional)</label><input id="f-asset-url" placeholder="https://frame.io/..." style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.87rem;outline:none;"></div>
+    </div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
@@ -435,7 +438,7 @@ td{padding:11px 14px;font-size:.83rem;color:var(--text);}
     var start=document.getElementById("f-start").value;
     var time=document.getElementById("f-time").value;
     if(!name||!lead||!due){alert("Please fill in Task Name, Lead, and Due Date.");return;}
-    var payload={name:name,lead:lead,start_date:start||null,due_date:due,due_time:time||null,priority:document.getElementById("f-priority").value,status:document.getElementById("f-status").value,handoff_to:document.getElementById("f-handoff").value.trim(),asset:document.getElementById("f-asset").value.trim(),user_id:currentUser.id};
+    var payload={name:name,lead:lead,start_date:start||null,due_date:due,due_time:time||null,priority:document.getElementById("f-priority").value,status:document.getElementById("f-status").value,handoff_to:document.getElementById("f-handoff").value.trim(),asset:document.getElementById("f-asset").value.trim(),asset_url:document.getElementById("f-asset-url").value.trim(),user_id:currentUser.id};
     if(editId){await sb.from("tasks").update(payload).eq("id",editId);}
     else{await sb.from("tasks").insert(payload);}
     closeModal();loadTasks();
@@ -493,7 +496,14 @@ td{padding:11px 14px;font-size:.83rem;color:var(--text);}
     var el=document.getElementById("asset-list");
     if(!a.length){el.innerHTML='<div class="empty">No assets tracked.</div>';return;}
     var html="";
-    for(var i=0;i<a.length;i++){var t=a[i],ready=t.status==="done",missing=t.status!=="done"&&daysUntil(t.due_date)<0;var cls=ready?"a-ready":missing?"a-late":"a-pend",lbl=ready?"Ready":missing?"Late":"Pending";html+='<div class="aitem"><div><div class="aname">'+t.asset+'</div><div class="ameta">'+t.lead+" &middot; "+fmtDate(t.due_date)+'</div></div><div class="'+cls+'">'+lbl+"</div></div>";}
+    for(var i=0;i<a.length;i++){
+      var t=a[i],ready=t.status==="done",missing=t.status!=="done"&&daysUntil(t.due_date)<0;
+      var cls=ready?"a-ready":missing?"a-late":"a-pend",lbl=ready?"Ready":missing?"Late":"Pending";
+      var nameHtml=t.asset_url
+        ?'<a href="'+t.asset_url+'" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-weight:600;" title="Open asset">'+t.asset+' <span style="font-size:.65rem">&#8599;</span></a>'
+        :'<span style="font-weight:600">'+t.asset+"</span>";
+      html+='<div class="aitem"><div><div class="aname">'+nameHtml+'</div><div class="ameta">'+t.lead+" &middot; "+fmtDate(t.due_date)+'</div></div><div class="'+cls+'">'+lbl+"</div></div>";
+    }
     el.innerHTML=html;
   }
 
@@ -679,9 +689,10 @@ td{padding:11px 14px;font-size:.83rem;color:var(--text);}
         document.getElementById("f-status").value=t.status;
         document.getElementById("f-handoff").value=t.handoff_to||"";
         document.getElementById("f-asset").value=t.asset||"";
+        document.getElementById("f-asset-url").value=t.asset_url||"";
       }
     } else {
-      ["f-name","f-lead","f-start","f-due","f-time","f-handoff","f-asset"].forEach(function(id){document.getElementById(id).value="";});
+      ["f-name","f-lead","f-start","f-due","f-time","f-handoff","f-asset","f-asset-url"].forEach(function(id){document.getElementById(id).value="";});
       document.getElementById("f-priority").value="med";
       document.getElementById("f-status").value="todo";
     }
