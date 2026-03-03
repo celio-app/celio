@@ -480,9 +480,9 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         <div class="schedule-body">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div class="sched-tabs">
-              <button class="sched-tab active" onclick="setSchedView('all',this)">All Tasks</button>
+              <button class="sched-tab active" onclick="setSchedView('all',this)">All Assets</button>
               <button class="sched-tab" onclick="setSchedView('assets',this)">&#127912; Assets</button>
-              <button class="sched-tab" onclick="setSchedView('general',this)">&#128203; Milestones</button>
+              
             </div>
             <button class="btn btn-primary btn-sm" onclick="openModal(null)">+ Add Task</button>
           </div>
@@ -527,6 +527,75 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
           </div>
           <div class="gantt-container" style="overflow-x:auto"><div class="gantt-inner" id="gantt-inner"></div></div>
         </div>
+
+      <!-- DEPENDENCIES TAB -->
+      <div class="tab-content" id="tab-deps" style="display:none">
+        <div class="dep-overview">
+          <div class="dep-header">
+            <h2>&#128209; Dependencies</h2>
+            <div class="dep-legend">
+              <div class="dep-legend-item"><div class="dep-legend-dot" style="background:#ef4444"></div>Blocked</div>
+              <div class="dep-legend-item"><div class="dep-legend-dot" style="background:#f59e0b"></div>At Risk</div>
+              <div class="dep-legend-item"><div class="dep-legend-dot" style="background:#10b981"></div>Ready</div>
+              <div class="dep-legend-item"><div class="dep-legend-dot" style="background:#64748b"></div>No Assets</div>
+            </div>
+          </div>
+          <div class="dep-summary" id="dep-summary"></div>
+          <div class="dep-grid" id="dep-grid"></div>
+        </div>
+      </div>
+
+      <!-- SHOT PROGRESSION TAB -->
+      <div class="tab-content" id="tab-shotprog" style="display:none">
+        <div class="dep-overview">
+          <div class="dep-header">
+            <h2>&#127916; Shot Progression</h2>
+          </div>
+          <div style="margin-bottom:18px">
+            <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Department Rollup</div>
+            <div id="shotprog-rollup" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px"></div>
+          </div>
+          <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Per-Shot Breakdown</div>
+          <div id="shotprog-grid" style="display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+
+      <!-- MILESTONES TAB -->
+      <div class="tab-content" id="tab-milestones" style="display:none">
+        <div style="padding:16px 20px 24px;display:flex;flex-direction:column;gap:14px">
+          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+            <div style="display:flex;align-items:center;gap:10px">
+              <h2 style="font-size:1rem;font-weight:800">&#128203; Milestones &amp; Admin</h2>
+              <select id="fstatus" class="btn btn-ghost" style="padding:4px 9px;font-size:.75rem" onchange="renderMilestones()">
+                <option value="">All Status</option>
+                <option value="todo">To Do</option>
+                <option value="inprogress">In Progress</option>
+                <option value="review">In Review</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openModal(null)">+ Add Milestone</button>
+          </div>
+          <div style="overflow-x:auto;border:1px solid var(--border);border-radius:12px">
+            <table style="width:100%;border-collapse:collapse">
+              <thead><tr>
+                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Task</th>
+                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Lead</th>
+                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Due</th>
+                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Priority</th>
+                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Status</th>
+                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Actions</th>
+              </tr></thead>
+              <tbody id="task-tbody"></tbody>
+            </table>
+          </div>
+          <div class="prog-wrap">
+            <div class="prog-lbl"><span>Overall Progress</span><span id="prog-pct">0%</span></div>
+            <div class="pbar"><div class="pfill" id="prog-fill" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+
       </div>
       <div class="shot-page" id="shot-page">
         <div class="shot-hero">
