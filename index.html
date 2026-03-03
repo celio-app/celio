@@ -1,4 +1,48 @@
-<!DOCTYPE html>
+<!DOC
+
+    <!-- NEW ASSET MODAL -->
+    <div class="modal-overlay" id="new-asset-modal">
+      <div class="modal-box" style="max-width:480px">
+        <div class="modal-header">
+          <h2>New Asset</h2>
+          <button class="modal-close" onclick="closeNewAssetModal()">&#215;</button>
+        </div>
+        <div class="modal-body" style="display:flex;flex-direction:column;gap:14px">
+          <div class="form-row">
+            <label class="form-label">Asset Name</label>
+            <input id="naf-name" class="form-input" placeholder="e.g. Hero Character, Police Car...">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Asset Type</label>
+            <select id="naf-type" class="form-input" onchange="updateNewAssetStages()">
+              <option value="character">Character</option>
+              <option value="prop">Prop</option>
+              <option value="environment">Environment</option>
+              <option value="vehicle">Vehicle</option>
+              <option value="fx">FX Element</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Pipeline Stages <span style="font-size:.72rem;color:var(--text4);font-weight:400">(click to deselect)</span></label>
+            <div id="naf-stages" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-row">
+              <label class="form-label">Lead</label>
+              <input id="naf-lead" class="form-input" placeholder="Name">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Start Date</label>
+              <input id="naf-start" class="form-input" type="date">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeNewAssetModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveNewAsset()">Create Asset</button>
+        </div>
+      </div>
+    </div>TYPE html>
 <html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
@@ -521,6 +565,32 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .seq-section-hdr{padding:8px 4px;font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between;}
 .add-shot-task-inline{font-size:.72rem;padding:4px 10px;border-radius:6px;background:var(--bg3);color:var(--text3);border:1px solid var(--border);cursor:pointer;}
 .add-shot-task-inline:hover{background:var(--bg4);color:var(--text);}
+
+/* ASSET SECTION REDESIGN */
+.asset-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:2px;}
+.asset-card-hdr{padding:10px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+.asset-card-hdr:hover{background:var(--bg3);}
+.asset-card-icon{font-size:1rem;flex-shrink:0;}
+.asset-card-name{font-size:.88rem;font-weight:800;color:var(--text);flex:1;}
+.asset-card-type{font-size:.68rem;font-weight:700;padding:2px 7px;border-radius:5px;background:var(--bg3);color:var(--text3);flex-shrink:0;}
+.asset-status-badge{font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px;flex-shrink:0;}
+.asb-ready{background:#064e3b;color:#34d399;}
+.asb-inprog{background:#1e3a5f;color:#60a5fa;}
+.asb-blocked{background:#450a0a;color:#f87171;}
+[data-theme="light"] .asb-ready{background:#d1fae5;color:#065f46;}
+[data-theme="light"] .asb-inprog{background:#dbeafe;color:#1d4ed8;}
+[data-theme="light"] .asb-blocked{background:#fee2e2;color:#b91c1c;}
+.asset-prog-bar{width:80px;height:5px;background:var(--border2);border-radius:99px;overflow:hidden;flex-shrink:0;}
+.asset-prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa);}
+.asset-prog-pct{font-size:.7rem;font-weight:700;color:var(--text3);width:32px;text-align:right;flex-shrink:0;}
+.asset-due-lbl{font-size:.7rem;color:var(--text4);flex-shrink:0;}
+.asset-body-table{width:100%;border-collapse:collapse;}
+.asset-body-table th{padding:7px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700;}
+.asset-body-table td{padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2);}
+.naf-stage-pill{font-size:.74rem;font-weight:700;padding:4px 11px;border-radius:6px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);cursor:pointer;transition:all .12s;}
+.naf-stage-pill.active{background:var(--purple);color:#fff;border-color:var(--purple);}
+.asset-type-section{margin-bottom:2px;}
+.asset-type-hdr{padding:8px 4px;font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between;}
 </style>
 </head>
 </head>
@@ -1444,6 +1514,51 @@ async function loadTasks(){
 
 window.setSchedView=function(v,btn){schedView=v;document.querySelectorAll(".sched-tab").forEach(function(t){t.classList.remove("active");});btn.classList.add("active");renderSchedule();};
 
+
+var newAssetSelectedStages=[];
+window.openNewAssetModal=function(){
+  el("naf-name").value="";el("naf-lead").value="";el("naf-start").value="";
+  el("naf-type").value="character";
+  newAssetSelectedStages=[];
+  updateNewAssetStages();
+  el("new-asset-modal").classList.add("open");
+};
+window.closeNewAssetModal=function(){el("new-asset-modal").classList.remove("open");};
+window.updateNewAssetStages=function(){
+  var at=el("naf-type").value;
+  var stages=PIPELINE_STAGES[at]||["Design","Modelling","Texturing"];
+  newAssetSelectedStages=stages.slice();// all selected by default
+  renderNewAssetStages();
+};
+function renderNewAssetStages(){
+  var at=el("naf-type").value;
+  var stages=PIPELINE_STAGES[at]||["Design","Modelling","Texturing"];
+  var grid=el("naf-stages");grid.innerHTML="";
+  stages.forEach(function(s){
+    var pill=ce("button");pill.className="naf-stage-pill"+(newAssetSelectedStages.indexOf(s)>=0?" active":"");
+    pill.textContent=s;
+    pill.onclick=function(e){e.preventDefault();e.stopPropagation();
+      var idx=newAssetSelectedStages.indexOf(s);
+      if(idx>=0)newAssetSelectedStages.splice(idx,1);else newAssetSelectedStages.push(s);
+      renderNewAssetStages();
+    };
+    grid.appendChild(pill);
+  });
+}
+window.saveNewAsset=async function(){
+  var name=el("naf-name").value.trim();var lead=el("naf-lead").value.trim();var at=el("naf-type").value;
+  if(!name){alert("Please enter an asset name.");return;}
+  if(!lead){alert("Please enter a lead.");return;}
+  if(!newAssetSelectedStages.length){alert("Please select at least one pipeline stage.");return;}
+  var start=el("naf-start").value||null;
+  var rows=newAssetSelectedStages.map(function(stage){
+    return{name:name+" \u2014 "+stage,lead:lead,start_date:start,category:"asset",asset_type:at,asset_name:name,pipeline_stage:stage,status:"todo",priority:"med",user_id:currentUser.id,project_id:activeProject.id};
+  });
+  var r=await sb.from("tasks").insert(rows);
+  if(r.error){alert("Error: "+r.error.message);return;}
+  closeNewAssetModal();showToast(name+" created with "+rows.length+" stages!");loadTasks();
+};
+
 window.renderSchedule=function(){
   updateStats();
   var assetTasks=tasks.filter(function(t){return t.category==="asset";});
@@ -1569,52 +1684,95 @@ function renderAssetSections(assetTasks){
     var sec=ce("div");sec.className="asset-section";
     var hdr=ce("div");hdr.className="asset-section-hdr";
     var h2=ce("h2");h2.innerHTML="&#127912; Asset Pipeline";
-    var btn=ce("button");btn.className="btn btn-ghost btn-sm";btn.textContent="+ Add Asset Task";btn.onclick=function(){openModal(null,"asset");};
+    var btn=ce("button");btn.className="btn btn-ghost btn-sm";btn.textContent="+ New Asset";btn.onclick=function(){openNewAssetModal();};
     hdr.appendChild(h2);hdr.appendChild(btn);
-    var empty=ce("div");empty.style.cssText="padding:24px;text-align:center;color:var(--text4);font-size:.82rem";empty.textContent="No asset tasks yet. Click + Add Asset Task to track characters, props and environments.";
+    var empty=ce("div");empty.style.cssText="padding:24px;text-align:center;color:var(--text4);font-size:.82rem";
+    empty.textContent="No assets yet. Click + New Asset to create a character, prop or environment.";
     sec.appendChild(hdr);sec.appendChild(empty);container.appendChild(sec);return;
   }
+  // Group by type then by asset name
   var byType={};
-  assetTasks.forEach(function(t){var at=t.asset_type||"other";if(!byType[at])byType[at]=[];byType[at].push(t);});
-  ["character","prop","environment","vehicle","fx","other"].forEach(function(at){
+  assetTasks.forEach(function(t){
+    var at=t.asset_type||"other";var n=t.asset_name||"Unnamed";
+    if(!byType[at])byType[at]={};
+    if(!byType[at][n])byType[at][n]=[];
+    byType[at][n].push(t);
+  });
+  var typeOrder=["character","prop","environment","vehicle","fx","other"];
+  var typeLabels={character:"Characters",prop:"Props",environment:"Environments",vehicle:"Vehicles",fx:"FX Elements",other:"Other"};
+
+  var wrap=ce("div");wrap.className="asset-section";
+  var secHdr=ce("div");secHdr.className="asset-section-hdr";
+  var h2=ce("h2");h2.innerHTML="&#127912; Asset Pipeline";
+  // count unique assets
+  var totalAssets=0;typeOrder.forEach(function(at){if(byType[at])totalAssets+=Object.keys(byType[at]).length;});
+  var cnt=ce("span");cnt.style.cssText="font-size:.75rem;font-weight:400;color:var(--text3);margin-left:8px";
+  cnt.textContent=totalAssets+" assets";h2.appendChild(cnt);
+  var allAssetIds=[];typeOrder.forEach(function(at){if(byType[at])Object.keys(byType[at]).forEach(function(n){allAssetIds.push(at+"|"+n);});});
+  var allAssetCollapsed=allAssetIds.every(function(k){return assetGroupCollapsed[k]!==false;});
+  var toggleAllBtn=ce("button");toggleAllBtn.className="btn btn-ghost btn-sm";
+  toggleAllBtn.textContent=allAssetCollapsed?"Expand All":"Collapse All";
+  toggleAllBtn.onclick=function(){var nowCollapsed=!allAssetCollapsed;allAssetIds.forEach(function(k){assetGroupCollapsed[k]=nowCollapsed;});renderAssetSections(assetTasks);};
+  var addBtn=ce("button");addBtn.className="btn btn-primary btn-sm";addBtn.textContent="+ New Asset";addBtn.onclick=function(){openNewAssetModal();};
+  secHdr.appendChild(h2);secHdr.appendChild(toggleAllBtn);secHdr.appendChild(addBtn);wrap.appendChild(secHdr);
+
+  typeOrder.forEach(function(at){
     if(!byType[at])return;
-    var byName={};byType[at].forEach(function(t){var n=t.asset_name||"Unnamed";if(!byName[n])byName[n]=[];byName[n].push(t);});
-    var sec=ce("div");sec.className="asset-section";
-    var hdr=ce("div");hdr.className="asset-section-hdr";
-    var h2=ce("h2");h2.innerHTML=assetTypeIcon(at)+" "+assetTypeLabel(at)+"s";
-    var cnt=ce("span");cnt.style.cssText="font-size:.75rem;font-weight:400;color:var(--text3);margin-left:8px";cnt.textContent=Object.keys(byName).length+" assets";h2.appendChild(cnt);
-    var addb=ce("button");addb.className="btn btn-ghost btn-sm";addb.textContent="+ Add";addb.onclick=(function(atype){return function(){openModal(null,"asset",atype);};})(at);
-    hdr.appendChild(h2);hdr.appendChild(addb);sec.appendChild(hdr);
-    Object.keys(byName).forEach(function(name){
-      var ntasks=byName[name];var total=ntasks.length,done=ntasks.filter(function(t){return t.status==="done";}).length;
+    var names=Object.keys(byType[at]);
+    // Type header
+    var typeHdr=ce("div");typeHdr.className="asset-type-hdr";
+    typeHdr.innerHTML=assetTypeIcon(at)+" <span style='margin-left:5px'>"+typeLabels[at]+"</span><span style='font-size:.68rem;font-weight:400;color:var(--text4)'>"+names.length+"</span>";
+    wrap.appendChild(typeHdr);
+
+    names.forEach(function(name){
+      var stageTasks=byType[at][name];
+      var total=stageTasks.length,done=stageTasks.filter(function(t){return t.status==="done";}).length;
+      var anyLate=stageTasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
       var pct=total?Math.round(done/total*100):0;
-      var anyLate=ntasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
-      var grp=ce("div");grp.className="asset-group";
-      var ghdr=ce("div");ghdr.className="asset-group-hdr";
-      var arr=ce("span");arr.className="asset-group-arrow open";arr.innerHTML="&#9658;";
-      var gname=ce("span");gname.className="asset-group-name";gname.textContent=name;
-      var pbar=ce("div");pbar.className="asset-progress-bar";var pfill=ce("div");pfill.className="asset-progress-fill";pfill.style.width=pct+"%";pbar.appendChild(pfill);
-      var plbl=ce("span");plbl.className="asset-progress-lbl";plbl.textContent=pct+"%";
-      ghdr.appendChild(arr);ghdr.appendChild(gname);
-      if(anyLate){var late=ce("span");late.style.cssText="font-size:.7rem;color:#ef4444;font-weight:700";late.innerHTML="&#9888; Overdue";ghdr.appendChild(late);}
-      else if(done===total&&total>0){var rdy=ce("span");rdy.style.cssText="font-size:.7rem;color:#10b981;font-weight:700";rdy.innerHTML="&#10003; Ready";ghdr.appendChild(rdy);}
-      ghdr.appendChild(pbar);ghdr.appendChild(plbl);
-      var tbody_wrap=ce("div");
-      var isAssetCollapsed=!!assetGroupCollapsed[at+"|"+name];
-      tbody_wrap.style.display=isAssetCollapsed?"none":"";
-      arr.classList.toggle("open",!isAssetCollapsed);
-      (function(atype2,name2){ghdr.onclick=function(){var hidden=tbody_wrap.style.display==="none";tbody_wrap.style.display=hidden?"":"none";arr.classList.toggle("open",hidden);assetGroupCollapsed[atype2+"|"+name2]=!hidden;};})(at,name);
-      var tbl=ce("table");tbl.className="asset-tasks-table";
+      var isReady=done===total&&total>0;
+      var stateLabel=isReady?"Ready":anyLate?"Blocked":"In Progress";
+      var stateCls=isReady?"asb-ready":anyLate?"asb-blocked":"asb-inprog";
+      // Latest due date
+      var dueDates=stageTasks.map(function(t){return t.due_date;}).filter(Boolean).sort();
+      var lastDue=dueDates.length?dueDates[dueDates.length-1]:null;
+      var stateKey=at+"|"+name;
+      var isCollapsed=assetGroupCollapsed[stateKey]!==false;// default collapsed
+
+      var card=ce("div");card.className="asset-card";
+      var hdr=ce("div");hdr.className="asset-card-hdr";
+      var arrow=ce("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
+      var icon=ce("span");icon.className="asset-card-icon";icon.innerHTML=assetTypeIcon(at);
+      var nameSpan=ce("span");nameSpan.className="asset-card-name";nameSpan.textContent=name;
+      var badge=ce("span");badge.className="asset-status-badge "+stateCls;badge.textContent=stateLabel;
+      var pbar=ce("div");pbar.className="asset-prog-bar";
+      var pfill=ce("div");pfill.className="asset-prog-fill";pfill.style.width=pct+"%";pbar.appendChild(pfill);
+      var ppct=ce("span");ppct.className="asset-prog-pct";ppct.textContent=pct+"%";
+      hdr.appendChild(arrow);hdr.appendChild(icon);hdr.appendChild(nameSpan);hdr.appendChild(badge);hdr.appendChild(pbar);hdr.appendChild(ppct);
+      if(lastDue){var dlbl=ce("span");dlbl.className="asset-due-lbl";
+        var d=daysUntil(lastDue);dlbl.textContent=done===total?"Done":d<0?Math.abs(d)+"d late":fmtDate(lastDue);
+        dlbl.style.color=done===total?"#10b981":d<0?"#ef4444":d<=7?"#f59e0b":"var(--text4)";
+        hdr.appendChild(dlbl);}
+      var delAssetBtn=ce("button");delAssetBtn.className="btn btn-sm btn-del";delAssetBtn.style.cssText="font-size:.65rem;padding:2px 7px;flex-shrink:0";
+      delAssetBtn.textContent="Delete";
+      delAssetBtn.onclick=(function(assetName,assetType){return function(e){e.stopPropagation();deleteAsset(assetName,assetType);};})(name,at);
+      hdr.appendChild(delAssetBtn);
+
+      var bodyDiv=ce("div");bodyDiv.style.display=isCollapsed?"none":"";
+      (function(key){hdr.onclick=function(e){if(e.target.classList.contains("btn-del"))return;var hidden=bodyDiv.style.display==="none";bodyDiv.style.display=hidden?"":"none";arrow.classList.toggle("open",hidden);assetGroupCollapsed[key]=!hidden;};})(stateKey);
+
+      // Stage table
+      var tbl=ce("table");tbl.className="asset-body-table";
       var thead=ce("thead");thead.innerHTML="<tr><th>Stage</th><th>Lead</th><th>Start</th><th>Due</th><th>Status</th><th>Actions</th></tr>";
       var tbody=ce("tbody");
-      ntasks.forEach(function(t){
-        var tr=ce("tr");var d=t.due_date?daysUntil(t.due_date):null;
-        var dl=!t.due_date?"--":t.status==="done"?fmtDate(t.due_date):d<0?Math.abs(d)+"d late":fmtDate(t.due_date);
+      stageTasks.forEach(function(t){
+        var tr=ce("tr");
+        var d=t.due_date?daysUntil(t.due_date):null;
+        var dl=!t.due_date?"—":t.status==="done"?fmtDate(t.due_date):d<0?Math.abs(d)+"d late":fmtDate(t.due_date);
         var dCls=!t.due_date?"":t.status==="done"?"d-ok":d<0?"d-late":d<=2?"d-soon":"d-ok";
-        var stageTd=ce("td");var stageBadge=ce("span");stageBadge.className="pipeline-stage-badge";stageBadge.textContent=t.pipeline_stage||t.name;stageTd.appendChild(stageBadge);
-        var leadTd=ce("td");var chip=ce("span");chip.className="chip";chip.textContent=t.lead;leadTd.appendChild(chip);
-        var startTd=ce("td");startTd.style.fontSize=".78rem";startTd.textContent=fmtDate(t.start_date);
-        var dueTd=ce("td");var dueSpan=ce("span");dueSpan.className=dCls;dueSpan.textContent=dl;dueTd.appendChild(dueSpan);
+        var stageTd=ce("td");var sb2=ce("span");sb2.className="pipeline-stage-badge";sb2.textContent=t.pipeline_stage||t.name;stageTd.appendChild(sb2);
+        var leadTd=ce("td");if(t.lead){var chip=ce("span");chip.className="chip";chip.textContent=t.lead;leadTd.appendChild(chip);}else{leadTd.style.color="var(--text4)";leadTd.textContent="—";}
+        var startTd=ce("td");startTd.style.fontSize=".78rem";startTd.textContent=fmtDate(t.start_date)||"—";
+        var dueTd=ce("td");var ds=ce("span");ds.className=dCls;ds.textContent=dl;dueTd.appendChild(ds);
         var statTd=mkStatusCellDOM(t);
         var actTd=ce("td");actTd.style.whiteSpace="nowrap";
         var editBtn=ce("button");editBtn.className="btn btn-ghost btn-sm";editBtn.textContent="Edit";editBtn.onclick=(function(tid){return function(){editTask(tid);};})(t.id);
@@ -1622,11 +1780,18 @@ function renderAssetSections(assetTasks){
         actTd.appendChild(editBtn);actTd.appendChild(document.createTextNode(" "));actTd.appendChild(delBtn);
         tr.appendChild(stageTd);tr.appendChild(leadTd);tr.appendChild(startTd);tr.appendChild(dueTd);tr.appendChild(statTd);tr.appendChild(actTd);tbody.appendChild(tr);
       });
-      tbl.appendChild(thead);tbl.appendChild(tbody);tbody_wrap.appendChild(tbl);grp.appendChild(ghdr);grp.appendChild(tbody_wrap);sec.appendChild(grp);
+      tbl.appendChild(thead);tbl.appendChild(tbody);bodyDiv.appendChild(tbl);
+      // Add stage button
+      var addRow=ce("div");addRow.style.cssText="padding:8px 14px;border-top:1px solid var(--border2)";
+      var addStageBtn=ce("button");addStageBtn.className="add-shot-task-inline";addStageBtn.textContent="+ Add Stage";
+      addStageBtn.onclick=(function(atype2,aname2){return function(e){e.stopPropagation();openModal(null,"asset",atype2,aname2);};})(at,name);
+      addRow.appendChild(addStageBtn);bodyDiv.appendChild(addRow);
+      card.appendChild(hdr);card.appendChild(bodyDiv);wrap.appendChild(card);
     });
-    container.appendChild(sec);
   });
+  container.appendChild(wrap);
 }
+
 
 function updateStats(){
   var total=tasks.length,done=tasks.filter(function(t){return t.status==="done";}).length;
@@ -1721,6 +1886,7 @@ window.openModal=function(id,forceCat,forceAssetType){
     ["f-name","f-lead","f-start","f-due","f-time","f-handoff","f-deliverable","f-deliverable-url","f-asset-name"].forEach(function(fid){el(fid).value="";});
     el("f-priority").value="med";el("f-status").value="todo";
     if(forceAssetType)el("f-asset-type").value=forceAssetType;
+    if(arguments[3])el("f-asset-name").value=arguments[3];
     selectedPipelineStage=null;if(selectedCat==="asset")updatePipelineStages();
   }
   el("modal").classList.add("open");
@@ -1737,6 +1903,15 @@ window.saveTask=async function(){
   else await sb.from("tasks").insert(payload);
   closeModal();showToast("Task saved!");loadTasks();
 };
+
+window.deleteAsset=async function(assetName,assetType){
+  if(!confirm('Delete all pipeline tasks for '+assetName+'?'))return;
+  var ids=tasks.filter(function(t){return t.asset_name===assetName&&t.asset_type===assetType&&t.project_id===activeProject.id;}).map(function(t){return t.id;});
+  if(!ids.length)return;
+  await sb.from("tasks").delete().in("id",ids);
+  showToast("Asset deleted.");loadTasks();
+};
+
 window.deleteTask=async function(id){if(!confirm("Remove this task?"))return;await sb.from("tasks").delete().eq("id",id);showToast("Removed.");loadTasks();};
 window.editTask=function(id){openModal(id);};
 
@@ -2010,9 +2185,9 @@ window.saveProject=async function(){
   renderSidebar();showToast("Project saved!");
 };
 
-["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal"].forEach(function(id){
+["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal","new-asset-modal"].forEach(function(id){
   var e=el(id);if(!e)return;
-  e.addEventListener("click",function(ev){if(ev.target===e){var fns={modal:closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal};if(fns[id])fns[id]();}});
+  e.addEventListener("click",function(ev){if(ev.target===e){var fns={modal:closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal,"new-asset-modal":closeNewAssetModal};if(fns[id])fns[id]();}});
 });
 
 })();
