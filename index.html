@@ -1426,13 +1426,7 @@ window.saveProject=async function(){var name=document.getElementById("pf-name").
 // MODAL CLOSE ON BG CLICK
 ["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal"].forEach(function(id){var el=document.getElementById(id);el.addEventListener("click",function(e){if(e.target===el){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal}[id];if(closeFn)closeFn();}});});
 
-// also need to add linked_assets column to shots
-// We'll do this via a one-time alter if needed
-async function ensureLinkedAssetsCol(){
-  // safe to call - will just fail silently if col exists
-  try{await sb.rpc("exec_sql",{sql:"alter table shots add column if not exists linked_assets text"});}catch(e){}
-}
-ensureLinkedAssetsCol();
+
 })();
 </script>
 </body>
