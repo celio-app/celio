@@ -1092,7 +1092,13 @@ function getShotAssetStatus(sh){
   });
   var blocked=[],atrisk=[],ready=[];
   linked.forEach(function(key){
-    var g=groups[key];if(!g)return;
+    var g=groups[key];
+    if(!g){
+      // Key exists in linked_assets but no matching task found - show as missing
+      var namePart=key.split("|")[0]||key;
+      blocked.push({name:namePart,type:"",done:0,total:0,pct:0,anyLate:true,anySoon:false,missing:true});
+      return;
+    }
     var total=g.tasks.length,done=g.tasks.filter(function(t){return t.status==="done";}).length;
     var anyLate=g.tasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
     var anySoon=g.tasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)>=0&&daysUntil(t.due_date)<=7;});
@@ -2046,6 +2052,7 @@ function renderDependencies(){
         var apct=ce("span");apct.className="dep-asset-pct";apct.textContent=a.pct+"%";
         var warn=ce("span");warn.className="dep-asset-warn";
         if(a.anyLate){warn.className+=" dep-warn-late";warn.textContent=" Late";}else if(a.anySoon){warn.className+=" dep-warn-soon";warn.textContent=" Due soon";}
+        if(a.missing){adot.style.background="#ef4444";warn.className="dep-asset-warn dep-warn-late";warn.textContent=" Not found";}
         arow.appendChild(adot);arow.appendChild(aname);arow.appendChild(apct);arow.appendChild(warn);body.appendChild(arow);
       });
     }
@@ -2155,6 +2162,8 @@ window.showTab=function(name){
   var tab=el("tab-"+name);if(tab){tab.style.display="block";tab.classList.add("active");}
   var idx={schedule:0,calendar:1,gantt:2,deps:3,milestones:4}[name];
   var navTabs=document.querySelectorAll(".nav-tab");if(navTabs[idx])navTabs[idx].classList.add("active");
+  // If tasks not yet loaded, load them first then render
+  if(!tasks.length&&activeProject){loadTasks();return;}
   if(name==="schedule")renderSchedule();
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
