@@ -174,7 +174,37 @@ td{padding:11px 14px;font-size:.83rem;color:var(--text);}
 .status-option:hover{background:var(--bg3);}
 .status-option .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .dot-todo{background:#94a3b8;} .dot-inprogress{background:#3b82f6;} .dot-review{background:#f59e0b;} .dot-done{background:#10b981;}
-@media(max-width:900px){.main{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}}
+
+@media(max-width:900px){
+  .main{grid-template-columns:1fr;}
+  .stats{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:640px){
+  header{padding:10px 14px;}
+  .user-chip{display:none;}
+  .theme-btn{padding:4px 9px;font-size:.72rem;}
+  .btn-sm{padding:3px 8px;font-size:.7rem;}
+  .nav-tabs{padding:10px 14px 0;gap:2px;overflow-x:auto;}
+  .nav-tab{padding:7px 13px;font-size:.76rem;white-space:nowrap;}
+  .stats{grid-template-columns:repeat(2,1fr);padding:14px;gap:10px;}
+  .stat-card{padding:12px 14px;}
+  .sval{font-size:1.5rem;}
+  .main{padding:0 14px 14px;gap:12px;}
+  .calendar-wrap,.gantt-wrap{padding:14px 14px 20px;}
+  .cal-grid{gap:2px;}
+  .cal-day{min-height:58px;padding:4px;}
+  .cal-day-header{font-size:.6rem;padding:5px 0;}
+  .cal-task-chip{font-size:.62rem;padding:2px 4px;}
+  .gantt-tip{display:none;}
+  table{font-size:.76rem;}
+  thead th{padding:8px 8px;font-size:.64rem;}
+  td{padding:8px 8px;}
+  .panel-header{padding:11px 14px;}
+  .modal{padding:18px;width:96vw;}
+  .form-row-2{grid-template-columns:1fr;}
+  .hdr{gap:6px;}
+  .gantt-labels{min-width:140px;}
+}
 </style>
 </head>
 <body>
@@ -312,7 +342,7 @@ td{padding:11px 14px;font-size:.83rem;color:var(--text);}
     <div class="form-row-2">
       <div><label style="display:block;font-size:.73rem;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Due Time (optional)</label><input id="f-time" type="time" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.87rem;outline:none;"></div>
       <div><label style="display:block;font-size:.73rem;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;">Priority</label>
-        <select id="f-priority" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.87rem;outline:none;">
+        <select id="f-priority" style="width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.87rem;outline:none;box-sizing:border-box;min-width:0;overflow:hidden;">
           <option value="high">High</option><option value="med" selected>Medium</option><option value="low">Low</option>
         </select>
       </div>
