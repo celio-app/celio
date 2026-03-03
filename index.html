@@ -980,6 +980,7 @@ var today=new Date();today.setHours(0,0,0,0);
 var COL_W=34,selectedColor="#7c3aed",selectedCat="general",selectedPipelineStage=null,selectedShotTaskType=null;
 var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16","#f97316","#8b5cf6","#64748b","#0ea5e9"];
 var projExpanded={},seqOpen={},schedView="all";
+var assetGroupCollapsed={},shotSectionCollapsed={};
 var assetLinkSelection=[];
 
 var PIPELINE_STAGES={
@@ -1478,7 +1479,15 @@ function renderShotSection(){
   var totShots=projShots.length;
   var cnt=ce("span");cnt.style.cssText="font-size:.75rem;font-weight:400;color:var(--text3);margin-left:8px";
   cnt.textContent=totShots+" shots";h2.appendChild(cnt);
-  secHdr.appendChild(h2);wrap.appendChild(secHdr);
+  var allCollapsed=projShots.every(function(s){return shotSectionCollapsed[s.id]!==false;});
+  var toggleAllBtn=ce("button");toggleAllBtn.className="btn btn-ghost btn-sm";
+  toggleAllBtn.textContent=allCollapsed?"Expand All":"Collapse All";
+  toggleAllBtn.onclick=function(){
+    var nowCollapsed=!allCollapsed;
+    projShots.forEach(function(s){shotSectionCollapsed[s.id]=nowCollapsed;});
+    renderShotSection();
+  };
+  secHdr.appendChild(h2);secHdr.appendChild(toggleAllBtn);wrap.appendChild(secHdr);
   Object.keys(bySeq).forEach(function(sid){
     var seq=sequences.find(function(x){return x.id===sid;});
     var seqShots=bySeq[sid];
@@ -1496,7 +1505,7 @@ function renderShotSection(){
       var shotRow=ce("div");shotRow.className="shot-section";
       // Header (clickable to expand/collapse)
       var hdrDiv=ce("div");hdrDiv.className="shot-section-hdr";
-      var arrow=ce("span");arrow.className="shot-arrow open";arrow.innerHTML="&#9658;";
+      var arrow=ce("span");arrow.className="shot-arrow"+(isShotCollapsed?"":" open");arrow.innerHTML="&#9658;";
       var statusDot=ce("span");statusDot.style.cssText="width:8px;height:8px;border-radius:50%;background:"+dotColor+";flex-shrink:0;display:inline-block";
       var codeSpan=ce("span");codeSpan.className="shot-code-badge";codeSpan.textContent=sh.code;
       var descSpan=ce("span");descSpan.className="shot-desc-badge";descSpan.textContent=sh.description||"";
@@ -1507,10 +1516,11 @@ function renderShotSection(){
       openBtn.textContent="Open";openBtn.onclick=function(e){e.stopPropagation();openShot(sh.id);};
       hdrDiv.appendChild(arrow);hdrDiv.appendChild(statusDot);hdrDiv.appendChild(codeSpan);hdrDiv.appendChild(descSpan);hdrDiv.appendChild(progBar);hdrDiv.appendChild(progPct);hdrDiv.appendChild(openBtn);
       // Body (collapsible)
-      var bodyDiv=ce("div");
-      hdrDiv.onclick=function(){
-        var hidden=bodyDiv.style.display==="none";bodyDiv.style.display=hidden?"":"none";arrow.classList.toggle("open",hidden);
-      };
+      var isShotCollapsed=shotSectionCollapsed[sh.id]!==false;// default collapsed
+      var bodyDiv=ce("div");bodyDiv.style.display=isShotCollapsed?"none":"";
+      (function(shotId){hdrDiv.onclick=function(){
+        var hidden=bodyDiv.style.display==="none";bodyDiv.style.display=hidden?"":"none";arrow.classList.toggle("open",hidden);shotSectionCollapsed[shotId]=!hidden;
+      };})(sh.id);
       // Tasks table
       if(!shTasks.length){
         var noTask=ce("div");noTask.style.cssText="padding:12px 16px;font-size:.78rem;color:var(--text4)";
@@ -1590,7 +1600,10 @@ function renderAssetSections(assetTasks){
       else if(done===total&&total>0){var rdy=ce("span");rdy.style.cssText="font-size:.7rem;color:#10b981;font-weight:700";rdy.innerHTML="&#10003; Ready";ghdr.appendChild(rdy);}
       ghdr.appendChild(pbar);ghdr.appendChild(plbl);
       var tbody_wrap=ce("div");
-      ghdr.onclick=function(){var hidden=tbody_wrap.style.display==="none";tbody_wrap.style.display=hidden?"":"none";arr.classList.toggle("open",hidden);};
+      var isAssetCollapsed=!!assetGroupCollapsed[at+"|"+name];
+      tbody_wrap.style.display=isAssetCollapsed?"none":"";
+      arr.classList.toggle("open",!isAssetCollapsed);
+      (function(atype2,name2){ghdr.onclick=function(){var hidden=tbody_wrap.style.display==="none";tbody_wrap.style.display=hidden?"":"none";arr.classList.toggle("open",hidden);assetGroupCollapsed[atype2+"|"+name2]=!hidden;};})(at,name);
       var tbl=ce("table");tbl.className="asset-tasks-table";
       var thead=ce("thead");thead.innerHTML="<tr><th>Stage</th><th>Lead</th><th>Start</th><th>Due</th><th>Status</th><th>Actions</th></tr>";
       var tbody=ce("tbody");
