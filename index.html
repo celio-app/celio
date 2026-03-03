@@ -106,15 +106,15 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .nav-tabs{display:flex;gap:4px;padding:12px 20px 0;border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;overflow-x:auto;}
 .nav-tab{padding:7px 18px;border-radius:8px 8px 0 0;font-size:.82rem;font-weight:600;cursor:pointer;color:var(--text3);border:1px solid transparent;border-bottom:none;white-space:nowrap;}
 .nav-tab.active{background:var(--bg2);color:#7c3aed;border-color:var(--border);}
-.tab-content{display:none;overflow-y:auto;}
-.tab-content.active{display:block;}
+.tab-content{display:none;overflow-y:auto;flex:1;min-height:0;}
+.tab-content.active{display:flex;flex-direction:column;}
 .no-project{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:14px;color:var(--text3);}
 .no-project h3{font-size:1.1rem;color:var(--text2);}
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:18px 20px 0;}
 .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;}
 .sval{font-size:1.7rem;font-weight:800;}.slbl{font-size:.7rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px;font-weight:600;}
 .c-blue{color:#3b82f6;}.c-green{color:#10b981;}.c-yellow{color:#f59e0b;}.c-red{color:#ef4444;}
-.schedule-body{padding:16px 20px 24px;display:flex;flex-direction:column;gap:16px;}
+.schedule-body{padding:16px 20px 24px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;flex:1;}
 .sched-tabs{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
 .sched-tab{padding:5px 14px;border-radius:999px;font-size:.78rem;font-weight:700;cursor:pointer;border:1px solid var(--border);background:transparent;color:var(--text3);transition:all .15s;}
 .sched-tab.active{background:#7c3aed;color:#fff;border-color:#7c3aed;}
@@ -355,6 +355,56 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 [data-theme="light"] .sbb-chip-ok{background:#d1fae5;color:#065f46;}
 
 @media(max-width:580px){.dep-summary{grid-template-columns:repeat(2,1fr);}.dep-overview{padding:12px 14px 20px;}}
+
+/* SHOT PROGRESSION */
+.sp-dept-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.sp-dept-name{font-size:.78rem;font-weight:800;color:var(--text);margin-bottom:6px;}
+.sp-dept-bar{height:6px;background:var(--border2);border-radius:99px;overflow:hidden;margin-bottom:5px;}
+.sp-dept-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa);transition:width .4s;}
+.sp-dept-meta{display:flex;justify-content:space-between;font-size:.68rem;color:var(--text3);font-weight:600;}
+
+.sp-shot-row{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:box-shadow .15s;}
+.sp-shot-row:hover{box-shadow:0 2px 12px rgba(0,0,0,.15);}
+.sp-shot-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sp-shot-code{font-size:.88rem;font-weight:800;color:var(--purple);}
+.sp-shot-seq{font-size:.72rem;color:var(--text4);}
+.sp-shot-status{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--bg3);color:var(--text3);margin-left:auto;}
+.sp-shot-pct{font-size:.72rem;font-weight:700;color:var(--text2);margin-left:4px;}
+.sp-task-pills{display:flex;gap:5px;flex-wrap:wrap;}
+.sp-task-pill{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:5px;}
+.sp-pill-done{background:#064e3b;color:#34d399;}
+.sp-pill-prog{background:#1e3a5f;color:#60a5fa;}
+.sp-pill-review{background:#3b2f00;color:#fbbf24;}
+.sp-pill-ready{background:var(--bg3);color:var(--text4);}
+[data-theme="light"] .sp-pill-done{background:#d1fae5;color:#065f46;}
+[data-theme="light"] .sp-pill-prog{background:#dbeafe;color:#1d4ed8;}
+[data-theme="light"] .sp-pill-review{background:#fef3c7;color:#92400e;}
+[data-theme="light"] .sp-pill-ready{background:#e2e8f0;color:#475569;}
+.sp-overall-bar{height:5px;background:var(--border2);border-radius:99px;overflow:hidden;flex:1;max-width:200px;}
+.sp-overall-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa);}
+
+/* SHOT PROGRESSION */
+.sp-dept-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+.sp-dept-name{font-size:.78rem;font-weight:800;color:var(--text);margin-bottom:6px;}
+.sp-dept-bar{height:6px;background:var(--border2);border-radius:99px;overflow:hidden;margin-bottom:5px;}
+.sp-dept-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa);transition:width .4s;}
+.sp-dept-meta{display:flex;justify-content:space-between;font-size:.68rem;color:var(--text3);font-weight:600;}
+.sp-shot-row{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:box-shadow .15s;}
+.sp-shot-row:hover{box-shadow:0 2px 12px rgba(0,0,0,.15);}
+.sp-shot-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.sp-shot-code{font-size:.88rem;font-weight:800;color:var(--purple);}
+.sp-shot-seq{font-size:.72rem;color:var(--text4);}
+.sp-shot-status{font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--bg3);color:var(--text3);margin-left:auto;}
+.sp-task-pills{display:flex;gap:5px;flex-wrap:wrap;}
+.sp-task-pill{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:5px;}
+.sp-pill-done{background:#064e3b;color:#34d399;}
+.sp-pill-prog{background:#1e3a5f;color:#60a5fa;}
+.sp-pill-review{background:#3b2f00;color:#fbbf24;}
+.sp-pill-ready{background:var(--bg3);color:var(--text4);}
+[data-theme="light"] .sp-pill-done{background:#d1fae5;color:#065f46;}
+[data-theme="light"] .sp-pill-prog{background:#dbeafe;color:#1d4ed8;}
+[data-theme="light"] .sp-pill-review{background:#fef3c7;color:#92400e;}
+[data-theme="light"] .sp-pill-ready{background:#e2e8f0;color:#475569;}
 </style>
 </head>
 </head>
@@ -411,6 +461,10 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         <div class="nav-tab" onclick="showTab('calendar')">Calendar</div>
         <div class="nav-tab" onclick="showTab('gantt')">Gantt Chart</div>
         <div class="nav-tab" onclick="showTab('deps')">&#128209; Dependencies</div>
+        <div class="nav-tab" onclick="showTab('shotprog')">&#127916; Shot Progression</div>
+        <div class="nav-tab" onclick="showTab('milestones')">&#128203; Milestones</div>
+        <div class="nav-tab" onclick="showTab('shotprog')">&#127916; Shot Progression</div>
+        <div class="nav-tab" onclick="showTab('milestones')">&#128203; Milestones</div>
       </div>
       <div id="no-proj" class="no-project" style="display:flex">
         <div style="font-size:2.5rem">&#128203;</div>
@@ -437,31 +491,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
           <div class="schedule-grid">
             <div style="display:flex;flex-direction:column;gap:0">
               <div id="asset-sections"></div>
-              <div id="general-section" class="general-section">
-                <div class="general-section-hdr">
-                  <h2>&#128203; Milestones &amp; Admin</h2>
-                  <select id="fstatus" class="btn btn-ghost" style="padding:4px 9px;font-size:.75rem" onchange="renderSchedule()">
-                    <option value="">All Status</option><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="review">In Review</option><option value="done">Done</option>
-                  </select>
-                </div>
-                <div style="overflow-x:auto">
-                  <table style="width:100%;border-collapse:collapse">
-                    <thead><tr>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Task</th>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Lead</th>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Due</th>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Priority</th>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Status</th>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Actions</th>
-                    </tr></thead>
-                    <tbody id="task-tbody"></tbody>
-                  </table>
-                </div>
-                <div class="prog-wrap">
-                  <div class="prog-lbl"><span>Overall Progress</span><span id="prog-pct">0%</span></div>
-                  <div class="pbar"><div class="pfill" id="prog-fill" style="width:0%"></div></div>
-                </div>
-              </div>
+                       <div id="general-section" style="display:none"></div>
             </div>
             <div class="right-col">
               <div class="panel"><div class="panel-header"><h2>Handoffs</h2></div><div id="handoff-list"></div></div>
@@ -867,7 +897,131 @@ window.toggleSidebar=function(){var sb=el("sidebar");if(isMobile()){openMobileSi
 window.openMobileSidebar=function(){el("sidebar").classList.add("mobile-open");el("sb-overlay").classList.add("show");};
 window.closeMobileSidebar=function(){el("sidebar").classList.remove("mobile-open");el("sb-overlay").classList.remove("show");};
 window.toggleTheme=function(){var html=document.documentElement,isDark=html.getAttribute("data-theme")==="dark";html.setAttribute("data-theme",isDark?"light":"dark");el("theme-btn").innerHTML=isDark?"&#127769; <span>Dark</span>":"&#9728; <span>Light</span>";localStorage.setItem("celio-theme",isDark?"light":"dark");};
-(function(){var t=localStorage.getItem("celio-theme")||"dark";document.documentElement.setAttribute("data-theme",t);window.addEventListener("DOMContentLoaded",function(){var btn=el("theme-btn");if(btn)btn.innerHTML=t==="dark"?"&#9728; <span>Light</span>":"&#127769; <span>Dark</span>";if(!isMobile()&&localStorage.getItem("celio-sb-exp")==="1")el("sidebar").classList.add("expanded");});})();
+(function(){var t=localStorage.getItem("celio-theme")||"dark";document.documentElement.setAttribute("data-theme",t);window.addEventListener("DOMContentLoaded",function(){var btn=el("theme-btn");if(btn)btn.innerHTML=t==="dark"?"&#9728; <span>Light</span>":"&#127769; <span>Dark</span>";if(!isMobile()&&localStorage.getItem("celio-sb-exp")==="1")el("sidebar").classList.add("expanded");});
+// ─── SHOT PROGRESSION ────────────────────────────────────────────────────────
+function renderShotProgression(){
+  var projShots=shots.filter(function(s){return activeProject&&s.project_id===activeProject.id;});
+  var rollupEl=el("shotprog-rollup");var gridEl=el("shotprog-grid");
+  rollupEl.innerHTML="";gridEl.innerHTML="";
+  if(!projShots.length){
+    var d=ce("div");d.style.cssText="text-align:center;padding:40px;color:var(--text3);grid-column:1/-1";
+    d.textContent="No shots yet. Add sequences and shots in the sidebar.";rollupEl.appendChild(d);return;
+  }
+  // Load shot tasks for all project shots
+  var projShotIds=projShots.map(function(s){return s.id;});
+  // Use already-loaded shotTasks if available, otherwise fetch
+  sb.from("shot_tasks").select("*").in("shot_id",projShotIds).then(function(r){
+    var allShotTasks=r.data||[];
+    // Department rollup
+    var deptMap={};
+    allShotTasks.forEach(function(t){
+      var dept=t.task_type;
+      if(!deptMap[dept])deptMap[dept]={total:0,done:0,inprog:0,review:0};
+      deptMap[dept].total++;
+      if(t.status==="approved"||t.status==="final")deptMap[dept].done++;
+      else if(t.status==="inprogress")deptMap[dept].inprog++;
+      else if(t.status==="review")deptMap[dept].review++;
+    });
+    rollupEl.innerHTML="";
+    if(!Object.keys(deptMap).length){
+      var d=ce("div");d.style.cssText="color:var(--text4);font-size:.82rem;padding:10px 0;grid-column:1/-1";
+      d.textContent="No shot tasks added yet. Open a shot and add pipeline tasks to see rollup data.";rollupEl.appendChild(d);
+    }
+    Object.keys(deptMap).sort().forEach(function(dept){
+      var dm=deptMap[dept];
+      var pct=dm.total?Math.round(dm.done/dm.total*100):0;
+      var card=ce("div");card.className="sp-dept-card";
+      var name=ce("div");name.className="sp-dept-name";name.textContent=dept;
+      var bar=ce("div");bar.className="sp-dept-bar";
+      var fill=ce("div");fill.className="sp-dept-fill";fill.style.width=pct+"%";bar.appendChild(fill);
+      var meta=ce("div");meta.className="sp-dept-meta";
+      meta.innerHTML="<span>"+dm.done+"/"+dm.total+" approved</span><span style='font-weight:800;color:var(--purple)'>"+pct+"%</span>";
+      // mini status breakdown
+      var breakdown=ce("div");breakdown.style.cssText="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap";
+      if(dm.inprog){var b=ce("span");b.className="sp-task-pill sp-pill-prog";b.textContent=dm.inprog+" WIP";breakdown.appendChild(b);}
+      if(dm.review){var b2=ce("span");b2.className="sp-task-pill sp-pill-review";b2.textContent=dm.review+" Review";breakdown.appendChild(b2);}
+      var remaining=dm.total-dm.done-dm.inprog-dm.review;
+      if(remaining>0){var b3=ce("span");b3.className="sp-task-pill sp-pill-ready";b3.textContent=remaining+" Not Started";breakdown.appendChild(b3);}
+      card.appendChild(name);card.appendChild(bar);card.appendChild(meta);card.appendChild(breakdown);
+      rollupEl.appendChild(card);
+    });
+    // Per-shot breakdown
+    gridEl.innerHTML="";
+    // Group by sequence
+    var bySeq={};
+    projShots.forEach(function(sh){
+      var sid=sh.sequence_id||"none";if(!bySeq[sid])bySeq[sid]=[];bySeq[sid].push(sh);
+    });
+    Object.keys(bySeq).forEach(function(sid){
+      var seq=sequences.find(function(x){return x.id===sid;});
+      if(seq){
+        var seqHdr=ce("div");seqHdr.style.cssText="font-size:.75rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:4px 2px;margin-top:4px";
+        seqHdr.textContent=seq.code+(seq.name?" — "+seq.name:"");gridEl.appendChild(seqHdr);
+      }
+      bySeq[sid].forEach(function(sh){
+        var shTasks=allShotTasks.filter(function(t){return t.shot_id===sh.id;});
+        var total=shTasks.length;
+        var done=shTasks.filter(function(t){return t.status==="approved"||t.status==="final";}).length;
+        var pct=total?Math.round(done/total*100):0;
+        var row=ce("div");row.className="sp-shot-row";row.onclick=function(){openShot(sh.id);};
+        var hdr=ce("div");hdr.className="sp-shot-header";
+        var code=ce("span");code.className="sp-shot-code";code.textContent=sh.code;
+        var seqLbl=ce("span");seqLbl.className="sp-shot-seq";seqLbl.textContent=seq?seq.code:"";
+        var stat=ce("span");stat.className="sp-shot-status";stat.textContent=sh.status||"pending";
+        // overall bar
+        var barWrap=ce("div");barWrap.style.cssText="flex:1;max-width:160px;height:5px;background:var(--border2);border-radius:99px;overflow:hidden";
+        var barFill=ce("div");barFill.style.cssText="height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa);width:"+pct+"%";
+        barWrap.appendChild(barFill);
+        var pctLbl=ce("span");pctLbl.className="sp-shot-pct";pctLbl.textContent=pct+"%";
+        hdr.appendChild(code);hdr.appendChild(seqLbl);hdr.appendChild(barWrap);hdr.appendChild(pctLbl);hdr.appendChild(stat);
+        var pills=ce("div");pills.className="sp-task-pills";
+        if(!shTasks.length){
+          var np=ce("span");np.className="sp-task-pill sp-pill-ready";np.textContent="No tasks yet";pills.appendChild(np);
+        } else {
+          shTasks.forEach(function(t){
+            var pill=ce("span");
+            var cls=t.status==="approved"||t.status==="final"?"sp-pill-done":t.status==="inprogress"?"sp-pill-prog":t.status==="review"?"sp-pill-review":"sp-pill-ready";
+            pill.className="sp-task-pill "+cls;pill.textContent=t.task_type;pills.appendChild(pill);
+          });
+        }
+        row.appendChild(hdr);row.appendChild(pills);gridEl.appendChild(row);
+      });
+    });
+  });
+}
+
+// ─── MILESTONES ───────────────────────────────────────────────────────────────
+window.renderMilestones=function(){
+  var generalTasks=tasks.filter(function(t){return !t.category||t.category==="general";});
+  var fs=el("fstatus").value;
+  var filtered=generalTasks.filter(function(t){return !fs||t.status===fs;});
+  var tbody=el("task-tbody");if(!tbody)return;tbody.innerHTML="";
+  var total=generalTasks.length,done=generalTasks.filter(function(t){return t.status==="done";}).length;
+  var pct=total?Math.round(done/total*100):0;
+  var pctEl=el("prog-pct");if(pctEl)pctEl.textContent=pct+"%";
+  var fillEl=el("prog-fill");if(fillEl)fillEl.style.width=pct+"%";
+  if(!filtered.length){
+    var tr=ce("tr");var td=ce("td");td.colSpan=6;td.style.cssText="text-align:center;padding:24px;color:var(--text3);font-size:.82rem";
+    td.textContent="No milestones yet. Click + Add Milestone to create one.";tr.appendChild(td);tbody.appendChild(tr);return;
+  }
+  filtered.forEach(function(t){
+    var tr=ce("tr");
+    var d=t.due_date?daysUntil(t.due_date):null;
+    var dl=!t.due_date?"--":t.status==="done"?fmtDate(t.due_date):d<0?Math.abs(d)+"d late":d===0?"Today":fmtDue(t);
+    var nameTd=ce("td");var strong=ce("strong");strong.textContent=t.name;nameTd.appendChild(strong);
+    var leadTd=ce("td");var chip=ce("span");chip.className="chip";chip.textContent=t.lead;leadTd.appendChild(chip);
+    var dueTd=ce("td");var dueSpan=ce("span");dueSpan.className=t.due_date?dueClass(t):"d-ok";dueSpan.textContent=dl;dueTd.appendChild(dueSpan);
+    var priTd=ce("td");var pdot=ce("span");pdot.className="pdot p-"+t.priority;priTd.appendChild(pdot);priTd.appendChild(document.createTextNode(t.priority.charAt(0).toUpperCase()+t.priority.slice(1)));
+    var statTd=mkStatusCellDOM(t);
+    var actTd=ce("td");actTd.style.whiteSpace="nowrap";
+    var editBtn=ce("button");editBtn.className="btn btn-ghost btn-sm";editBtn.textContent="Edit";editBtn.onclick=function(){editTask(t.id);};
+    var delBtn=ce("button");delBtn.className="btn btn-sm btn-del";delBtn.textContent="Remove";delBtn.onclick=function(){deleteTask(t.id);};
+    actTd.appendChild(editBtn);actTd.appendChild(document.createTextNode(" "));actTd.appendChild(delBtn);
+    tr.appendChild(nameTd);tr.appendChild(leadTd);tr.appendChild(dueTd);tr.appendChild(priTd);tr.appendChild(statTd);tr.appendChild(actTd);tbody.appendChild(tr);
+  });
+};
+
+})();
 
 // AUTH
 function setMsg(m,type){var e=el("auth-msg");e.textContent=m;e.className="auth-msg"+(type?" "+type:"");}
@@ -1243,6 +1397,8 @@ async function loadTasks(){
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
   else if(name==="deps")renderDependencies();
+  else if(name==="shotprog")renderShotProgression();
+  else if(name==="milestones")renderMilestones();
   renderSidebar();
 }
 
@@ -1256,7 +1412,7 @@ window.renderSchedule=function(){
   if(schedView==="general"){assetSec.style.display="none";generalSec.style.display="";}
   else if(schedView==="assets"){assetSec.style.display="";generalSec.style.display="none";}
   else{assetSec.style.display="";generalSec.style.display="";}
-  renderAssetSections(assetTasks);renderGeneralTasks(generalTasks);renderHandoffs();renderAssetDeliverables();
+  renderAssetSections(assetTasks);renderHandoffs();renderAssetDeliverables();
 };
 
 function renderAssetSections(assetTasks){
@@ -1550,12 +1706,12 @@ window.ganttNext=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttSt
 window.ganttToday=function(){ganttStart=new Date(today.getFullYear(),today.getMonth(),1);renderGantt();};
 
 window.showTab=function(name){
-  ["tab-schedule","tab-calendar","tab-gantt","tab-deps"].forEach(function(id){var e=el(id);if(e){e.style.display="none";e.classList.remove("active");}});
+  ["tab-schedule","tab-calendar","tab-gantt","tab-deps","tab-shotprog","tab-milestones"].forEach(function(id){var e=el(id);if(e){e.style.display="none";e.classList.remove("active");}});
   document.querySelectorAll(".nav-tab").forEach(function(e){e.classList.remove("active");});
   var tab=el("tab-"+name);if(tab){tab.style.display="block";tab.classList.add("active");}
-  var idx={schedule:0,calendar:1,gantt:2,deps:3}[name];
+  var idx={schedule:0,calendar:1,gantt:2,deps:3,shotprog:4,milestones:5}[name];
   var navTabs=document.querySelectorAll(".nav-tab");if(navTabs[idx])navTabs[idx].classList.add("active");
-  if(name==="schedule")renderSchedule();else if(name==="calendar")renderCalendar();else if(name==="gantt")renderGantt();else if(name==="deps")renderDependencies();
+  if(name==="schedule")renderSchedule();else if(name==="calendar")renderCalendar();else if(name==="gantt")renderGantt();else if(name==="deps")renderDependencies();else if(name==="shotprog")renderShotProgression();else if(name==="milestones")renderMilestones();
 };
 
 window.openProjectModal=function(id){
@@ -1584,6 +1740,130 @@ window.saveProject=async function(){
   var e=el(id);if(!e)return;
   e.addEventListener("click",function(ev){if(ev.target===e){var fns={modal:closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal};if(fns[id])fns[id]();}});
 });
+
+
+// ─── SHOT PROGRESSION ────────────────────────────────────────────────────────
+function renderShotProgression(){
+  var projShots=shots.filter(function(s){return activeProject&&s.project_id===activeProject.id;});
+  var rollupEl=el("shotprog-rollup");var gridEl=el("shotprog-grid");
+  rollupEl.innerHTML="";gridEl.innerHTML="";
+  if(!projShots.length){
+    var d=ce("div");d.style.cssText="text-align:center;padding:40px;color:var(--text3);grid-column:1/-1";
+    d.textContent="No shots yet. Add sequences and shots in the sidebar.";rollupEl.appendChild(d);return;
+  }
+  // Load shot tasks for all project shots
+  var projShotIds=projShots.map(function(s){return s.id;});
+  // Use already-loaded shotTasks if available, otherwise fetch
+  sb.from("shot_tasks").select("*").in("shot_id",projShotIds).then(function(r){
+    var allShotTasks=r.data||[];
+    // Department rollup
+    var deptMap={};
+    allShotTasks.forEach(function(t){
+      var dept=t.task_type;
+      if(!deptMap[dept])deptMap[dept]={total:0,done:0,inprog:0,review:0};
+      deptMap[dept].total++;
+      if(t.status==="approved"||t.status==="final")deptMap[dept].done++;
+      else if(t.status==="inprogress")deptMap[dept].inprog++;
+      else if(t.status==="review")deptMap[dept].review++;
+    });
+    rollupEl.innerHTML="";
+    if(!Object.keys(deptMap).length){
+      var d=ce("div");d.style.cssText="color:var(--text4);font-size:.82rem;padding:10px 0;grid-column:1/-1";
+      d.textContent="No shot tasks added yet. Open a shot and add pipeline tasks to see rollup data.";rollupEl.appendChild(d);
+    }
+    Object.keys(deptMap).sort().forEach(function(dept){
+      var dm=deptMap[dept];
+      var pct=dm.total?Math.round(dm.done/dm.total*100):0;
+      var card=ce("div");card.className="sp-dept-card";
+      var name=ce("div");name.className="sp-dept-name";name.textContent=dept;
+      var bar=ce("div");bar.className="sp-dept-bar";
+      var fill=ce("div");fill.className="sp-dept-fill";fill.style.width=pct+"%";bar.appendChild(fill);
+      var meta=ce("div");meta.className="sp-dept-meta";
+      meta.innerHTML="<span>"+dm.done+"/"+dm.total+" approved</span><span style='font-weight:800;color:var(--purple)'>"+pct+"%</span>";
+      // mini status breakdown
+      var breakdown=ce("div");breakdown.style.cssText="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap";
+      if(dm.inprog){var b=ce("span");b.className="sp-task-pill sp-pill-prog";b.textContent=dm.inprog+" WIP";breakdown.appendChild(b);}
+      if(dm.review){var b2=ce("span");b2.className="sp-task-pill sp-pill-review";b2.textContent=dm.review+" Review";breakdown.appendChild(b2);}
+      var remaining=dm.total-dm.done-dm.inprog-dm.review;
+      if(remaining>0){var b3=ce("span");b3.className="sp-task-pill sp-pill-ready";b3.textContent=remaining+" Not Started";breakdown.appendChild(b3);}
+      card.appendChild(name);card.appendChild(bar);card.appendChild(meta);card.appendChild(breakdown);
+      rollupEl.appendChild(card);
+    });
+    // Per-shot breakdown
+    gridEl.innerHTML="";
+    // Group by sequence
+    var bySeq={};
+    projShots.forEach(function(sh){
+      var sid=sh.sequence_id||"none";if(!bySeq[sid])bySeq[sid]=[];bySeq[sid].push(sh);
+    });
+    Object.keys(bySeq).forEach(function(sid){
+      var seq=sequences.find(function(x){return x.id===sid;});
+      if(seq){
+        var seqHdr=ce("div");seqHdr.style.cssText="font-size:.75rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding:4px 2px;margin-top:4px";
+        seqHdr.textContent=seq.code+(seq.name?" — "+seq.name:"");gridEl.appendChild(seqHdr);
+      }
+      bySeq[sid].forEach(function(sh){
+        var shTasks=allShotTasks.filter(function(t){return t.shot_id===sh.id;});
+        var total=shTasks.length;
+        var done=shTasks.filter(function(t){return t.status==="approved"||t.status==="final";}).length;
+        var pct=total?Math.round(done/total*100):0;
+        var row=ce("div");row.className="sp-shot-row";row.onclick=function(){openShot(sh.id);};
+        var hdr=ce("div");hdr.className="sp-shot-header";
+        var code=ce("span");code.className="sp-shot-code";code.textContent=sh.code;
+        var seqLbl=ce("span");seqLbl.className="sp-shot-seq";seqLbl.textContent=seq?seq.code:"";
+        var stat=ce("span");stat.className="sp-shot-status";stat.textContent=sh.status||"pending";
+        // overall bar
+        var barWrap=ce("div");barWrap.style.cssText="flex:1;max-width:160px;height:5px;background:var(--border2);border-radius:99px;overflow:hidden";
+        var barFill=ce("div");barFill.style.cssText="height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa);width:"+pct+"%";
+        barWrap.appendChild(barFill);
+        var pctLbl=ce("span");pctLbl.className="sp-shot-pct";pctLbl.textContent=pct+"%";
+        hdr.appendChild(code);hdr.appendChild(seqLbl);hdr.appendChild(barWrap);hdr.appendChild(pctLbl);hdr.appendChild(stat);
+        var pills=ce("div");pills.className="sp-task-pills";
+        if(!shTasks.length){
+          var np=ce("span");np.className="sp-task-pill sp-pill-ready";np.textContent="No tasks yet";pills.appendChild(np);
+        } else {
+          shTasks.forEach(function(t){
+            var pill=ce("span");
+            var cls=t.status==="approved"||t.status==="final"?"sp-pill-done":t.status==="inprogress"?"sp-pill-prog":t.status==="review"?"sp-pill-review":"sp-pill-ready";
+            pill.className="sp-task-pill "+cls;pill.textContent=t.task_type;pills.appendChild(pill);
+          });
+        }
+        row.appendChild(hdr);row.appendChild(pills);gridEl.appendChild(row);
+      });
+    });
+  });
+}
+
+// ─── MILESTONES ───────────────────────────────────────────────────────────────
+window.renderMilestones=function(){
+  var generalTasks=tasks.filter(function(t){return !t.category||t.category==="general";});
+  var fs=el("fstatus").value;
+  var filtered=generalTasks.filter(function(t){return !fs||t.status===fs;});
+  var tbody=el("task-tbody");if(!tbody)return;tbody.innerHTML="";
+  var total=generalTasks.length,done=generalTasks.filter(function(t){return t.status==="done";}).length;
+  var pct=total?Math.round(done/total*100):0;
+  var pctEl=el("prog-pct");if(pctEl)pctEl.textContent=pct+"%";
+  var fillEl=el("prog-fill");if(fillEl)fillEl.style.width=pct+"%";
+  if(!filtered.length){
+    var tr=ce("tr");var td=ce("td");td.colSpan=6;td.style.cssText="text-align:center;padding:24px;color:var(--text3);font-size:.82rem";
+    td.textContent="No milestones yet. Click + Add Milestone to create one.";tr.appendChild(td);tbody.appendChild(tr);return;
+  }
+  filtered.forEach(function(t){
+    var tr=ce("tr");
+    var d=t.due_date?daysUntil(t.due_date):null;
+    var dl=!t.due_date?"--":t.status==="done"?fmtDate(t.due_date):d<0?Math.abs(d)+"d late":d===0?"Today":fmtDue(t);
+    var nameTd=ce("td");var strong=ce("strong");strong.textContent=t.name;nameTd.appendChild(strong);
+    var leadTd=ce("td");var chip=ce("span");chip.className="chip";chip.textContent=t.lead;leadTd.appendChild(chip);
+    var dueTd=ce("td");var dueSpan=ce("span");dueSpan.className=t.due_date?dueClass(t):"d-ok";dueSpan.textContent=dl;dueTd.appendChild(dueSpan);
+    var priTd=ce("td");var pdot=ce("span");pdot.className="pdot p-"+t.priority;priTd.appendChild(pdot);priTd.appendChild(document.createTextNode(t.priority.charAt(0).toUpperCase()+t.priority.slice(1)));
+    var statTd=mkStatusCellDOM(t);
+    var actTd=ce("td");actTd.style.whiteSpace="nowrap";
+    var editBtn=ce("button");editBtn.className="btn btn-ghost btn-sm";editBtn.textContent="Edit";editBtn.onclick=function(){editTask(t.id);};
+    var delBtn=ce("button");delBtn.className="btn btn-sm btn-del";delBtn.textContent="Remove";delBtn.onclick=function(){deleteTask(t.id);};
+    actTd.appendChild(editBtn);actTd.appendChild(document.createTextNode(" "));actTd.appendChild(delBtn);
+    tr.appendChild(nameTd);tr.appendChild(leadTd);tr.appendChild(dueTd);tr.appendChild(priTd);tr.appendChild(statTd);tr.appendChild(actTd);tbody.appendChild(tr);
+  });
+};
 
 })();
 </script>
