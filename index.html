@@ -464,41 +464,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   .right-col{display:flex;flex-direction:column;}
 }
 
-/* PHASE 2B */
-.dep-overview{padding:16px 20px 24px;}
-.dep-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
-.dep-header h2{font-size:1rem;font-weight:800;}
-.dep-legend{display:flex;gap:12px;flex-wrap:wrap;}
-.dep-legend-item{display:flex;align-items:center;gap:5px;font-size:.74rem;color:var(--text2);font-weight:600;}
-.dep-legend-dot{width:10px;height:10px;border-radius:50%;}
-.dep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;}
-.dep-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;cursor:pointer;transition:box-shadow .15s;}
-.dep-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.2);}
-.dep-card-header{padding:11px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border2);}
-.dep-card-status{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
-.dep-card-code{font-size:.9rem;font-weight:800;color:var(--purple);}
-.dep-card-seq{font-size:.72rem;color:var(--text4);margin-left:2px;}
-.dep-card-body{padding:10px 14px;}
-.dep-asset-row{display:flex;align-items:center;gap:7px;padding:4px 0;font-size:.78rem;}
-.dep-asset-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
-.dep-asset-name{flex:1;color:var(--text2);}
-.dep-asset-pct{font-size:.7rem;color:var(--text3);font-weight:600;}
-.dep-asset-warn{font-size:.68rem;font-weight:700;}
-.dep-warn-late{color:#ef4444;}
-.dep-warn-soon{color:#f59e0b;}
-.dep-card-footer{padding:8px 14px;background:var(--bg3);display:flex;align-items:center;justify-content:space-between;}
-.dep-block-badge{font-size:.7rem;font-weight:800;padding:2px 8px;border-radius:999px;}
-.dep-blocked{background:#450a0a;color:#f87171;}
-.dep-atrisk{background:#3b2000;color:#fbbf24;}
-.dep-ready{background:#064e3b;color:#34d399;}
-.dep-noassets{background:var(--bg4);color:var(--text4);}
-.dep-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px;}
-.dep-sum-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;text-align:center;}
-.dep-sum-val{font-size:1.5rem;font-weight:800;}
-.dep-sum-lbl{font-size:.68rem;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin-top:2px;}
-[data-theme="light"] .dep-blocked{background:#fee2e2;color:#b91c1c;}
-[data-theme="light"] .dep-atrisk{background:#fef3c7;color:#92400e;}
-[data-theme="light"] .dep-ready{background:#d1fae5;color:#065f46;}
 .shot-block-banner{margin:0 0 12px;padding:10px 16px;border-radius:10px;display:flex;align-items:center;gap:10px;font-size:.82rem;font-weight:600;flex-wrap:wrap;}
 .sbb-blocked{background:#450a0a;color:#f87171;border:1px solid #7f1d1d;}
 .sbb-atrisk{background:#3b2000;color:#fbbf24;border:1px solid #78350f;}
@@ -667,7 +632,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         <div class="nav-tab active" onclick="showTab('schedule')">Schedule</div>
         <div class="nav-tab" onclick="showTab('calendar')">Calendar</div>
         <div class="nav-tab" onclick="showTab('gantt')">Gantt Chart</div>
-        <div class="nav-tab" onclick="showTab('deps')">&#128209; Dependencies</div>
         <div class="nav-tab" onclick="showTab('milestones')">&#128203; Milestones</div>
       </div>
 
@@ -750,23 +714,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
             <div class="gantt-inner" id="gantt-inner"></div>
           </div>
         </div>
-
-      <!-- DEPENDENCIES TAB -->
-      <div class="tab-content" id="tab-deps" style="display:none">
-        <div class="dep-overview">
-          <div class="dep-header">
-            <h2>&#128209; Dependencies</h2>
-            <div class="dep-legend">
-              <div class="dep-legend-item"><div class="dep-legend-dot" style="background:#ef4444"></div>Blocked</div>
-              <div class="dep-legend-item"><div class="dep-legend-dot" style="background:#f59e0b"></div>At Risk</div>
-              <div class="dep-legend-item"><div class="dep-legend-dot" style="background:#10b981"></div>Ready</div>
-              <div class="dep-legend-item"><div class="dep-legend-dot" style="background:#64748b"></div>No Assets</div>
-            </div>
-          </div>
-          <div class="dep-summary" id="dep-summary"></div>
-          <div class="dep-grid" id="dep-grid"></div>
-        </div>
-      </div>
 
       <!-- MILESTONES TAB -->
       <div class="tab-content" id="tab-milestones" style="display:none">
@@ -1513,7 +1460,6 @@ async function loadTasks(){
   if(name==="schedule")renderSchedule();
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
-  else if(name==="deps")renderDependencies();
   else if(name==="milestones")renderMilestones();
   renderSidebar();
 }
@@ -2018,54 +1964,6 @@ window.ganttPrev=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttSt
 window.ganttNext=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,1);renderGantt();};
 window.ganttToday=function(){ganttStart=new Date(today.getFullYear(),today.getMonth(),1);renderGantt();};
 
-// DEPENDENCIES TAB
-function renderDependencies(){
-  var projShots=shots.filter(function(s){return activeProject&&s.project_id===activeProject.id;});
-  var sumEl=el("dep-summary");var gridEl=el("dep-grid");
-  sumEl.innerHTML="";gridEl.innerHTML="";
-  if(!projShots.length){var d=ce("div");d.style.cssText="text-align:center;padding:40px;color:var(--text3);grid-column:1/-1";d.textContent="No shots in this project yet.";gridEl.appendChild(d);return;}
-  var counts={blocked:0,atrisk:0,ready:0,noassets:0};
-  var cardData=projShots.map(function(sh){var status=getShotAssetStatus(sh);counts[status.state]++;return{sh:sh,status:status};});
-  [{key:"blocked",label:"Blocked",color:"#ef4444"},{key:"atrisk",label:"At Risk",color:"#f59e0b"},{key:"ready",label:"Asset Ready",color:"#10b981"},{key:"noassets",label:"No Assets",color:"#64748b"}].forEach(function(s){
-    var card=ce("div");card.className="dep-sum-card";var val=ce("div");val.className="dep-sum-val";val.style.color=s.color;val.textContent=counts[s.key];var lbl=ce("div");lbl.className="dep-sum-lbl";lbl.textContent=s.label;card.appendChild(val);card.appendChild(lbl);sumEl.appendChild(card);
-  });
-  var order={blocked:0,atrisk:1,ready:2,noassets:3};
-  cardData.sort(function(a,b){return order[a.status.state]-order[b.status.state];});
-  cardData.forEach(function(item){
-    var sh=item.sh,status=item.status;
-    var seq=sequences.find(function(x){return x.id===sh.sequence_id;});
-    var dotColor={blocked:"#ef4444",atrisk:"#f59e0b",ready:"#10b981",noassets:"#64748b"}[status.state];
-    var card=ce("div");card.className="dep-card";card.onclick=function(){openShot(sh.id);};
-    var hdr=ce("div");hdr.className="dep-card-header";
-    var dot=ce("div");dot.className="dep-card-status";dot.style.background=dotColor;
-    var code=ce("span");code.className="dep-card-code";code.textContent=sh.code;
-    var seqLbl=ce("span");seqLbl.className="dep-card-seq";seqLbl.textContent=seq?seq.code:"";
-    var shotStat=ce("span");shotStat.style.cssText="margin-left:auto;font-size:.7rem;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--bg3);color:var(--text3)";shotStat.textContent=sh.status||"pending";
-    hdr.appendChild(dot);hdr.appendChild(code);hdr.appendChild(seqLbl);hdr.appendChild(shotStat);
-    var body=ce("div");body.className="dep-card-body";
-    if(status.state==="noassets"){var na=ce("div");na.style.cssText="font-size:.78rem;color:var(--text4);padding:4px 0";na.textContent="No assets linked yet";body.appendChild(na);}
-    else{
-      status.blocked.concat(status.atrisk).concat(status.ready).forEach(function(a){
-        var arow=ce("div");arow.className="dep-asset-row";
-        var adot=ce("div");adot.className="dep-asset-dot";adot.style.background=a.done===a.total?"#10b981":a.anyLate?"#ef4444":"#f59e0b";
-        var aname=ce("span");aname.className="dep-asset-name";aname.textContent=a.name;
-        var apct=ce("span");apct.className="dep-asset-pct";apct.textContent=a.pct+"%";
-        var warn=ce("span");warn.className="dep-asset-warn";
-        if(a.anyLate){warn.className+=" dep-warn-late";warn.textContent=" Late";}else if(a.anySoon){warn.className+=" dep-warn-soon";warn.textContent=" Due soon";}
-        if(a.missing){adot.style.background="#ef4444";warn.className="dep-asset-warn dep-warn-late";warn.textContent=" Not found";}
-        arow.appendChild(adot);arow.appendChild(aname);arow.appendChild(apct);arow.appendChild(warn);body.appendChild(arow);
-      });
-    }
-    var footer=ce("div");footer.className="dep-card-footer";
-    var badgeCls={blocked:"dep-blocked",atrisk:"dep-atrisk",ready:"dep-ready",noassets:"dep-noassets"};
-    var badgeLbl={blocked:"BLOCKED",atrisk:"AT RISK",ready:"READY",noassets:"NO ASSETS"};
-    var badge=ce("span");badge.className="dep-block-badge "+(badgeCls[status.state]||"dep-noassets");badge.textContent=badgeLbl[status.state]||"";
-    var pctLbl=ce("span");pctLbl.style.cssText="font-size:.72rem;color:var(--text3);font-weight:600";if(status.state!=="noassets")pctLbl.textContent=status.pct+"% assets ready";
-    footer.appendChild(badge);footer.appendChild(pctLbl);
-    card.appendChild(hdr);card.appendChild(body);card.appendChild(footer);gridEl.appendChild(card);
-  });
-}
-
 // SHOT PROGRESSION TAB
 function renderShotProgression(){
   var projShots=shots.filter(function(s){return activeProject&&s.project_id===activeProject.id;});
@@ -2157,17 +2055,16 @@ window.renderMilestones=function(){
 
 // TABS
 window.showTab=function(name){
-  ["tab-schedule","tab-calendar","tab-gantt","tab-deps","tab-milestones"].forEach(function(id){var e=el(id);if(e){e.style.display="none";e.classList.remove("active");}});
+  ["tab-schedule","tab-calendar","tab-gantt","tab-milestones"].forEach(function(id){var e=el(id);if(e){e.style.display="none";e.classList.remove("active");}});
   document.querySelectorAll(".nav-tab").forEach(function(e){e.classList.remove("active");});
   var tab=el("tab-"+name);if(tab){tab.style.display="block";tab.classList.add("active");}
-  var idx={schedule:0,calendar:1,gantt:2,deps:3,milestones:4}[name];
+  var idx={schedule:0,calendar:1,gantt:2,milestones:3}[name];
   var navTabs=document.querySelectorAll(".nav-tab");if(navTabs[idx])navTabs[idx].classList.add("active");
   // If tasks not yet loaded, load them first then render
   if(!tasks.length&&activeProject){loadTasks();return;}
   if(name==="schedule")renderSchedule();
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
-  else if(name==="deps")renderDependencies();
   else if(name==="milestones")renderMilestones();
 };
 
