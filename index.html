@@ -936,7 +936,7 @@ function renderSidebar(){
     var isActive=activeProject&&activeProject.id===p.id;
     var isExpanded=!!projExpanded[p.id];
     var projSeqs=sequences.filter(function(s){return s.project_id===p.id;});
-    html+='<div class="proj-row'+(isActive?' active':'')+'">';
+    html+='<div class="proj-row'+(isActive?' active':'')+'>';
     html+='<div class="proj-row-main" onclick="selectProject(\''+p.id+'\')"><span class="proj-dot" style="background:'+p.color+'"></span><span class="proj-row-name">'+p.name+'</span></div>';
     html+='<span class="proj-chevron'+(isExpanded?' open':'')+'" onclick="toggleProjExpand(\''+p.id+'\',event)">&#9658;</span></div>';
     if(isExpanded){
@@ -946,14 +946,14 @@ function renderSidebar(){
         var isSeqOpen=!seqOpen[p.id]||seqOpen[p.id][seq.id]!==false;
         var seqShots=shots.filter(function(s){return s.sequence_id===seq.id;});
         html+='<div class="seq-row" onclick="toggleSeq(\''+p.id+'\',\''+seq.id+'\')">';
-        html+='<span class="seq-arrow'+(isSeqOpen?" open":"")+'">&#9658;</span>';
+        html+='<span class="seq-arrow+(isSeqOpen?' open':'')+'">&#9658;</span>';
         html+='<span class="seq-code">'+seq.code+'</span>';
         if(seq.name)html+='<span class="seq-name-lbl">'+seq.name+'</span>';
         html+='<span class="seq-btns"><button class="tree-btn" onclick="openSeqModal(\''+seq.id+'\',\''+p.id+'\');event.stopPropagation()">&#9998;</button><button class="tree-btn" onclick="deleteSeq(\''+seq.id+'\');event.stopPropagation()">&#215;</button></span></div>';
         if(isSeqOpen){
           seqShots.forEach(function(sh){
             var isActiveShot=activeShot&&activeShot.id===sh.id;
-            html+='<div class="shot-row'+(isActiveShot?" active":'")+'" onclick="openShot(\''+sh.id+'\')"><span class="shot-sdot" style="background:'+shotStatusColor(sh.status)+'"></span><span class="shot-code-lbl">'+sh.code+'</span>'+(sh.description?'<span class="shot-desc-lbl">'+sh.description+'</span>':'')+'<button class="shot-del-btn" onclick="deleteShot(\''+sh.id+'\');event.stopPropagation()">&#215;</button></div>';
+            html+='<div class="shot-row+(isActiveShot?' active':'')+'" onclick="openShot(\''+sh.id+'\')"><span class="shot-sdot" style="background:'+shotStatusColor(sh.status)+'"></span><span class="shot-code-lbl">'+sh.code+'</span>'+(sh.description?'<span class="shot-desc-lbl">'+sh.description+'</span>':'')+'<button class="shot-del-btn" onclick="deleteShot(\''+sh.id+'\');event.stopPropagation()">&#215;</button></div>';
           });
           html+='<button class="add-shot-row" onclick="openShotModal(\''+seq.id+'\');event.stopPropagation()">+ Add Shot</button>';
         }
@@ -1169,7 +1169,7 @@ window.closeAssetLinkModal=function(){document.getElementById("asset-link-modal"
 function renderAssetSearchList(q,groups,sel){
   var keys=Object.keys(groups).filter(function(k){return !q||groups[k].name.toLowerCase().indexOf(q.toLowerCase())>=0;});
   if(!keys.length){document.getElementById("asset-search-list").innerHTML='<div style="padding:14px;text-align:center;color:var(--text4);font-size:.8rem">No assets found. Add asset tasks in the Schedule tab first.</div>';return;}
-  var html=keys.map(function(k){var g=groups[k];var isSel=assetLinkSelection.indexOf(k)>=0;return'<div class="asset-search-item'+(isSel?" selected":'")+'" onclick="toggleAssetLink(\''+k.replace(/'/g,"\\'")+'\')" data-key="'+k.replace(/"/g,"&quot;")+'"><div><div class="asi-name">'+g.name+'</div><div class="asi-type">'+assetTypeLabel(g.type)+'</div></div>'+(isSel?'<span class="asi-check">&#10003;</span>':'')+'</div>';}).join("");
+  var html=keys.map(function(k){var g=groups[k];var isSel=assetLinkSelection.indexOf(k)>=0;return'<div class="asset-search-item+(isSel?' selected':'')+'" onclick="toggleAssetLink(\''+k.replace(/'/g,"\\'")+'\')" data-key="'+k.replace(/"/g,"&quot;")+'"><div><div class="asi-name">'+g.name+'</div><div class="asi-type">'+assetTypeLabel(g.type)+'</div></div>'+(isSel?'<span class="asi-check">&#10003;</span>':'')+'</div>';}).join("");
   document.getElementById("asset-search-list").innerHTML=html;
 }
 window.filterAssetSearch=function(q){renderAssetSearchList(q,window._assetGroups||{},assetLinkSelection);};
