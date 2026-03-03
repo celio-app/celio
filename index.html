@@ -953,7 +953,12 @@ function renderSidebar(){
         if(isSeqOpen){
           seqShots.forEach(function(sh){
             var isActiveShot=activeShot&&activeShot.id===sh.id;
-            html+='<div class="shot-row+(isActiveShot?' active':'')+'" onclick="openShot(\''+sh.id+'\')"><span class="shot-sdot" style="background:'+shotStatusColor(sh.status)+'"></span><span class="shot-code-lbl">'+sh.code+'</span>'+(sh.description?'<span class="shot-desc-lbl">'+sh.description+'</span>':'')+'<button class="shot-del-btn" onclick="deleteShot(\''+sh.id+'\');event.stopPropagation()">&#215;</button></div>';
+            var shotCls=isActiveShot?' active':'';
+            html+='<div class="shot-row'+shotCls+'" onclick="openShot(\''+sh.id+'\')">';
+            html+='<span class="shot-sdot" style="background:'+shotStatusColor(sh.status)+'">';
+            html+='</span><span class="shot-code-lbl">'+sh.code+'</span>';
+            if(sh.description)html+='<span class="shot-desc-lbl">'+sh.description+'</span>';
+            html+='<button class="shot-del-btn" onclick="deleteShot(\''+sh.id+'\');event.stopPropagation()">&#215;</button></div>';
           });
           html+='<button class="add-shot-row" onclick="openShotModal(\''+seq.id+'\');event.stopPropagation()">+ Add Shot</button>';
         }
