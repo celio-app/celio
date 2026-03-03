@@ -492,6 +492,35 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 [data-theme="light"] .sp-pill-review{background:#fef3c7;color:#92400e;}
 [data-theme="light"] .sp-pill-ready{background:#e2e8f0;color:#475569;}
 @media(max-width:580px){.dep-summary{grid-template-columns:repeat(2,1fr);}.dep-overview{padding:12px 14px 20px;}}
+
+/* SHOT SECTION IN SCHEDULE */
+.shot-section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:2px;}
+.shot-section-hdr{padding:10px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
+.shot-section-hdr:hover{background:var(--bg3);}
+.shot-seq-label{font-size:.7rem;font-weight:700;color:var(--text4);text-transform:uppercase;letter-spacing:.5px;}
+.shot-code-badge{font-size:.85rem;font-weight:800;color:var(--purple);}
+.shot-desc-badge{font-size:.75rem;color:var(--text3);flex:1;}
+.shot-prog-bar{width:80px;height:5px;background:var(--border2);border-radius:99px;overflow:hidden;flex-shrink:0;}
+.shot-prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa);}
+.shot-prog-pct{font-size:.7rem;font-weight:700;color:var(--text3);width:32px;text-align:right;flex-shrink:0;}
+.shot-arrow{font-size:.6rem;color:var(--text4);transition:transform .2s;flex-shrink:0;}
+.shot-arrow.open{transform:rotate(90deg);}
+.shot-tasks-table{width:100%;border-collapse:collapse;}
+.shot-tasks-table th{padding:7px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700;}
+.shot-tasks-table td{padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2);}
+.shot-status-pill{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:5px;}
+.ssp-ready{background:var(--bg3);color:var(--text4);}
+.ssp-inprogress{background:#1e3a5f;color:#60a5fa;}
+.ssp-review{background:#3b2f00;color:#fbbf24;}
+.ssp-approved{background:#064e3b;color:#34d399;}
+.ssp-final{background:#2e1065;color:#a78bfa;}
+[data-theme="light"] .ssp-inprogress{background:#dbeafe;color:#1d4ed8;}
+[data-theme="light"] .ssp-review{background:#fef3c7;color:#92400e;}
+[data-theme="light"] .ssp-approved{background:#d1fae5;color:#065f46;}
+[data-theme="light"] .ssp-final{background:#ede9fe;color:#5b21b6;}
+.seq-section-hdr{padding:8px 4px;font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between;}
+.add-shot-task-inline{font-size:.72rem;padding:4px 10px;border-radius:6px;background:var(--bg3);color:var(--text3);border:1px solid var(--border);cursor:pointer;}
+.add-shot-task-inline:hover{background:var(--bg4);color:var(--text);}
 </style>
 </head>
 </head>
@@ -569,7 +598,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         <div class="nav-tab" onclick="showTab('calendar')">Calendar</div>
         <div class="nav-tab" onclick="showTab('gantt')">Gantt Chart</div>
         <div class="nav-tab" onclick="showTab('deps')">&#128209; Dependencies</div>
-        <div class="nav-tab" onclick="showTab('shotprog')">&#127916; Shot Progression</div>
         <div class="nav-tab" onclick="showTab('milestones')">&#128203; Milestones</div>
       </div>
 
@@ -602,6 +630,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
             <div style="display:flex;flex-direction:column;gap:14px">
               <!-- ASSET GROUPS -->
               <div id="asset-sections"></div>
+              <div id="shot-schedule-section"></div>
               <!-- GENERAL TASKS -->
               
             </div>
@@ -666,19 +695,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
           </div>
           <div class="dep-summary" id="dep-summary"></div>
           <div class="dep-grid" id="dep-grid"></div>
-        </div>
-      </div>
-
-      <!-- SHOT PROGRESSION TAB -->
-      <div class="tab-content" id="tab-shotprog" style="display:none">
-        <div class="dep-overview">
-          <div class="dep-header"><h2>&#127916; Shot Progression</h2></div>
-          <div style="margin-bottom:18px">
-            <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Department Rollup</div>
-            <div id="shotprog-rollup" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px"></div>
-          </div>
-          <div style="font-size:.78rem;font-weight:700;color:var(--text2);margin-bottom:10px;text-transform:uppercase;letter-spacing:.5px">Per-Shot Breakdown</div>
-          <div id="shotprog-grid" style="display:flex;flex-direction:column;gap:8px"></div>
         </div>
       </div>
 
@@ -1327,7 +1343,11 @@ window.saveShotTask=async function(){
   var payload={shot_id:activeShot.id,project_id:activeShot.project_id,user_id:currentUser.id,task_type:type,department:DEPT_MAP[type]||null,assignee:el("stf-assignee").value.trim()||null,start_date:el("stf-start").value||null,due_date:el("stf-due").value||null,status:el("stf-status").value,notes:el("stf-notes").value.trim()||null,order_index:shotTasks.length};
   var r=await sb.from("shot_tasks").insert(payload).select();
   if(r.error){alert("Error: "+r.error.message);return;}
-  shotTasks=shotTasks.concat(r.data);closeShotTaskModal();renderShotTasks();showToast("Task added!");
+  shotTasks=shotTasks.concat(r.data);closeShotTaskModal();renderShotTasks();
+  // Also refresh schedule section if visible
+  var active=document.querySelector(".tab-content.active");
+  if(active&&active.id==="tab-schedule")renderShotSection();
+  showToast("Task added!");
 };
 
 // SHOT ASSETS
@@ -1417,7 +1437,6 @@ async function loadTasks(){
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
   else if(name==="deps")renderDependencies();
-  else if(name==="shotprog")renderShotProgression();
   else if(name==="milestones")renderMilestones();
   renderSidebar();
 }
@@ -1429,7 +1448,109 @@ window.renderSchedule=function(){
   var assetTasks=tasks.filter(function(t){return t.category==="asset";});
   var assetSec=el("asset-sections");
   assetSec.style.display="";
-  renderAssetSections(assetTasks);renderHandoffs();renderAssetDeliverables();
+  renderAssetSections(assetTasks);
+  renderShotSection();
+  renderHandoffs();renderAssetDeliverables();
+};
+
+function renderShotSection(){
+  var container=el("shot-schedule-section");if(!container)return;
+  container.innerHTML="";
+  if(!activeProject)return;
+  var projShots=shots.filter(function(s){return s.project_id===activeProject.id;});
+  if(!projShots.length){
+    var hdr=ce("div");hdr.className="asset-section";
+    var h=ce("div");h.className="asset-section-hdr";
+    var h2=ce("h2");h2.innerHTML="&#127916; Shot Pipeline";
+    h.appendChild(h2);hdr.appendChild(h);
+    var empty=ce("div");empty.style.cssText="padding:24px;text-align:center;color:var(--text4);font-size:.82rem";
+    empty.textContent="No shots yet. Add sequences and shots in the sidebar.";
+    hdr.appendChild(empty);container.appendChild(hdr);return;
+  }
+  // Group shots by sequence
+  var bySeq={};
+  projShots.forEach(function(sh){
+    var sid=sh.sequence_id||"_none";if(!bySeq[sid])bySeq[sid]=[];bySeq[sid].push(sh);
+  });
+  var wrap=ce("div");wrap.className="asset-section";
+  var secHdr=ce("div");secHdr.className="asset-section-hdr";
+  var h2=ce("h2");h2.innerHTML="&#127916; Shot Pipeline";
+  var totShots=projShots.length;
+  var cnt=ce("span");cnt.style.cssText="font-size:.75rem;font-weight:400;color:var(--text3);margin-left:8px";
+  cnt.textContent=totShots+" shots";h2.appendChild(cnt);
+  secHdr.appendChild(h2);wrap.appendChild(secHdr);
+  Object.keys(bySeq).forEach(function(sid){
+    var seq=sequences.find(function(x){return x.id===sid;});
+    var seqShots=bySeq[sid];
+    // Sequence label
+    var seqDiv=ce("div");seqDiv.style.cssText="padding:8px 16px 4px;font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-top:1px solid var(--border2)";
+    seqDiv.textContent=seq?(seq.code+(seq.name?" — "+seq.name:"")):"Unassigned";
+    wrap.appendChild(seqDiv);
+    seqShots.forEach(function(sh){
+      var shTasks=shotTasks.filter(function(t){return t.shot_id===sh.id;});
+      var total=shTasks.length;
+      var done=shTasks.filter(function(t){return t.status==="approved"||t.status==="final";}).length;
+      var pct=total?Math.round(done/total*100):0;
+      var depStatus=getShotAssetStatus(sh);
+      var dotColor={blocked:"#ef4444",atrisk:"#f59e0b",ready:"#10b981",noassets:shotStatusColor(sh.status)}[depStatus.state];
+      var shotRow=ce("div");shotRow.className="shot-section";
+      // Header (clickable to expand/collapse)
+      var hdrDiv=ce("div");hdrDiv.className="shot-section-hdr";
+      var arrow=ce("span");arrow.className="shot-arrow open";arrow.innerHTML="&#9658;";
+      var statusDot=ce("span");statusDot.style.cssText="width:8px;height:8px;border-radius:50%;background:"+dotColor+";flex-shrink:0;display:inline-block";
+      var codeSpan=ce("span");codeSpan.className="shot-code-badge";codeSpan.textContent=sh.code;
+      var descSpan=ce("span");descSpan.className="shot-desc-badge";descSpan.textContent=sh.description||"";
+      var progBar=ce("div");progBar.className="shot-prog-bar";
+      var progFill=ce("div");progFill.className="shot-prog-fill";progFill.style.width=pct+"%";progBar.appendChild(progFill);
+      var progPct=ce("span");progPct.className="shot-prog-pct";progPct.textContent=pct+"%";
+      var openBtn=ce("button");openBtn.className="btn btn-ghost btn-sm";openBtn.style.cssText="font-size:.68rem;padding:2px 8px;flex-shrink:0";
+      openBtn.textContent="Open";openBtn.onclick=function(e){e.stopPropagation();openShot(sh.id);};
+      hdrDiv.appendChild(arrow);hdrDiv.appendChild(statusDot);hdrDiv.appendChild(codeSpan);hdrDiv.appendChild(descSpan);hdrDiv.appendChild(progBar);hdrDiv.appendChild(progPct);hdrDiv.appendChild(openBtn);
+      // Body (collapsible)
+      var bodyDiv=ce("div");
+      hdrDiv.onclick=function(){
+        var hidden=bodyDiv.style.display==="none";bodyDiv.style.display=hidden?"":"none";arrow.classList.toggle("open",hidden);
+      };
+      // Tasks table
+      if(!shTasks.length){
+        var noTask=ce("div");noTask.style.cssText="padding:12px 16px;font-size:.78rem;color:var(--text4)";
+        noTask.textContent="No pipeline tasks yet.";bodyDiv.appendChild(noTask);
+      } else {
+        var tbl=ce("table");tbl.className="shot-tasks-table";
+        var thead=ce("thead");thead.innerHTML="<tr><th>Task</th><th>Assignee</th><th>Due</th><th>Status</th><th></th></tr>";
+        var tbody=ce("tbody");
+        shTasks.forEach(function(t){
+          var tr=ce("tr");
+          var typeTd=ce("td");var tb=ce("span");tb.className="pipeline-stage-badge";tb.textContent=t.task_type;typeTd.appendChild(tb);
+          var assignTd=ce("td");if(t.assignee){var chip=ce("span");chip.className="chip";chip.style.fontSize=".7rem";chip.textContent=t.assignee;assignTd.appendChild(chip);}else{assignTd.style.color="var(--text4)";assignTd.textContent="—";}
+          var dueTd=ce("td");dueTd.style.fontSize=".75rem";
+          if(t.due_date){var d=daysUntil(t.due_date);var dspan=ce("span");dspan.className=t.status==="approved"||t.status==="final"?"d-ok":d<0?"d-late":d<=2?"d-soon":"d-ok";dspan.textContent=fmtDate(t.due_date);dueTd.appendChild(dspan);}else{dueTd.textContent="—";dueTd.style.color="var(--text4)";}
+          var stCls={ready:"ssp-ready",inprogress:"ssp-inprogress",review:"ssp-review",approved:"ssp-approved",final:"ssp-final"};
+          var stLbl={ready:"Ready",inprogress:"In Progress",review:"In Review",approved:"Approved",final:"Final"};
+          var statTd=ce("td");var pill=ce("span");pill.className="shot-status-pill "+(stCls[t.status]||"ssp-ready");pill.textContent=stLbl[t.status]||t.status;statTd.appendChild(pill);
+          var actTd=ce("td");
+          var delb=ce("button");delb.className="btn btn-sm btn-del";delb.style.fontSize=".68rem";delb.textContent="Remove";
+          delb.onclick=(function(tid,shotId){return function(e){e.stopPropagation();deleteShotTaskInline(tid,shotId);};})(t.id,sh.id);
+          actTd.appendChild(delb);
+          tr.appendChild(typeTd);tr.appendChild(assignTd);tr.appendChild(dueTd);tr.appendChild(statTd);tr.appendChild(actTd);tbody.appendChild(tr);
+        });
+        tbl.appendChild(thead);tbl.appendChild(tbody);bodyDiv.appendChild(tbl);
+      }
+      // Add task button
+      var addRow=ce("div");addRow.style.cssText="padding:8px 14px;border-top:1px solid var(--border2)";
+      var addBtn=ce("button");addBtn.className="add-shot-task-inline";addBtn.textContent="+ Add Pipeline Task";
+      addBtn.onclick=(function(shotObj){return function(e){e.stopPropagation();activeShot=shotObj;openShotTaskModal();};})(sh);
+      addRow.appendChild(addBtn);bodyDiv.appendChild(addRow);
+      shotRow.appendChild(hdrDiv);shotRow.appendChild(bodyDiv);wrap.appendChild(shotRow);
+    });
+  });
+  container.appendChild(wrap);
+}
+
+window.deleteShotTaskInline=async function(id,shotId){
+  await sb.from("shot_tasks").delete().eq("id",id);
+  shotTasks=shotTasks.filter(function(t){return t.id!==id;});
+  renderShotSection();showToast("Removed.");
 };
 
 function renderAssetSections(assetTasks){
@@ -1841,16 +1962,15 @@ window.renderMilestones=function(){
 
 // TABS
 window.showTab=function(name){
-  ["tab-schedule","tab-calendar","tab-gantt","tab-deps","tab-shotprog","tab-milestones"].forEach(function(id){var e=el(id);if(e){e.style.display="none";e.classList.remove("active");}});
+  ["tab-schedule","tab-calendar","tab-gantt","tab-deps","tab-milestones"].forEach(function(id){var e=el(id);if(e){e.style.display="none";e.classList.remove("active");}});
   document.querySelectorAll(".nav-tab").forEach(function(e){e.classList.remove("active");});
   var tab=el("tab-"+name);if(tab){tab.style.display="block";tab.classList.add("active");}
-  var idx={schedule:0,calendar:1,gantt:2,deps:3,shotprog:4,milestones:5}[name];
+  var idx={schedule:0,calendar:1,gantt:2,deps:3,milestones:4}[name];
   var navTabs=document.querySelectorAll(".nav-tab");if(navTabs[idx])navTabs[idx].classList.add("active");
   if(name==="schedule")renderSchedule();
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
   else if(name==="deps")renderDependencies();
-  else if(name==="shotprog")renderShotProgression();
   else if(name==="milestones")renderMilestones();
 };
 
