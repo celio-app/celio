@@ -1,5 +1,58 @@
 <!DOC
 
+
+    <!-- ADMIN ENTRY MODAL -->
+    <div class="modal-overlay" id="admin-modal">
+      <div class="modal-box" style="max-width:460px">
+        <div class="modal-header">
+          <h2 id="admin-modal-title">New Entry</h2>
+          <button class="modal-close" onclick="closeAdminModal()">&#215;</button>
+        </div>
+        <div class="modal-body" style="display:flex;flex-direction:column;gap:12px">
+          <div class="form-row">
+            <label class="form-label">Title</label>
+            <input id="af-title" class="form-input" placeholder="Title or description">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-row">
+              <label class="form-label">Assignee</label>
+              <input id="af-assignee" class="form-input" placeholder="Name">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Date</label>
+              <input id="af-date" class="form-input" type="date">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-row">
+              <label class="form-label">Priority</label>
+              <select id="af-priority" class="form-input">
+                <option value="low">Low</option>
+                <option value="med" selected>Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Status</label>
+              <select id="af-status" class="form-input">
+                <option value="todo">To Do</option>
+                <option value="inprogress">In Progress</option>
+                <option value="done">Done</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Notes</label>
+            <textarea id="af-notes" class="form-input" rows="2" style="resize:vertical" placeholder="Optional notes..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-ghost" onclick="closeAdminModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveAdminEntry()">Save</button>
+        </div>
+      </div>
+    </div>
+
     <!-- NEW ASSET MODAL -->
     <div class="modal-overlay" id="new-asset-modal">
       <div class="modal-box" style="max-width:480px">
@@ -556,6 +609,34 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .naf-stage-pill.active{background:var(--purple);color:#fff;border-color:var(--purple);}
 .asset-type-section{margin-bottom:2px;}
 .asset-type-hdr{padding:8px 4px;font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;display:flex;align-items:center;justify-content:space-between;}
+
+/* ADMIN TAB */
+.admin-wrap{padding:16px 20px 32px;display:flex;flex-direction:column;gap:12px;}
+.admin-section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.admin-sec-hdr{padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border2);}
+.admin-sec-icon{font-size:1.1rem;}
+.admin-sec-title{font-size:.88rem;font-weight:800;flex:1;}
+.admin-list{display:flex;flex-direction:column;}
+.admin-entry{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--border2);transition:background .12s;}
+.admin-entry:first-child{border-top:none;}
+.admin-entry:hover{background:var(--bg3);}
+.admin-entry-main{flex:1;min-width:0;}
+.admin-entry-title{font-size:.82rem;font-weight:600;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.admin-entry-meta{font-size:.7rem;color:var(--text4);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;}
+.admin-entry-notes{font-size:.72rem;color:var(--text3);margin-top:3px;font-style:italic;}
+.admin-pri{font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:999px;flex-shrink:0;}
+.admin-pri-high{background:#450a0a;color:#f87171;}
+.admin-pri-med{background:#3b2f00;color:#fbbf24;}
+.admin-pri-low{background:var(--bg3);color:var(--text4);}
+[data-theme="light"] .admin-pri-high{background:#fee2e2;color:#b91c1c;}
+[data-theme="light"] .admin-pri-med{background:#fef3c7;color:#92400e;}
+.admin-stat{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:5px;flex-shrink:0;}
+.admin-stat-todo{background:var(--bg3);color:var(--text4);}
+.admin-stat-inprogress{background:#1e3a5f;color:#60a5fa;}
+.admin-stat-done{background:#064e3b;color:#34d399;}
+[data-theme="light"] .admin-stat-inprogress{background:#dbeafe;color:#1d4ed8;}
+[data-theme="light"] .admin-stat-done{background:#d1fae5;color:#065f46;}
+.admin-empty{padding:20px 16px;font-size:.8rem;color:var(--text4);text-align:center;}
 </style>
 </head>
 </head>
@@ -632,7 +713,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         <div class="nav-tab active" onclick="showTab('schedule')">Schedule</div>
         <div class="nav-tab" onclick="showTab('calendar')">Calendar</div>
         <div class="nav-tab" onclick="showTab('gantt')">Gantt Chart</div>
-        <div class="nav-tab" onclick="showTab('milestones')">&#128203; Milestones</div>
+        <div class="nav-tab" onclick="showTab('milestones')">&#128203; Admin</div>
       </div>
 
       <div id="no-proj" class="no-project" style="display:flex">
@@ -717,274 +798,51 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 
       <!-- MILESTONES TAB -->
       <div class="tab-content" id="tab-milestones" style="display:none">
-        <div style="padding:16px 20px 24px;display:flex;flex-direction:column;gap:14px">
-          <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-            <div style="display:flex;align-items:center;gap:10px">
-              <h2 style="font-size:1rem;font-weight:800">&#128203; Milestones &amp; Admin</h2>
-              <select id="fstatus" class="btn btn-ghost" style="padding:4px 9px;font-size:.75rem" onchange="renderMilestones()">
-                <option value="">All Status</option>
-                <option value="todo">To Do</option><option value="inprogress">In Progress</option>
-                <option value="review">In Review</option><option value="done">Done</option>
-              </select>
+        <div class="admin-wrap">
+
+          <!-- CLIENT FEEDBACK -->
+          <div class="admin-section" id="admin-sec-client">
+            <div class="admin-sec-hdr">
+              <span class="admin-sec-icon">&#128172;</span>
+              <span class="admin-sec-title">Client Feedback</span>
+              <button class="btn btn-ghost btn-sm" onclick="openAdminModal('client')">+ Add</button>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="openModal(null)">+ Add Milestone</button>
+            <div class="admin-list" id="admin-list-client"></div>
           </div>
-          <div style="overflow-x:auto;border:1px solid var(--border);border-radius:12px">
-            <table style="width:100%;border-collapse:collapse">
-              <thead><tr>
-                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Task</th>
-                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Lead</th>
-                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Due</th>
-                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Priority</th>
-                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Status</th>
-                <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Actions</th>
-              </tr></thead>
-              <tbody id="task-tbody"></tbody>
-            </table>
+
+          <!-- MARKETING -->
+          <div class="admin-section" id="admin-sec-marketing">
+            <div class="admin-sec-hdr">
+              <span class="admin-sec-icon">&#128227;</span>
+              <span class="admin-sec-title">Marketing</span>
+              <button class="btn btn-ghost btn-sm" onclick="openAdminModal('marketing')">+ Add</button>
+            </div>
+            <div class="admin-list" id="admin-list-marketing"></div>
           </div>
-          <div class="prog-wrap">
-            <div class="prog-lbl"><span>Overall Progress</span><span id="prog-pct">0%</span></div>
-            <div class="pbar"><div class="pfill" id="prog-fill" style="width:0%"></div></div>
+
+          <!-- MEETINGS -->
+          <div class="admin-section" id="admin-sec-meetings">
+            <div class="admin-sec-hdr">
+              <span class="admin-sec-icon">&#128197;</span>
+              <span class="admin-sec-title">Meetings</span>
+              <button class="btn btn-ghost btn-sm" onclick="openAdminModal('meetings')">+ Add</button>
+            </div>
+            <div class="admin-list" id="admin-list-meetings"></div>
           </div>
+
+          <!-- PRODUCTION TEAM -->
+          <div class="admin-section" id="admin-sec-team">
+            <div class="admin-sec-hdr">
+              <span class="admin-sec-icon">&#128101;</span>
+              <span class="admin-sec-title">Production Team</span>
+              <button class="btn btn-ghost btn-sm" onclick="openAdminModal('team')">+ Add</button>
+            </div>
+            <div class="admin-list" id="admin-list-team"></div>
+          </div>
+
         </div>
       </div>
-
-      </div>
-
-      <!-- SHOT PAGE -->
-      <div class="shot-page" id="shot-page">
-        <div class="shot-hero">
-          <div class="shot-hero-top">
-            <div style="flex:1;min-width:0">
-              <div class="shot-code-big" id="sp-code"></div>
-              <div class="shot-seq-label" id="sp-seq-label"></div>
-              <input class="shot-desc-input" id="sp-desc" placeholder="Add a shot description..." onblur="saveShotField('description',this.value)">
-            </div>
-            <div style="display:flex;gap:8px;align-items:flex-start;flex-wrap:wrap;flex-shrink:0">
-              <select class="shot-status-sel" id="sp-status" onchange="saveShotField('status',this.value)">
-                <option value="pending">Pending</option>
-                <option value="inprogress">In Progress</option>
-                <option value="review">In Review</option>
-                <option value="approved">Approved</option>
-                <option value="final">Final</option>
-              </select>
-              <button class="btn btn-del btn-sm" onclick="deleteShotConfirm()">Delete Shot</button>
-            </div>
-          </div>
-          <div class="shot-meta-row">
-            <span class="chip" id="sp-proj-chip"></span>
-            <span class="chip" id="sp-seq-chip"></span>
-          </div>
-        </div>
-        <div id="shot-block-banner"></div>
-        <div class="shot-body">
-          <!-- Storyboard -->
-          <div class="shot-section">
-            <div class="shot-section-hdr">
-              <h3>&#127916; Storyboard Notes</h3>
-              <span style="font-size:.71rem;color:var(--text4)">Auto-saves on blur</span>
-            </div>
-            <div class="shot-section-body">
-              <textarea class="storyboard-textarea" id="sp-storyboard" placeholder="Camera angle, action, dialogue cues, FX notes, composition..." onblur="saveShotField('storyboard_notes',this.value)"></textarea>
-            </div>
-          </div>
-          <!-- Shot Details -->
-          <div class="shot-section">
-            <div class="shot-section-hdr"><h3>&#128196; Shot Details</h3></div>
-            <div class="shot-section-body">
-              <div class="shot-info-grid">
-                <div class="sif"><label>Shot Code</label><input id="sp-code-edit" placeholder="e.g. SH010" onblur="saveShotField('code',this.value)"></div>
-                <div class="sif"><label>Sequence</label><input id="sp-seq-edit" disabled style="opacity:.5"></div>
-                <div class="sif"><label>Frame Count</label><input id="sp-frames" type="number" placeholder="e.g. 72" onblur="saveShotField('frame_count',this.value)"></div>
-                <div class="sif"><label>Camera</label><input id="sp-camera" placeholder="e.g. CAM_A" onblur="saveShotField('camera',this.value)"></div>
-              </div>
-            </div>
-          </div>
-          <!-- Shot Pipeline Tasks -->
-          <div class="shot-section">
-            <div class="shot-section-hdr">
-              <h3>&#9997;&#65039; Shot Tasks</h3>
-              <button class="btn btn-ghost btn-sm" onclick="openShotTaskModal()">+ Add Task</button>
-            </div>
-            <div id="shot-tasks-list"></div>
-          </div>
-          <!-- Asset Readiness -->
-          <div class="shot-section">
-            <div class="shot-section-hdr">
-              <h3>&#127912; Asset Readiness</h3>
-              <button class="btn btn-ghost btn-sm" onclick="openAssetLinkModal()">+ Link Asset</button>
-            </div>
-            <div id="shot-assets-list"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- TASK MODAL (upgraded with category) -->
-<div class="modal-bg" id="modal">
-  <div class="modal">
-    <h3 id="modal-title">Add Task</h3>
-    <!-- Category selector -->
-    <div class="form-row">
-      <label class="flbl">Category</label>
-      <div class="cat-pills">
-        <button class="cat-pill active" data-cat="general" onclick="selectCat('general',this)">&#128203; Milestone / Admin</button>
-        <button class="cat-pill" data-cat="asset" onclick="selectCat('asset',this)">&#127912; Asset Task</button>
-      </div>
-    </div>
-    <!-- Asset fields (shown when category=asset) -->
-    <div id="asset-fields" style="display:none">
-      <div class="form-row-2">
-        <div>
-          <label class="flbl">Asset Type</label>
-          <select id="f-asset-type" class="inp" onchange="updatePipelineStages()">
-            <option value="character">&#128100; Character</option>
-            <option value="prop">&#128218; Prop</option>
-            <option value="environment">&#127758; Environment</option>
-            <option value="vehicle">&#128663; Vehicle</option>
-            <option value="fx">&#10024; FX Element</option>
-          </select>
-        </div>
-        <div>
-          <label class="flbl">Asset Name</label>
-          <input id="f-asset-name" class="inp" placeholder="e.g. Hero Character">
-        </div>
-      </div>
-      <div class="form-row">
-        <label class="flbl">Pipeline Stage</label>
-        <div class="pipeline-stages" id="pipeline-stages-grid"></div>
-      </div>
-    </div>
-    <div class="form-row"><label class="flbl">Task Name / Notes</label><input id="f-name" class="inp" placeholder="e.g. Final rig sign-off"></div>
-    <div class="form-row"><label class="flbl">Lead / Artist</label><input id="f-lead" class="inp" placeholder="e.g. Jordan"></div>
-    <div class="form-row-2">
-      <div><label class="flbl">Start Date</label><input id="f-start" type="date" class="inp"></div>
-      <div><label class="flbl">Due Date</label><input id="f-due" type="date" class="inp"></div>
-    </div>
-    <div class="form-row-2">
-      <div><label class="flbl">Due Time (optional)</label><input id="f-time" type="time" class="inp"></div>
-      <div><label class="flbl">Priority</label>
-        <select id="f-priority" class="inp"><option value="high">High</option><option value="med" selected>Medium</option><option value="low">Low</option></select>
-      </div>
-    </div>
-    <div class="form-row"><label class="flbl">Status</label>
-      <select id="f-status" class="inp"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="review">In Review</option><option value="done">Done</option></select>
-    </div>
-    <div id="general-extra-fields">
-      <div class="form-row"><label class="flbl">Handoff To (optional)</label><input id="f-handoff" class="inp" placeholder="e.g. Alex"></div>
-      <div class="form-row-2">
-        <div><label class="flbl">Deliverable Name (optional)</label><input id="f-deliverable" class="inp"></div>
-        <div><label class="flbl">Deliverable URL (optional)</label><input id="f-deliverable-url" class="inp" placeholder="https://..."></div>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
-    </div>
-  </div>
-</div>
-
-<!-- PROJECT MODAL -->
-<div class="modal-bg" id="proj-modal">
-  <div class="modal" style="width:420px">
-    <h3 id="proj-modal-title">New Project</h3>
-    <div class="form-row"><label class="flbl">Project Name</label><input id="pf-name" class="inp" placeholder="e.g. Season 2 Production"></div>
-    <div class="form-row"><label class="flbl">Description (optional)</label><input id="pf-desc" class="inp" placeholder="Short description"></div>
-    <div class="form-row"><label class="flbl">Project Colour</label><div class="color-row" id="color-row"></div></div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeProjModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
-    </div>
-  </div>
-</div>
-
-<!-- SEQUENCE MODAL -->
-<div class="modal-bg" id="seq-modal">
-  <div class="modal" style="width:420px">
-    <h3 id="seq-modal-title">New Sequence</h3>
-    <div class="form-row">
-      <label class="flbl">Sequence Code</label>
-      <input id="sf-code" class="inp" placeholder="e.g. SQ010">
-      <div class="hint">Use increments of 10 — easier to insert sequences later.</div>
-    </div>
-    <div class="form-row"><label class="flbl">Sequence Name (optional)</label><input id="sf-name" class="inp" placeholder="e.g. Opening Chase"></div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeSeqModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveSeq()">Save Sequence</button>
-    </div>
-  </div>
-</div>
-
-<!-- SHOT MODAL -->
-<div class="modal-bg" id="shot-modal">
-  <div class="modal" style="width:420px">
-    <h3>New Shot</h3>
-    <div class="form-row">
-      <label class="flbl">Shot Code</label>
-      <input id="shf-code" class="inp" placeholder="e.g. SH010">
-      <div class="hint">Use increments of 10 — easier to insert shots later.</div>
-    </div>
-    <div class="form-row"><label class="flbl">Description (optional)</label><input id="shf-desc" class="inp" placeholder="e.g. Hero enters the lab"></div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeShotModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveShot()">Save Shot</button>
-    </div>
-  </div>
-</div>
-
-<!-- SHOT TASK MODAL -->
-<div class="modal-bg" id="shot-task-modal">
-  <div class="modal" style="width:460px">
-    <h3>Add Shot Task</h3>
-    <div class="form-row">
-      <label class="flbl">Task Type</label>
-      <div class="pipeline-stages" id="shot-task-type-grid"></div>
-    </div>
-    <div class="form-row" id="custom-type-row" style="display:none">
-      <label class="flbl">Custom Task Name</label>
-      <input id="stf-custom" class="inp" placeholder="e.g. Matte Painting">
-    </div>
-    <div class="form-row"><label class="flbl">Assignee</label><input id="stf-assignee" class="inp" placeholder="e.g. Jordan"></div>
-    <div class="form-row-2">
-      <div><label class="flbl">Start Date</label><input id="stf-start" type="date" class="inp"></div>
-      <div><label class="flbl">Due Date</label><input id="stf-due" type="date" class="inp"></div>
-    </div>
-    <div class="form-row"><label class="flbl">Status</label>
-      <select id="stf-status" class="inp">
-        <option value="ready">Ready to Start</option>
-        <option value="inprogress">In Progress</option>
-        <option value="review">Supervisor Review</option>
-        <option value="approved">Approved</option>
-        <option value="final">Final</option>
-      </select>
-    </div>
-    <div class="form-row"><label class="flbl">Notes (optional)</label><input id="stf-notes" class="inp" placeholder="Any notes..."></div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeShotTaskModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveShotTask()">Add Task</button>
-    </div>
-  </div>
-</div>
-
-<!-- ASSET LINK MODAL -->
-<div class="modal-bg" id="asset-link-modal">
-  <div class="modal" style="width:460px">
-    <h3>Link Assets to Shot</h3>
-    <p style="font-size:.8rem;color:var(--text3);margin-bottom:14px">Select assets from the schedule that appear in this shot. Their pipeline readiness will show on the shot page.</p>
-    <input class="inp" id="asset-search-inp" placeholder="Search assets..." oninput="filterAssetSearch(this.value)" style="margin-bottom:4px">
-    <div class="asset-search-list" id="asset-search-list"></div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeAssetLinkModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveAssetLinks()">Save Links</button>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast">Saved!</div>
-
-<script>
+    <script>
 (function(){
 var SB_URL="https://uwocrciwfgggnopszpjb.supabase.co";
 var SB_KEY="sb_publishable_D4TCcLpL7elN7q0c0igLxA_PoOKl7Y0";
@@ -2026,32 +1884,85 @@ function renderShotProgression(){
 
 // MILESTONES TAB
 window.renderMilestones=function(){
-  updateStats();
-  var generalTasks=tasks.filter(function(t){return !t.category||t.category==="general";});
-  var fs=el("fstatus");var fsVal=fs?fs.value:"";
-  var filtered=generalTasks.filter(function(t){return !fsVal||t.status===fsVal;});
-  var tbody=el("task-tbody");if(!tbody)return;tbody.innerHTML="";
-  var total=generalTasks.length,done=generalTasks.filter(function(t){return t.status==="done";}).length;
-  var pct=total?Math.round(done/total*100):0;
-  var pctEl=el("prog-pct");if(pctEl)pctEl.textContent=pct+"%";
-  var fillEl=el("prog-fill");if(fillEl)fillEl.style.width=pct+"%";
-  if(!filtered.length){var tr=ce("tr");var td=ce("td");td.colSpan=6;td.style.cssText="text-align:center;padding:24px;color:var(--text3);font-size:.82rem";td.textContent="No milestones yet. Click + Add Milestone to create one.";tr.appendChild(td);tbody.appendChild(tr);return;}
-  filtered.forEach(function(t){
-    var tr=ce("tr");
-    var d=t.due_date?daysUntil(t.due_date):null;
-    var dl=!t.due_date?"--":t.status==="done"?fmtDate(t.due_date):d<0?Math.abs(d)+"d late":d===0?"Today":fmtDue(t);
-    var nameTd=ce("td");var strong=ce("strong");strong.textContent=t.name;nameTd.appendChild(strong);
-    var leadTd=ce("td");var chip=ce("span");chip.className="chip";chip.textContent=t.lead;leadTd.appendChild(chip);
-    var dueTd=ce("td");var dueSpan=ce("span");dueSpan.className=t.due_date?dueClass(t):"d-ok";dueSpan.textContent=dl;dueTd.appendChild(dueSpan);
-    var priTd=ce("td");var pdot=ce("span");pdot.className="pdot p-"+t.priority;priTd.appendChild(pdot);priTd.appendChild(document.createTextNode(t.priority.charAt(0).toUpperCase()+t.priority.slice(1)));
-    var statTd=mkStatusCellDOM(t);
-    var actTd=ce("td");actTd.style.whiteSpace="nowrap";
-    var editBtn=ce("button");editBtn.className="btn btn-ghost btn-sm";editBtn.textContent="Edit";editBtn.onclick=function(){editTask(t.id);};
-    var delBtn=ce("button");delBtn.className="btn btn-sm btn-del";delBtn.textContent="Remove";delBtn.onclick=function(){deleteTask(t.id);};
-    actTd.appendChild(editBtn);actTd.appendChild(document.createTextNode(" "));actTd.appendChild(delBtn);
-    tr.appendChild(nameTd);tr.appendChild(leadTd);tr.appendChild(dueTd);tr.appendChild(priTd);tr.appendChild(statTd);tr.appendChild(actTd);tbody.appendChild(tr);
+  var cats=["client","marketing","meetings","team"];
+  cats.forEach(function(cat){
+    var items=tasks.filter(function(t){return t.category===cat&&t.project_id===activeProject.id;});
+    items.sort(function(a,b){
+      var po={high:0,med:1,low:2};
+      if(a.status==="done"&&b.status!=="done")return 1;
+      if(b.status==="done"&&a.status!=="done")return -1;
+      return (po[a.priority]||1)-(po[b.priority]||1);
+    });
+    var container=el("admin-list-"+cat);if(!container)return;
+    container.innerHTML="";
+    if(!items.length){
+      var empty=ce("div");empty.className="admin-empty";
+      empty.textContent="No entries yet.";container.appendChild(empty);return;
+    }
+    items.forEach(function(t){
+      var entry=ce("div");entry.className="admin-entry";
+      var main=ce("div");main.className="admin-entry-main";
+      var title=ce("div");title.className="admin-entry-title";title.textContent=t.name;
+      var meta=ce("div");meta.className="admin-entry-meta";
+      if(t.lead){var asgn=ce("span");asgn.textContent="\u{1F464} "+t.lead;meta.appendChild(asgn);}
+      if(t.due_date){
+        var d=daysUntil(t.due_date);
+        var dspan=ce("span");
+        dspan.style.color=t.status==="done"?"var(--text4)":d<0?"#ef4444":d<=3?"#f59e0b":"var(--text4)";
+        dspan.textContent="\u{1F4C5} "+(t.status==="done"?fmtDate(t.due_date):d<0?Math.abs(d)+"d overdue":d===0?"Today":fmtDate(t.due_date));
+        meta.appendChild(dspan);
+      }
+      main.appendChild(title);main.appendChild(meta);
+      if(t.asset){var notes=ce("div");notes.className="admin-entry-notes";notes.textContent=t.asset;main.appendChild(notes);}
+      var priCls={high:"admin-pri-high",med:"admin-pri-med",low:"admin-pri-low"};
+      var pri=ce("span");pri.className="admin-pri "+(priCls[t.priority]||"admin-pri-low");
+      pri.textContent={high:"High",med:"Med",low:"Low"}[t.priority]||t.priority;
+      var statCls={todo:"admin-stat-todo",inprogress:"admin-stat-inprogress",done:"admin-stat-done"};
+      var stat=ce("span");stat.className="admin-stat "+(statCls[t.status]||"admin-stat-todo");
+      stat.textContent={todo:"To Do",inprogress:"In Progress",done:"Done"}[t.status]||t.status;
+      var editBtn=ce("button");editBtn.className="btn btn-ghost btn-sm";editBtn.style.fontSize=".68rem";editBtn.textContent="Edit";
+      editBtn.onclick=(function(tid){return function(){openAdminModal(null,tid);};})(t.id);
+      var delBtn=ce("button");delBtn.className="btn btn-sm btn-del";delBtn.style.fontSize=".68rem";delBtn.textContent="\u00d7";
+      delBtn.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
+      entry.appendChild(main);entry.appendChild(pri);entry.appendChild(stat);entry.appendChild(editBtn);entry.appendChild(delBtn);
+      container.appendChild(entry);
+    });
   });
 };
+
+var adminModalCat=null,adminEditId=null;
+window.openAdminModal=function(cat,editId){
+  adminModalCat=cat||null;adminEditId=editId||null;
+  var catLabels={client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Production Team"};
+  if(editId){
+    var t=tasks.find(function(x){return x.id===editId;});
+    if(t){adminModalCat=t.category;
+      el("admin-modal-title").textContent="Edit \u2014 "+(catLabels[t.category]||t.category);
+      el("af-title").value=t.name;el("af-assignee").value=t.lead||"";
+      el("af-date").value=t.due_date||"";el("af-priority").value=t.priority||"med";
+      el("af-status").value=t.status||"todo";el("af-notes").value=t.asset||"";
+    }
+  } else {
+    el("admin-modal-title").textContent="New \u2014 "+(catLabels[cat]||cat);
+    el("af-title").value="";el("af-assignee").value="";el("af-date").value="";
+    el("af-priority").value="med";el("af-status").value="todo";el("af-notes").value="";
+  }
+  el("admin-modal").classList.add("open");
+};
+window.closeAdminModal=function(){el("admin-modal").classList.remove("open");};
+window.saveAdminEntry=async function(){
+  var title=el("af-title").value.trim();
+  if(!title){alert("Please enter a title.");return;}
+  var payload={name:title,lead:el("af-assignee").value.trim()||null,
+    due_date:el("af-date").value||null,priority:el("af-priority").value,
+    status:el("af-status").value,category:adminModalCat,
+    asset:el("af-notes").value.trim()||null,
+    user_id:currentUser.id,project_id:activeProject.id};
+  if(adminEditId)await sb.from("tasks").update(payload).eq("id",adminEditId);
+  else await sb.from("tasks").insert(payload);
+  closeAdminModal();showToast("Saved!");loadTasks();
+};
+
 
 // TABS
 window.showTab=function(name){
@@ -2091,9 +2002,9 @@ window.saveProject=async function(){
   renderSidebar();showToast("Project saved!");
 };
 
-["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal","new-asset-modal"].forEach(function(id){
+["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal","new-asset-modal","admin-modal"].forEach(function(id){
   var e=el(id);if(!e)return;
-  e.addEventListener("click",function(ev){if(ev.target===e){var fns={modal:closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal,"new-asset-modal":closeNewAssetModal};if(fns[id])fns[id]();}});
+  e.addEventListener("click",function(ev){if(ev.target===e){var fns={modal:closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal,"new-asset-modal":closeNewAssetModal,"admin-modal":closeAdminModal};if(fns[id])fns[id]();}});
 });
 
 })();
