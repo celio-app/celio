@@ -1316,24 +1316,26 @@ window.setSchedView=function(v,el){
 };
 
 window.renderSchedule=function(){
-  var assetTasks=tasks.filter(function(t){return t.category==="asset";});
-  var generalTasks=tasks.filter(function(t){return !t.category||t.category==="general";});
-  // update stats (all tasks)
   updateStats();
-  // asset sections
-  var assetSec=document.getElementById("asset-sections");
-  var generalSec=document.getElementById("general-section");
-  if(schedView==="general"){assetSec.style.display="none";generalSec.style.display="";}
-  else if(schedView==="assets"){assetSec.style.display="";generalSec.style.display="none";}
-  else{assetSec.style.display="";generalSec.style.display="";}
+  var assetTasks=tasks.filter(function(t){return t.category==="asset";});
   renderAssetSections(assetTasks);
-  renderGeneralTasks(generalTasks);
+  renderShotSection();
   renderHandoffs();renderAssetDeliverables();
 };
 
 
 // ── ASSET SECTION REDESIGN ──────────────────────────────────────────────────
 var assetGroupCollapsed={},shotSectionCollapsed={};
+
+function mkStatusCellDOM(t){
+  var td=ce("td");
+  var sel=ce("select");sel.style.cssText="font-size:.72rem;border:1px solid var(--border);border-radius:5px;padding:2px 4px;background:var(--bg3);color:var(--text);cursor:pointer;";
+  var opts=["todo","inprogress","review","done"];
+  var labels={"todo":"To Do","inprogress":"In Progress","review":"In Review","done":"Done"};
+  opts.forEach(function(v){var o=ce("option");o.value=v;o.textContent=labels[v];if(t.status===v)o.selected=true;sel.appendChild(o);});
+  sel.onchange=(function(tid){return function(){updateTaskStatus(tid,this.value);};})(t.id);
+  td.appendChild(sel);return td;
+}
 
 function renderAssetSections(assetTasks){
   var container=el("asset-sections");container.innerHTML="";
@@ -1777,6 +1779,12 @@ async function ensureLinkedAssetsCol(){
 }
 ensureLinkedAssetsCol();
 })();
+
+window.updateTaskStatus=async function(id,status){
+  await sb.from("tasks").update({status:status}).eq("id",id);
+  var t=tasks.find(function(x){return x.id===id;});if(t)t.status=status;
+  showToast("Updated!");
+};
 </script>
 
     <!-- NEW ASSET MODAL -->
