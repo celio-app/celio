@@ -576,7 +576,8 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
               <div id="general-section" class="general-section">
                 <div class="general-section-hdr">
                   <h2>&#128203; Milestones &amp; Admin</h2>
-                  <select id="fstatus" class="btn btn-ghost" style="padding:4px 9px;font-size:.75rem" onchange="renderSchedule()">
+                  <button class="btn btn-primary btn-sm" onclick="openModal(null)">+ Add Task</button>
+                  <select id="fstatus" class="btn btn-ghost" style="padding:4px 9px;font-size:.75rem" onchange="renderGeneralTasks()">
                     <option value="">All Status</option><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="review">In Review</option><option value="done">Done</option>
                   </select>
                 </div>
@@ -1297,6 +1298,7 @@ window.renderSchedule=function(){
   else{if(assetSec)assetSec.style.display="";if(generalSec)generalSec.style.display="";}
   renderAssetSections(assetTasks);
   renderShotSection();
+  renderGeneralTasks();
   renderHandoffs();renderAssetDeliverables();
 };
 
@@ -1768,6 +1770,68 @@ function updateStats(){
   var pct=total?Math.round(done/total*100):0;
   document.getElementById("prog-pct").textContent=pct+"%";document.getElementById("prog-fill").style.width=pct+"%";
 }
+
+function renderGeneralTasks(){
+  var tbody=document.getElementById("task-tbody");if(!tbody)return;
+  var filterStatus=document.getElementById("fstatus")?document.getElementById("fstatus").value:"";
+  var generalTasks=tasks.filter(function(t){
+    return t.category!=="asset"&&["general","client","marketing","meetings","team",null,undefined,""].indexOf(t.category)>=0||!t.category;
+  });
+  if(filterStatus)generalTasks=generalTasks.filter(function(t){return t.status===filterStatus;});
+  generalTasks.sort(function(a,b){
+    var p={high:0,med:1,low:2};
+    if(a.status==="done"&&b.status!=="done")return 1;
+    if(b.status==="done"&&a.status!=="done")return -1;
+    return(p[a.priority]||1)-(p[b.priority]||1);
+  });
+  tbody.innerHTML="";
+  if(!generalTasks.length){
+    var tr=document.createElement("tr");
+    var td=document.createElement("td");td.colSpan=6;
+    td.style.cssText="padding:24px;text-align:center;color:var(--text4);font-size:.82rem";
+    td.textContent=filterStatus?"No tasks with that status.":"No milestone or admin tasks yet. Use + Add Task above.";
+    tr.appendChild(td);tbody.appendChild(tr);return;
+  }
+  var stClsMap={todo:"b-todo",inprogress:"b-inprogress",review:"b-review",done:"b-done"};
+  var stLblMap={todo:"To Do",inprogress:"In Progress",review:"In Review",done:"Done"};
+  var priClsMap={high:"admin-pri-high",med:"admin-pri-med",low:"admin-pri-low"};
+  var priLblMap={high:"High",med:"Med",low:"Low"};
+  generalTasks.forEach(function(t){
+    var tr=document.createElement("tr");
+    tr.style.opacity=t.status==="done"?"0.55":"1";
+    var d=t.due_date?daysUntil(t.due_date):null;
+    // Task name cell
+    var c1=document.createElement("td");c1.style.cssText="padding:9px 12px;font-size:.82rem;border-top:1px solid var(--border2)";
+    c1.textContent=t.name;
+    // Lead cell
+    var c2=document.createElement("td");c2.style.cssText="padding:9px 12px;font-size:.78rem;border-top:1px solid var(--border2)";
+    if(t.lead){var ch=document.createElement("span");ch.className="chip";ch.textContent=t.lead;c2.appendChild(ch);}else{c2.innerHTML="<span style='color:var(--text4)'>—</span>";}
+    // Due cell
+    var c3=document.createElement("td");c3.style.cssText="padding:9px 12px;font-size:.78rem;border-top:1px solid var(--border2)";
+    if(t.due_date){
+      var ds=document.createElement("span");
+      ds.className=t.status==="done"?"d-ok":d<0?"d-late":d<=2?"d-soon":"d-ok";
+      ds.textContent=fmtDate(t.due_date)+(t.due_time?" "+t.due_time.slice(0,5):"");
+      c3.appendChild(ds);
+    }else{c3.innerHTML="<span style='color:var(--text4)'>—</span>";}
+    // Priority cell
+    var c4=document.createElement("td");c4.style.cssText="padding:9px 12px;border-top:1px solid var(--border2)";
+    var pri=document.createElement("span");pri.className="admin-pri "+(priClsMap[t.priority]||"admin-pri-low");
+    pri.textContent=priLblMap[t.priority]||"";c4.appendChild(pri);
+    // Status cell
+    var c5=mkStatusCell(t);
+    // Actions cell
+    var c6=document.createElement("td");c6.style.cssText="padding:9px 12px;border-top:1px solid var(--border2);white-space:nowrap";
+    var eb=document.createElement("button");eb.className="btn btn-ghost btn-sm";eb.style.fontSize=".68rem";eb.textContent="Edit";
+    eb.onclick=(function(tid){return function(){editTask(tid);};})(t.id);
+    var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="Remove";
+    db.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
+    c6.appendChild(eb);c6.appendChild(db);
+    tr.appendChild(c1);tr.appendChild(c2);tr.appendChild(c3);tr.appendChild(c4);tr.appendChild(c5);tr.appendChild(c6);
+    tbody.appendChild(tr);
+  });
+}
+
 function renderHandoffs(){var h=tasks.filter(function(t){return t.handoff_to;});var el=document.getElementById("handoff-list");if(!h.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No handoffs configured.</div>';return;}var html="";h.forEach(function(t){var conf=t.status==="done";html+='<div class="hitem"><div class="hrow"><span class="chip">'+t.lead+'</span><span style="color:#7c3aed;margin:0 5px;font-weight:700">&#8594;</span><span class="chip" style="color:#3b82f6">'+t.handoff_to+'</span><span style="margin-left:auto" class="'+(conf?"conf":"pend")+'">'+(conf?"Done":"Pending")+'</span></div><div class="htask">'+t.name+"</div></div>";});el.innerHTML=html;}
 function renderAssetDeliverables(){var a=tasks.filter(function(t){return t.asset&&t.category!=="asset";});var el=document.getElementById("asset-list");if(!a.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No deliverables tracked.</div>';return;}var html="";a.forEach(function(t){var ready=t.status==="done",missing=t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;var cls=ready?"a-ready":missing?"a-late":"a-pend",lbl=ready?"Ready":missing?"Late":"Pending";var nm=t.asset_url?'<a href="'+t.asset_url+'" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-weight:600">'+t.asset+' &#8599;</a>':'<span style="font-weight:600">'+t.asset+"</span>";html+='<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+t.lead+" &middot; "+fmtDate(t.due_date)+'</div></div><div class="'+cls+'">'+lbl+"</div></div>";});el.innerHTML=html;}
 
