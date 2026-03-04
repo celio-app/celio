@@ -419,80 +419,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   .schedule-grid{grid-template-columns:1fr;}
   .right-col{display:flex;flex-direction:column;}
 }
-
-/* SHOT SECTION IN SCHEDULE */
-.shot-section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:2px;}
-.shot-section-hdr{padding:10px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
-.shot-section-hdr:hover{background:var(--bg3);}
-.shot-code-badge{font-size:.85rem;font-weight:800;color:var(--purple);}
-.shot-desc-badge{font-size:.75rem;color:var(--text3);flex:1;}
-.shot-prog-bar{width:80px;height:5px;background:var(--border2);border-radius:99px;overflow:hidden;flex-shrink:0;}
-.shot-prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa);}
-.shot-prog-pct{font-size:.7rem;font-weight:700;color:var(--text3);width:32px;text-align:right;flex-shrink:0;}
-.shot-arrow{font-size:.6rem;color:var(--text4);transition:transform .2s;flex-shrink:0;}
-.shot-arrow.open{transform:rotate(90deg);}
-.shot-tasks-table{width:100%;border-collapse:collapse;}
-.shot-tasks-table th{padding:7px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700;}
-.shot-tasks-table td{padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2);}
-.shot-status-pill{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:5px;}
-.ssp-ready{background:var(--bg3);color:var(--text4);}
-.ssp-inprogress{background:#1e3a5f;color:#60a5fa;}
-.ssp-review{background:#3b2f00;color:#fbbf24;}
-.ssp-approved{background:#064e3b;color:#34d399;}
-.ssp-final{background:#2e1065;color:#a78bfa;}
-[data-theme="light"] .ssp-inprogress{background:#dbeafe;color:#1d4ed8;}
-[data-theme="light"] .ssp-review{background:#fef3c7;color:#92400e;}
-[data-theme="light"] .ssp-approved{background:#d1fae5;color:#065f46;}
-[data-theme="light"] .ssp-final{background:#ede9fe;color:#5b21b6;}
-.add-shot-task-inline{font-size:.72rem;padding:4px 10px;border-radius:6px;background:var(--bg3);color:var(--text3);border:1px solid var(--border);cursor:pointer;}
-.add-shot-task-inline:hover{background:var(--bg4);}
-/* ASSET CARD REDESIGN */
-.asset-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:2px;}
-.asset-card-hdr{padding:10px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;}
-.asset-card-hdr:hover{background:var(--bg3);}
-.asset-card-name{font-size:.88rem;font-weight:800;color:var(--text);flex:1;}
-.asset-status-badge{font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px;flex-shrink:0;}
-.asb-ready{background:#064e3b;color:#34d399;}
-.asb-inprog{background:#1e3a5f;color:#60a5fa;}
-.asb-blocked{background:#450a0a;color:#f87171;}
-[data-theme="light"] .asb-ready{background:#d1fae5;color:#065f46;}
-[data-theme="light"] .asb-inprog{background:#dbeafe;color:#1d4ed8;}
-[data-theme="light"] .asb-blocked{background:#fee2e2;color:#b91c1c;}
-.asset-prog-bar{width:80px;height:5px;background:var(--border2);border-radius:99px;overflow:hidden;flex-shrink:0;}
-.asset-prog-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa);}
-.asset-prog-pct{font-size:.7rem;font-weight:700;color:var(--text3);width:32px;text-align:right;flex-shrink:0;}
-.asset-type-hdr{padding:6px 4px 2px;font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;}
-.asset-body-table{width:100%;border-collapse:collapse;}
-.asset-body-table th{padding:7px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700;}
-.asset-body-table td{padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2);}
-.naf-stage-pill{font-size:.74rem;font-weight:700;padding:4px 11px;border-radius:6px;background:var(--bg3);color:var(--text2);border:1px solid var(--border);cursor:pointer;}
-.naf-stage-pill.active{background:var(--purple);color:#fff;border-color:var(--purple);}
-/* ADMIN TAB */
-.admin-wrap{padding:16px 20px 32px;display:flex;flex-direction:column;gap:12px;}
-.admin-section{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
-.admin-sec-hdr{padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border2);}
-.admin-sec-icon{font-size:1.1rem;}
-.admin-sec-title{font-size:.88rem;font-weight:800;flex:1;}
-.admin-list{display:flex;flex-direction:column;}
-.admin-entry{display:flex;align-items:center;gap:10px;padding:10px 16px;border-top:1px solid var(--border2);}
-.admin-entry:hover{background:var(--bg3);}
-.admin-entry-main{flex:1;min-width:0;}
-.admin-entry-title{font-size:.82rem;font-weight:600;color:var(--text);}
-.admin-entry-meta{font-size:.7rem;color:var(--text4);margin-top:2px;display:flex;gap:8px;flex-wrap:wrap;}
-.admin-entry-notes{font-size:.72rem;color:var(--text3);margin-top:3px;font-style:italic;}
-.admin-pri{font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:999px;flex-shrink:0;}
-.admin-pri-high{background:#450a0a;color:#f87171;}
-.admin-pri-med{background:#3b2f00;color:#fbbf24;}
-.admin-pri-low{background:var(--bg3);color:var(--text4);}
-[data-theme="light"] .admin-pri-high{background:#fee2e2;color:#b91c1c;}
-[data-theme="light"] .admin-pri-med{background:#fef3c7;color:#92400e;}
-.admin-stat{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:5px;flex-shrink:0;}
-.admin-stat-todo{background:var(--bg3);color:var(--text4);}
-.admin-stat-inprogress{background:#1e3a5f;color:#60a5fa;}
-.admin-stat-done{background:#064e3b;color:#34d399;}
-[data-theme="light"] .admin-stat-inprogress{background:#dbeafe;color:#1d4ed8;}
-[data-theme="light"] .admin-stat-done{background:#d1fae5;color:#065f46;}
-.admin-empty{padding:20px 16px;font-size:.8rem;color:var(--text4);text-align:center;}
 </style>
 </head>
 <body>
@@ -512,17 +438,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
       <div class="form-row"><label>Email</label><input id="li-email" type="email" placeholder="you@example.com"></div>
       <div class="form-row"><label>Password</label><input id="li-pass" type="password" placeholder="password"></div>
       <button class="btn-auth" onclick="doSignIn()">Sign In</button>
-              <div style="text-align:center;margin-top:8px"><button onclick="showForgotPassword()" style="background:none;border:none;color:var(--text3);font-size:.78rem;cursor:pointer;text-decoration:underline">Forgot password?</button></div>
-          </div>
-          <div id="forgot-panel" style="display:none;flex-direction:column;gap:12px">
-            <div style="text-align:center"><div style="font-size:1.4rem;margin-bottom:6px">&#128274;</div>
-              <div style="font-weight:700;font-size:.95rem">Reset your password</div>
-              <div style="font-size:.78rem;color:var(--text3);margin-top:4px">Enter your email and we&#39;ll send you a reset link.</div>
-            </div>
-            <input id="fp-email" class="auth-input" type="email" placeholder="Your email address">
-            <button class="auth-btn" onclick="doForgotPassword()">Send Reset Link</button>
-            <div style="text-align:center"><button onclick="hideForgotPassword()" style="background:none;border:none;color:var(--text3);font-size:.78rem;cursor:pointer;text-decoration:underline">Back to sign in</button></div>
-          <div style="display:none">
     </div>
     <div id="signup-form" style="display:none">
       <div class="form-row"><label>Email</label><input id="su-email" type="email" placeholder="you@example.com"></div>
@@ -609,7 +524,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
             <div style="display:flex;flex-direction:column;gap:14px">
               <!-- ASSET GROUPS -->
               <div id="asset-sections"></div>
-              <div id="shot-schedule-section"></div>
               <!-- GENERAL TASKS -->
               <div id="general-section" class="general-section">
                 <div class="general-section-hdr">
@@ -686,27 +600,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
       </div>
 
       <!-- SHOT PAGE -->
-      <div class="tab-content" id="tab-milestones" style="display:none">
-        <div class="admin-wrap">
-          <div class="admin-section">
-            <div class="admin-sec-hdr"><span class="admin-sec-icon">&#128172;</span><span class="admin-sec-title">Client Feedback</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('client')">+ Add</button></div>
-            <div class="admin-list" id="admin-list-client"></div>
-          </div>
-          <div class="admin-section">
-            <div class="admin-sec-hdr"><span class="admin-sec-icon">&#128227;</span><span class="admin-sec-title">Marketing</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('marketing')">+ Add</button></div>
-            <div class="admin-list" id="admin-list-marketing"></div>
-          </div>
-          <div class="admin-section">
-            <div class="admin-sec-hdr"><span class="admin-sec-icon">&#128197;</span><span class="admin-sec-title">Meetings</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('meetings')">+ Add</button></div>
-            <div class="admin-list" id="admin-list-meetings"></div>
-          </div>
-          <div class="admin-section">
-            <div class="admin-sec-hdr"><span class="admin-sec-icon">&#128101;</span><span class="admin-sec-title">Production Team</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('team')">+ Add</button></div>
-            <div class="admin-list" id="admin-list-team"></div>
-          </div>
-        </div>
-      </div>
-
       <div class="shot-page" id="shot-page">
         <div class="shot-hero">
           <div class="shot-hero-top">
@@ -940,19 +833,9 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 
 <script>
 (function(){
-window.onerror=function(msg,src,line,col,err){
-  console.error("CELIO ERROR:",msg,"line:",line,err);
-  var d=document.getElementById("app-screen");
-  if(d){var eb=document.getElementById("celio-err-banner");
-    if(!eb){eb=document.createElement("div");eb.id="celio-err-banner";eb.style.cssText="position:fixed;top:0;left:0;right:0;background:#7f1d1d;color:#fca5a5;padding:10px 16px;font-size:.82rem;z-index:9999;font-family:monospace";d.appendChild(eb);}
-    eb.textContent="Runtime error: "+msg+" (line "+line+")";
-  }
-  return false;
-};
-
 var SB_URL="https://uwocrciwfgggnopszpjb.supabase.co";
 var SB_KEY="sb_publishable_D4TCcLpL7elN7q0c0igLxA_PoOKl7Y0";
-var sb=supabase.createClient(SB_URL,SB_KEY,{auth:{storage:window.localStorage,storageKey:"celio-auth",flowType:"implicit",detectSessionInUrl:true,persistSession:true}});
+var sb=supabase.createClient(SB_URL,SB_KEY);
 var currentUser=null,tasks=[],projects=[],sequences=[],shots=[],shotTasks=[],shotAssetLinks=[];
 var activeProject=null,activeShot=null;
 var editTaskId=null,editProjId=null,editSeqId=null,currentSeqId=null;
@@ -960,10 +843,8 @@ var calYear,calMonth,ganttStart;
 var today=new Date();today.setHours(0,0,0,0);
 var COL_W=34,selectedColor="#7c3aed",selectedCat="general",selectedPipelineStage=null,selectedShotTaskType=null;
 var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16","#f97316","#8b5cf6","#64748b","#0ea5e9"];
-var projExpanded={},seqOpen={},schedView="all",assetGroupCollapsed={},shotSectionCollapsed={};
+var projExpanded={},seqOpen={},schedView="all";
 var assetLinkSelection=[];
-function el(id){return document.getElementById(id);}
-function ce(tag){return document.createElement(tag);}
 
 // Pipeline stages by asset type
 var PIPELINE_STAGES={
@@ -1005,7 +886,6 @@ window.doSignUp=async function(){var e=document.getElementById("su-email").value
 window.doSignOut=async function(){await sb.auth.signOut();};
 
 sb.auth.onAuthStateChange(function(event,session){
-  if(event==="PASSWORD_RECOVERY"){el("reset-modal").classList.add("open");return;}
   if(session){
     currentUser=session.user;
     document.getElementById("auth-screen").style.display="none";
@@ -1314,15 +1194,12 @@ async function loadTasks(){
   tasks=r.data||[];
   var active=document.querySelector(".tab-content.active");
   var name=active?active.id.replace("tab-",""):"schedule";
-    // Load shot tasks for this project
-  var projShotIds=shots.filter(function(s){return activeProject&&s.project_id===activeProject.id;}).map(function(s){return s.id;});
-  if(projShotIds.length){var rst=await sb.from("shot_tasks").select("*").in("shot_id",projShotIds);shotTasks=rst.data||[];}else{shotTasks=[];}
   if(name==="schedule")renderSchedule();
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
-  else if(name==="milestones")renderMilestones();
-  renderSidebar();
-}// SCHEDULE VIEW FILTER
+}
+
+// SCHEDULE VIEW FILTER
 window.setSchedView=function(v,el){
   schedView=v;
   document.querySelectorAll(".sched-tab").forEach(function(t){t.classList.remove("active");});
@@ -1331,334 +1208,97 @@ window.setSchedView=function(v,el){
 };
 
 window.renderSchedule=function(){
-  updateStats();
   var assetTasks=tasks.filter(function(t){return t.category==="asset";});
+  var generalTasks=tasks.filter(function(t){return !t.category||t.category==="general";});
+  // update stats (all tasks)
+  updateStats();
+  // asset sections
+  var assetSec=document.getElementById("asset-sections");
+  var generalSec=document.getElementById("general-section");
+  if(schedView==="general"){assetSec.style.display="none";generalSec.style.display="";}
+  else if(schedView==="assets"){assetSec.style.display="";generalSec.style.display="none";}
+  else{assetSec.style.display="";generalSec.style.display="";}
   renderAssetSections(assetTasks);
-  renderShotSection();
+  renderGeneralTasks(generalTasks);
   renderHandoffs();renderAssetDeliverables();
 };
 
-
-// ── ASSET SECTION REDESIGN ──────────────────────────────────────────────────
-var assetGroupCollapsed={},shotSectionCollapsed={};
-
-function mkStatusCellDOM(t){
-  var td=ce("td");
-  var sel=ce("select");sel.style.cssText="font-size:.72rem;border:1px solid var(--border);border-radius:5px;padding:2px 4px;background:var(--bg3);color:var(--text);cursor:pointer;";
-  var opts=["todo","inprogress","review","done"];
-  var labels={"todo":"To Do","inprogress":"In Progress","review":"In Review","done":"Done"};
-  opts.forEach(function(v){var o=ce("option");o.value=v;o.textContent=labels[v];if(t.status===v)o.selected=true;sel.appendChild(o);});
-  sel.onchange=(function(tid){return function(){updateTaskStatus(tid,this.value);};})(t.id);
-  td.appendChild(sel);return td;
-}
-
 function renderAssetSections(assetTasks){
-  var container=el("asset-sections");container.innerHTML="";
+  var el=document.getElementById("asset-sections");
   if(!assetTasks.length){
-    var wrap=ce("div");wrap.className="asset-section";
-    var hdr=ce("div");hdr.className="asset-section-hdr";
-    var h2=ce("h2");h2.innerHTML="&#127912; Asset Pipeline";
-    var btn=ce("button");btn.className="btn btn-primary btn-sm";btn.textContent="+ New Asset";btn.onclick=openNewAssetModal;
-    hdr.appendChild(h2);hdr.appendChild(btn);
-    var empty=ce("div");empty.style.cssText="padding:24px;text-align:center;color:var(--text4);font-size:.82rem";
-    empty.textContent="No assets yet. Click + New Asset to get started.";
-    wrap.appendChild(hdr);wrap.appendChild(empty);container.appendChild(wrap);return;
+    el.innerHTML='<div class="asset-section"><div class="asset-section-hdr"><h2>&#127912; Asset Pipeline</h2><button class="btn btn-ghost btn-sm" onclick="openModal(null,\'asset\')">+ Add Asset Task</button></div><div style="padding:24px;text-align:center;color:var(--text4);font-size:.82rem">No asset tasks yet. Click + Add Asset Task to track characters, props and environments through the pre-production pipeline.</div></div>';
+    return;
   }
+  // group by asset_type then asset_name
   var byType={};
   assetTasks.forEach(function(t){
-    var at=t.asset_type||"other";var n=t.asset_name||"Unnamed";
-    if(!byType[at])byType[at]={};
-    if(!byType[at][n])byType[at][n]=[];
-    byType[at][n].push(t);
+    var at=t.asset_type||"other";
+    if(!byType[at])byType[at]=[];
+    byType[at].push(t);
   });
   var typeOrder=["character","prop","environment","vehicle","fx","other"];
-  var typeLabels={character:"Characters",prop:"Props",environment:"Environments",vehicle:"Vehicles",fx:"FX Elements",other:"Other"};
-  var wrap=ce("div");wrap.className="asset-section";
-  var secHdr=ce("div");secHdr.className="asset-section-hdr";
-  var h2=ce("h2");h2.innerHTML="&#127912; Asset Pipeline";
-  var allIds=[];typeOrder.forEach(function(at){if(byType[at])Object.keys(byType[at]).forEach(function(n){allIds.push(at+"|"+n);});});
-  var allCollapsed=allIds.every(function(k){return assetGroupCollapsed[k]!==false;});
-  var toggleAll=ce("button");toggleAll.className="btn btn-ghost btn-sm";toggleAll.textContent=allCollapsed?"Expand All":"Collapse All";
-  toggleAll.onclick=function(){allIds.forEach(function(k){assetGroupCollapsed[k]=!allCollapsed;});renderAssetSections(assetTasks);};
-  var addBtn=ce("button");addBtn.className="btn btn-primary btn-sm";addBtn.textContent="+ New Asset";addBtn.onclick=openNewAssetModal;
-  secHdr.appendChild(h2);secHdr.appendChild(toggleAll);secHdr.appendChild(addBtn);wrap.appendChild(secHdr);
+  var html="";
   typeOrder.forEach(function(at){
     if(!byType[at])return;
-    var names=Object.keys(byType[at]);
-    var typeHdr=ce("div");typeHdr.className="asset-type-hdr";
-    typeHdr.innerHTML=assetTypeIcon(at)+" "+typeLabels[at]+" <span style='font-size:.68rem;font-weight:400;color:var(--text4);margin-left:4px'>"+names.length+"</span>";
-    wrap.appendChild(typeHdr);
-    names.forEach(function(name){
-      var stageTasks=byType[at][name];
-      var total=stageTasks.length,done=stageTasks.filter(function(t){return t.status==="done";}).length;
+    var typeTasks=byType[at];
+    // group by asset_name
+    var byName={};
+    typeTasks.forEach(function(t){var n=t.asset_name||"Unnamed";if(!byName[n])byName[n]=[];byName[n].push(t);});
+    html+='<div class="asset-section"><div class="asset-section-hdr"><h2><span class="asset-type-icon">'+assetTypeIcon(at)+'</span>'+assetTypeLabel(at)+'s<span style="font-size:.75rem;font-weight:400;color:var(--text3);margin-left:8px">'+Object.keys(byName).length+' assets</span></h2><button class="btn btn-ghost btn-sm" onclick="openModal(null,\'asset\',\''+at+'\')">+ Add</button></div>';
+    Object.keys(byName).forEach(function(name){
+      var ntasks=byName[name];
+      var total=ntasks.length,done=ntasks.filter(function(t){return t.status==="done";}).length;
       var pct=total?Math.round(done/total*100):0;
-      var anyLate=stageTasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
-      var isReady=done===total&&total>0;
-      var stateLabel=isReady?"Ready":anyLate?"Blocked":"In Progress";
-      var stateCls=isReady?"asb-ready":anyLate?"asb-blocked":"asb-inprog";
-      var dueDates=stageTasks.map(function(t){return t.due_date;}).filter(Boolean).sort();
-      var lastDue=dueDates.length?dueDates[dueDates.length-1]:null;
-      var key=at+"|"+name;
-      var isCollapsed=assetGroupCollapsed[key]!==false;
-      var card=ce("div");card.className="asset-card";
-      var hdr=ce("div");hdr.className="asset-card-hdr";
-      var arrow=ce("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
-      var icon=ce("span");icon.style.cssText="font-size:.9rem;flex-shrink:0";icon.innerHTML=assetTypeIcon(at);
-      var nameSpan=ce("span");nameSpan.className="asset-card-name";nameSpan.textContent=name;
-      var badge=ce("span");badge.className="asset-status-badge "+stateCls;badge.textContent=stateLabel;
-      var pbar=ce("div");pbar.className="asset-prog-bar";
-      var pfill=ce("div");pfill.className="asset-prog-fill";pfill.style.width=pct+"%";pbar.appendChild(pfill);
-      var ppct=ce("span");ppct.className="asset-prog-pct";ppct.textContent=pct+"%";
-      if(lastDue){var dlbl=ce("span");dlbl.style.cssText="font-size:.7rem;flex-shrink:0";
-        var d=daysUntil(lastDue);dlbl.textContent=isReady?"Done":d<0?Math.abs(d)+"d late":fmtDate(lastDue);
-        dlbl.style.color=isReady?"#10b981":d<0?"#ef4444":d<=7?"#f59e0b":"var(--text4)";hdr.appendChild(dlbl);}
-      var delBtn=ce("button");delBtn.className="btn btn-sm btn-del";delBtn.style.cssText="font-size:.65rem;padding:2px 7px;flex-shrink:0";delBtn.textContent="Delete";
-      delBtn.onclick=(function(n2,at2){return function(e){e.stopPropagation();deleteAsset(n2,at2);};})(name,at);
-      hdr.appendChild(arrow);hdr.appendChild(icon);hdr.appendChild(nameSpan);hdr.appendChild(badge);hdr.appendChild(pbar);hdr.appendChild(ppct);hdr.appendChild(delBtn);
-      var bodyDiv=ce("div");bodyDiv.style.display=isCollapsed?"none":"";
-      (function(k2){hdr.onclick=function(e){if(e.target===delBtn||delBtn.contains(e.target))return;var hidden=bodyDiv.style.display==="none";bodyDiv.style.display=hidden?"":"none";arrow.classList.toggle("open",hidden);assetGroupCollapsed[k2]=!hidden;};})(key);
-      var tbl=ce("table");tbl.className="asset-body-table";
-      var thead=ce("thead");thead.innerHTML="<tr><th>Stage</th><th>Lead</th><th>Start</th><th>Due</th><th>Status</th><th>Actions</th></tr>";
-      var tbody=ce("tbody");
-      stageTasks.forEach(function(t){
-        var tr=ce("tr");
+      var allDone=done===total,anyLate=ntasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
+      var gid="ag-"+at+"-"+name.replace(/\s/g,"-");
+      html+='<div class="asset-group"><div class="asset-group-hdr" onclick="toggleAssetGroup(\''+gid+'\')">';
+      html+='<span class="asset-group-arrow open" id="arr-'+gid+'">&#9658;</span>';
+      html+='<span class="asset-group-name">'+name+'</span>';
+      if(anyLate)html+='<span style="font-size:.7rem;color:#ef4444;font-weight:700">&#9888; Overdue</span>';
+      else if(allDone)html+='<span style="font-size:.7rem;color:#10b981;font-weight:700">&#10003; Ready</span>';
+      html+='<div class="asset-progress-bar"><div class="asset-progress-fill" style="width:'+pct+'%"></div></div>';
+      html+='<span class="asset-progress-lbl">'+pct+'%</span></div>';
+      html+='<div id="'+gid+'">';
+      html+='<table class="asset-tasks-table"><thead><tr><th>Stage</th><th>Lead</th><th>Start</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
+      ntasks.forEach(function(t){
         var d=t.due_date?daysUntil(t.due_date):null;
-        var stageTd=ce("td");var sb2=ce("span");sb2.className="pipeline-stage-badge";sb2.textContent=t.pipeline_stage||t.name;stageTd.appendChild(sb2);
-        var leadTd=ce("td");if(t.lead){var chip=ce("span");chip.className="chip";chip.textContent=t.lead;leadTd.appendChild(chip);}else{leadTd.style.color="var(--text4)";leadTd.textContent="—";}
-        var startTd=ce("td");startTd.style.fontSize=".78rem";startTd.textContent=fmtDate(t.start_date)||"—";
-        var dueTd=ce("td");var ds=ce("span");ds.className=t.status==="done"?"d-ok":d!=null&&d<0?"d-late":d!=null&&d<=2?"d-soon":"d-ok";ds.textContent=t.due_date?fmtDate(t.due_date):"—";dueTd.appendChild(ds);
-        var statTd=mkStatusCellDOM(t);
-        var actTd=ce("td");actTd.style.whiteSpace="nowrap";
-        var editBtn=ce("button");editBtn.className="btn btn-ghost btn-sm";editBtn.style.fontSize=".68rem";editBtn.textContent="Edit";
-        editBtn.onclick=(function(tid){return function(){editTask(tid);};})(t.id);
-        var dBtn=ce("button");dBtn.className="btn btn-sm btn-del";dBtn.style.fontSize=".68rem";dBtn.textContent="Remove";
-        dBtn.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
-        actTd.appendChild(editBtn);actTd.appendChild(document.createTextNode(" "));actTd.appendChild(dBtn);
-        tr.appendChild(stageTd);tr.appendChild(leadTd);tr.appendChild(startTd);tr.appendChild(dueTd);tr.appendChild(statTd);tr.appendChild(actTd);tbody.appendChild(tr);
+        var dl=!t.due_date?"--":t.status==="done"?fmtDate(t.due_date):d<0?Math.abs(d)+"d late":fmtDate(t.due_date);
+        var dCls=!t.due_date?"":t.status==="done"?"d-ok":d<0?"d-late":d<=2?"d-soon":"d-ok";
+        html+='<tr><td><span class="pipeline-stage-badge">'+(t.pipeline_stage||t.name)+'</span></td>';
+        html+='<td><span class="chip">'+t.lead+'</span></td>';
+        html+='<td style="font-size:.78rem">'+fmtDate(t.start_date)+'</td>';
+        html+='<td style="font-size:.78rem"><span class="'+dCls+'">'+dl+'</span></td>';
+        html+=mkStatusCell(t);
+        html+='<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="editTask(\''+t.id+'\')">Edit</button> <button class="btn btn-sm btn-del" onclick="deleteTask(\''+t.id+'\')">Remove</button></td></tr>';
       });
-      tbl.appendChild(thead);tbl.appendChild(tbody);bodyDiv.appendChild(tbl);
-      var addRow=ce("div");addRow.style.cssText="padding:8px 14px;border-top:1px solid var(--border2)";
-      var addStageBtn=ce("button");addStageBtn.className="add-shot-task-inline";addStageBtn.textContent="+ Add Stage";
-      addStageBtn.onclick=(function(at2,n2){return function(e){e.stopPropagation();openModal(null,"asset",at2,n2);};})(at,name);
-      addRow.appendChild(addStageBtn);bodyDiv.appendChild(addRow);
-      card.appendChild(hdr);card.appendChild(bodyDiv);wrap.appendChild(card);
+      html+='</tbody></table></div></div>';
     });
+    html+='</div>';
   });
-  container.appendChild(wrap);
+  el.innerHTML=html;
 }
 
-window.deleteAsset=async function(assetName,assetType){
-  if(!confirm('Delete all pipeline tasks for '+assetName+'?'))return;
-  var ids=tasks.filter(function(t){return t.asset_name===assetName&&t.asset_type===assetType&&t.project_id===activeProject.id;}).map(function(t){return t.id;});
-  if(!ids.length)return;
-  await sb.from("tasks").delete().in("id",ids);
-  showToast("Asset deleted.");loadTasks();
+window.toggleAssetGroup=function(id){
+  var el=document.getElementById(id);var arr=document.getElementById("arr-"+id);
+  if(!el)return;
+  var hidden=el.style.display==="none";
+  el.style.display=hidden?"":"none";
+  if(arr)arr.classList.toggle("open",hidden);
 };
 
-// ── SHOT PIPELINE SECTION IN SCHEDULE ───────────────────────────────────────
-function renderShotSection(){
-  var container=el("shot-schedule-section");if(!container)return;
-  container.innerHTML="";
-  if(!activeProject)return;
-  var projShots=shots.filter(function(s){return s.project_id===activeProject.id;});
-  var wrap=ce("div");wrap.className="asset-section";
-  var secHdr=ce("div");secHdr.className="asset-section-hdr";
-  var h2=ce("h2");h2.innerHTML="&#127916; Shot Pipeline";
-  var totShots=projShots.length;
-  var cnt=ce("span");cnt.style.cssText="font-size:.75rem;font-weight:400;color:var(--text3);margin-left:8px";cnt.textContent=totShots+" shots";h2.appendChild(cnt);
-  if(projShots.length){
-    var allCollapsed=projShots.every(function(s){return shotSectionCollapsed[s.id]!==false;});
-    var toggleAll=ce("button");toggleAll.className="btn btn-ghost btn-sm";toggleAll.textContent=allCollapsed?"Expand All":"Collapse All";
-    toggleAll.onclick=function(){projShots.forEach(function(s){shotSectionCollapsed[s.id]=!allCollapsed;});renderShotSection();};
-    secHdr.appendChild(h2);secHdr.appendChild(toggleAll);
-  } else {
-    secHdr.appendChild(h2);
-  }
-  wrap.appendChild(secHdr);
-  if(!projShots.length){
-    var empty=ce("div");empty.style.cssText="padding:24px;text-align:center;color:var(--text4);font-size:.82rem";
-    empty.textContent="No shots yet. Add sequences and shots in the sidebar.";wrap.appendChild(empty);container.appendChild(wrap);return;
-  }
-  var bySeq={};
-  projShots.forEach(function(sh){var sid=sh.sequence_id||"_none";if(!bySeq[sid])bySeq[sid]=[];bySeq[sid].push(sh);});
-  Object.keys(bySeq).forEach(function(sid){
-    var seq=sequences.find(function(x){return x.id===sid;});
-    var seqDiv=ce("div");seqDiv.style.cssText="padding:8px 16px 4px;font-size:.72rem;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;border-top:1px solid var(--border2)";
-    seqDiv.textContent=seq?(seq.code+(seq.name?" \u2014 "+seq.name:"")):"Unassigned";
-    wrap.appendChild(seqDiv);
-    bySeq[sid].forEach(function(sh){
-      var shTasks=shotTasks.filter(function(t){return t.shot_id===sh.id;});
-      var total=shTasks.length,done=shTasks.filter(function(t){return t.status==="approved"||t.status==="final";}).length;
-      var pct=total?Math.round(done/total*100):0;
-      var isCollapsed=shotSectionCollapsed[sh.id]!==false;
-      var shotRow=ce("div");shotRow.className="shot-section";
-      var hdrDiv=ce("div");hdrDiv.className="shot-section-hdr";
-      var arrow=ce("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
-      var statusDot=ce("span");statusDot.style.cssText="width:8px;height:8px;border-radius:50%;flex-shrink:0;display:inline-block;background:"+shotStatusColor(sh.status);
-      var codeSpan=ce("span");codeSpan.className="shot-code-badge";codeSpan.textContent=sh.code;
-      var descSpan=ce("span");descSpan.className="shot-desc-badge";descSpan.textContent=sh.description||"";
-      var pbar=ce("div");pbar.className="shot-prog-bar";
-      var pfill=ce("div");pfill.className="shot-prog-fill";pfill.style.width=pct+"%";pbar.appendChild(pfill);
-      var ppct=ce("span");ppct.className="shot-prog-pct";ppct.textContent=pct+"%";
-      var openBtn=ce("button");openBtn.className="btn btn-ghost btn-sm";openBtn.style.cssText="font-size:.68rem;padding:2px 8px;flex-shrink:0";
-      openBtn.textContent="Open";openBtn.onclick=function(e){e.stopPropagation();openShot(sh.id);};
-      hdrDiv.appendChild(arrow);hdrDiv.appendChild(statusDot);hdrDiv.appendChild(codeSpan);hdrDiv.appendChild(descSpan);hdrDiv.appendChild(pbar);hdrDiv.appendChild(ppct);hdrDiv.appendChild(openBtn);
-      var bodyDiv=ce("div");bodyDiv.style.display=isCollapsed?"none":"";
-      (function(sid2){hdrDiv.onclick=function(e){if(e.target===openBtn||openBtn.contains(e.target))return;var hidden=bodyDiv.style.display==="none";bodyDiv.style.display=hidden?"":"none";arrow.classList.toggle("open",hidden);shotSectionCollapsed[sid2]=!hidden;};})(sh.id);
-      if(!shTasks.length){
-        var noTask=ce("div");noTask.style.cssText="padding:12px 16px;font-size:.78rem;color:var(--text4)";noTask.textContent="No pipeline tasks yet.";bodyDiv.appendChild(noTask);
-      } else {
-        var tbl=ce("table");tbl.className="shot-tasks-table";
-        var thead=ce("thead");thead.innerHTML="<tr><th>Task</th><th>Assignee</th><th>Due</th><th>Status</th><th></th></tr>";
-        var tbody=ce("tbody");
-        shTasks.forEach(function(t){
-          var tr=ce("tr");
-          var typeTd=ce("td");var tb=ce("span");tb.className="pipeline-stage-badge";tb.textContent=t.task_type;typeTd.appendChild(tb);
-          var assignTd=ce("td");if(t.assignee){var chip=ce("span");chip.className="chip";chip.style.fontSize=".7rem";chip.textContent=t.assignee;assignTd.appendChild(chip);}else{assignTd.style.color="var(--text4)";assignTd.textContent="—";}
-          var dueTd=ce("td");dueTd.style.fontSize=".75rem";
-          if(t.due_date){var d=daysUntil(t.due_date);var dspan=ce("span");dspan.className=t.status==="approved"||t.status==="final"?"d-ok":d<0?"d-late":d<=2?"d-soon":"d-ok";dspan.textContent=fmtDate(t.due_date);dueTd.appendChild(dspan);}else{dueTd.textContent="—";dueTd.style.color="var(--text4)";}
-          var stCls={ready:"ssp-ready",inprogress:"ssp-inprogress",review:"ssp-review",approved:"ssp-approved",final:"ssp-final"};
-          var stLbl={ready:"Ready",inprogress:"In Progress",review:"In Review",approved:"Approved",final:"Final"};
-          var statTd=ce("td");var pill=ce("span");pill.className="shot-status-pill "+(stCls[t.status]||"ssp-ready");pill.textContent=stLbl[t.status]||t.status;statTd.appendChild(pill);
-          var actTd=ce("td");var delb=ce("button");delb.className="btn btn-sm btn-del";delb.style.fontSize=".68rem";delb.textContent="Remove";
-          delb.onclick=(function(tid,shotId){return function(e){e.stopPropagation();deleteShotTaskInline(tid,shotId);};})(t.id,sh.id);
-          actTd.appendChild(delb);
-          tr.appendChild(typeTd);tr.appendChild(assignTd);tr.appendChild(dueTd);tr.appendChild(statTd);tr.appendChild(actTd);tbody.appendChild(tr);
-        });
-        tbl.appendChild(thead);tbl.appendChild(tbody);bodyDiv.appendChild(tbl);
-      }
-      var addRow=ce("div");addRow.style.cssText="padding:8px 14px;border-top:1px solid var(--border2)";
-      var addBtn2=ce("button");addBtn2.className="add-shot-task-inline";addBtn2.textContent="+ Add Pipeline Task";
-      addBtn2.onclick=(function(shotObj){return function(e){e.stopPropagation();activeShot=shotObj;openShotTaskModal();};})(sh);
-      addRow.appendChild(addBtn2);bodyDiv.appendChild(addRow);
-      shotRow.appendChild(hdrDiv);shotRow.appendChild(bodyDiv);wrap.appendChild(shotRow);
-    });
+function renderGeneralTasks(generalTasks){
+  var fs=document.getElementById("fstatus").value;
+  var filtered=generalTasks.filter(function(t){return !fs||t.status===fs;});
+  var tbody=document.getElementById("task-tbody");
+  if(!filtered.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3);font-size:.82rem">No milestone or admin tasks yet.</td></tr>';return;}
+  var rows="";
+  filtered.forEach(function(t){
+    var d=t.due_date?daysUntil(t.due_date):null;
+    var dl=!t.due_date?"--":t.status==="done"?fmtDate(t.due_date):d<0?Math.abs(d)+"d late":d===0?"Today":fmtDue(t);
+    rows+='<tr><td><strong>'+t.name+'</strong></td><td><span class="chip">'+t.lead+'</span></td><td><span class="'+(t.due_date?dueClass(t):"d-ok")+'">'+dl+'</span></td><td><span class="pdot p-'+t.priority+'"></span>'+t.priority.charAt(0).toUpperCase()+t.priority.slice(1)+'</td>'+mkStatusCell(t)+'<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="editTask(\''+t.id+'\')">Edit</button> <button class="btn btn-sm btn-del" onclick="deleteTask(\''+t.id+'\')">Remove</button></td></tr>';
   });
-  container.appendChild(wrap);
+  tbody.innerHTML=rows;
 }
-
-window.deleteShotTaskInline=async function(id,shotId){
-  await sb.from("shot_tasks").delete().eq("id",id);
-  shotTasks=shotTasks.filter(function(t){return t.id!==id;});
-  renderShotSection();showToast("Removed.");
-};
-
-// ── NEW ASSET MODAL ──────────────────────────────────────────────────────────
-var newAssetSelectedStages=[];
-window.openNewAssetModal=function(){
-  el("naf-name").value="";el("naf-lead").value="";el("naf-start").value="";
-  el("naf-type").value="character";newAssetSelectedStages=[];
-  updateNewAssetStages();el("new-asset-modal").classList.add("open");
-};
-window.closeNewAssetModal=function(){el("new-asset-modal").classList.remove("open");};
-window.updateNewAssetStages=function(){
-  var at=el("naf-type").value;
-  newAssetSelectedStages=(PIPELINE_STAGES[at]||["Design","Modelling","Texturing"]).slice();
-  renderNewAssetStageGrid();
-};
-function renderNewAssetStageGrid(){
-  var at=el("naf-type").value;var stages=PIPELINE_STAGES[at]||["Design","Modelling","Texturing"];
-  var grid=el("naf-stages");grid.innerHTML="";
-  stages.forEach(function(s){
-    var pill=ce("button");pill.className="naf-stage-pill"+(newAssetSelectedStages.indexOf(s)>=0?" active":"");
-    pill.textContent=s;
-    pill.onclick=function(e){e.preventDefault();e.stopPropagation();
-      var idx=newAssetSelectedStages.indexOf(s);
-      if(idx>=0)newAssetSelectedStages.splice(idx,1);else newAssetSelectedStages.push(s);
-      renderNewAssetStageGrid();};
-    grid.appendChild(pill);
-  });
-}
-window.saveNewAsset=async function(){
-  var name=el("naf-name").value.trim();var lead=el("naf-lead").value.trim();var at=el("naf-type").value;
-  if(!name){alert("Please enter an asset name.");return;}
-  if(!lead){alert("Please enter a lead.");return;}
-  if(!newAssetSelectedStages.length){alert("Please select at least one pipeline stage.");return;}
-  var start=el("naf-start").value||null;
-  var rows=newAssetSelectedStages.map(function(stage){
-    return{name:name+"\u2014"+stage,lead:lead,start_date:start,category:"asset",asset_type:at,asset_name:name,pipeline_stage:stage,status:"todo",priority:"med",user_id:currentUser.id,project_id:activeProject.id};
-  });
-  var r=await sb.from("tasks").insert(rows);
-  if(r.error){alert("Error: "+r.error.message);return;}
-  closeNewAssetModal();showToast(name+" created with "+rows.length+" stages!");loadTasks();
-};
-
-// ── ADMIN TAB ────────────────────────────────────────────────────────────────
-window.renderMilestones=function(){
-  ["client","marketing","meetings","team"].forEach(function(cat){
-    var items=tasks.filter(function(t){return t.category===cat&&t.project_id===activeProject.id;});
-    items.sort(function(a,b){var po={high:0,med:1,low:2};if(a.status==="done"&&b.status!=="done")return 1;if(b.status==="done"&&a.status!=="done")return -1;return(po[a.priority]||1)-(po[b.priority]||1);});
-    var container=el("admin-list-"+cat);if(!container)return;
-    container.innerHTML="";
-    if(!items.length){var empty=ce("div");empty.className="admin-empty";empty.textContent="No entries yet.";container.appendChild(empty);return;}
-    items.forEach(function(t){
-      var entry=ce("div");entry.className="admin-entry";
-      var main=ce("div");main.className="admin-entry-main";
-      var title=ce("div");title.className="admin-entry-title";title.textContent=t.name;
-      var meta=ce("div");meta.className="admin-entry-meta";
-      if(t.lead){var asgn=ce("span");asgn.textContent="\u{1F464} "+t.lead;meta.appendChild(asgn);}
-      if(t.due_date){var d=daysUntil(t.due_date);var ds=ce("span");ds.style.color=t.status==="done"?"var(--text4)":d<0?"#ef4444":d<=3?"#f59e0b":"var(--text4)";ds.textContent="\u{1F4C5} "+(t.status==="done"?fmtDate(t.due_date):d<0?Math.abs(d)+"d overdue":d===0?"Today":fmtDate(t.due_date));meta.appendChild(ds);}
-      main.appendChild(title);main.appendChild(meta);
-      if(t.asset){var notes=ce("div");notes.className="admin-entry-notes";notes.textContent=t.asset;main.appendChild(notes);}
-      var priCls={high:"admin-pri-high",med:"admin-pri-med",low:"admin-pri-low"};
-      var pri=ce("span");pri.className="admin-pri "+(priCls[t.priority]||"admin-pri-low");pri.textContent={high:"High",med:"Med",low:"Low"}[t.priority]||t.priority;
-      var statCls={todo:"admin-stat-todo",inprogress:"admin-stat-inprogress",done:"admin-stat-done"};
-      var stat=ce("span");stat.className="admin-stat "+(statCls[t.status]||"admin-stat-todo");stat.textContent={todo:"To Do",inprogress:"In Progress",done:"Done"}[t.status]||t.status;
-      var editBtn=ce("button");editBtn.className="btn btn-ghost btn-sm";editBtn.style.fontSize=".68rem";editBtn.textContent="Edit";
-      editBtn.onclick=(function(tid){return function(){openAdminModal(null,tid);};})(t.id);
-      var delBtn=ce("button");delBtn.className="btn btn-sm btn-del";delBtn.style.fontSize=".68rem";delBtn.textContent="\u00d7";
-      delBtn.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
-      entry.appendChild(main);entry.appendChild(pri);entry.appendChild(stat);entry.appendChild(editBtn);entry.appendChild(delBtn);
-      container.appendChild(entry);
-    });
-  });
-};
-
-var adminModalCat=null,adminEditId=null;
-window.openAdminModal=function(cat,editId){
-  adminModalCat=cat||null;adminEditId=editId||null;
-  var labels={client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Production Team"};
-  if(editId){
-    var t=tasks.find(function(x){return x.id===editId;});
-    if(t){adminModalCat=t.category;el("admin-modal-title").textContent="Edit \u2014 "+(labels[t.category]||t.category);
-      el("af-title").value=t.name;el("af-assignee").value=t.lead||"";el("af-date").value=t.due_date||"";el("af-priority").value=t.priority||"med";el("af-status").value=t.status||"todo";el("af-notes").value=t.asset||"";}
-  } else {
-    el("admin-modal-title").textContent="New \u2014 "+(labels[cat]||cat);
-    el("af-title").value="";el("af-assignee").value="";el("af-date").value="";el("af-priority").value="med";el("af-status").value="todo";el("af-notes").value="";
-  }
-  el("admin-modal").classList.add("open");
-};
-window.closeAdminModal=function(){el("admin-modal").classList.remove("open");};
-window.saveAdminEntry=async function(){
-  var title=el("af-title").value.trim();if(!title){alert("Please enter a title.");return;}
-  var payload={name:title,lead:el("af-assignee").value.trim()||null,due_date:el("af-date").value||null,priority:el("af-priority").value,status:el("af-status").value,category:adminModalCat,asset:el("af-notes").value.trim()||null,user_id:currentUser.id,project_id:activeProject.id};
-  if(adminEditId)await sb.from("tasks").update(payload).eq("id",adminEditId);
-  else await sb.from("tasks").insert(payload);
-  closeAdminModal();showToast("Saved!");loadTasks();
-};
-
-// ── FORGOT / RESET PASSWORD ───────────────────────────────────────────────────
-window.showForgotPassword=function(){
-  el("login-form").style.display="none";el("forgot-panel").style.display="flex";
-  var e=el("li-email");if(e&&e.value)el("fp-email").value=e.value;
-};
-window.hideForgotPassword=function(){el("forgot-panel").style.display="none";el("login-form").style.display="block";};
-window.doForgotPassword=async function(){
-  var email=el("fp-email").value.trim();if(!email){setMsg("Please enter your email.","error");return;}
-  setMsg("Sending...","");
-  var r=await sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.origin+window.location.pathname});
-  if(r.error)setMsg(r.error.message,"error");
-  else{hideForgotPassword();setMsg("Reset link sent! Check your inbox.","success");}
-};
-window.doResetPassword=async function(){
-  var pass=el("rp-pass").value,confirm=el("rp-confirm").value,msgEl=el("rp-msg");
-  if(pass.length<6){msgEl.style.color="#ef4444";msgEl.textContent="Password must be at least 6 characters.";return;}
-  if(pass!==confirm){msgEl.style.color="#ef4444";msgEl.textContent="Passwords don't match.";return;}
-  msgEl.textContent="Updating...";
-  var r=await sb.auth.updateUser({password:pass});
-  if(r.error){msgEl.style.color="#ef4444";msgEl.textContent=r.error.message;}
-  else{el("reset-modal").classList.remove("open");showToast("Password updated!");}
-};
 
 function updateStats(){
   var total=tasks.length,done=tasks.filter(function(t){return t.status==="done";}).length;
@@ -1771,12 +1411,11 @@ window.ganttToday=function(){ganttStart=new Date(today.getFullYear(),today.getMo
 
 // TABS
 window.showTab=function(name){
-  ["tab-schedule","tab-calendar","tab-gantt","tab-milestones"].forEach(function(id){var e=document.getElementById(id);if(e){e.style.display="none";e.classList.remove("active");}});
-  document.querySelectorAll(".nav-tab").forEach(function(e){e.classList.remove("active");});
-  var tab=document.getElementById("tab-"+name);if(tab){tab.style.display="block";tab.classList.add("active");}
-  var idx={schedule:0,calendar:1,gantt:2,milestones:3}[name];
-  var navTabs=document.querySelectorAll(".nav-tab");if(navTabs[idx])navTabs[idx].classList.add("active");
-  if(name==="schedule")renderSchedule();else if(name==="calendar")renderCalendar();else if(name==="gantt")renderGantt();else if(name==="milestones")renderMilestones();
+  ["tab-schedule","tab-calendar","tab-gantt"].forEach(function(id){var el=document.getElementById(id);el.style.display="none";el.classList.remove("active");});
+  document.querySelectorAll(".nav-tab").forEach(function(el){el.classList.remove("active");});
+  var el=document.getElementById("tab-"+name);el.style.display="block";el.classList.add("active");
+  document.querySelectorAll(".nav-tab")[{schedule:0,calendar:1,gantt:2}[name]].classList.add("active");
+  if(name==="schedule")renderSchedule();else if(name==="calendar")renderCalendar();else if(name==="gantt")renderGantt();
 };
 
 // PROJECT MODAL
@@ -1785,7 +1424,8 @@ window.closeProjModal=function(){document.getElementById("proj-modal").classList
 window.saveProject=async function(){var name=document.getElementById("pf-name").value.trim();if(!name){alert("Please enter a project name.");return;}var payload={name:name,description:document.getElementById("pf-desc").value.trim(),color:selectedColor,user_id:currentUser.id};var r;if(editProjId)r=await sb.from("projects").update(payload).eq("id",editProjId);else r=await sb.from("projects").insert(payload).select();if(r.error){alert("Error: "+r.error.message);return;}closeProjModal();if(!editProjId&&r.data&&r.data[0]){projects.push(r.data[0]);projExpanded[r.data[0].id]=true;activeProject=r.data[0];localStorage.setItem("celio-proj-"+currentUser.id,r.data[0].id);setHeaderProject(r.data[0]);showTab("schedule");loadTasks();}else{var idx=projects.findIndex(function(p){return p.id===editProjId;});if(idx>=0)projects[idx]=Object.assign(projects[idx],payload);}renderSidebar();showToast("Project saved!");};
 
 // MODAL CLOSE ON BG CLICK
-["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal","new-asset-modal","admin-modal","reset-modal"].forEach(function(id){var e=document.getElementById(id);if(!e)return;e.addEventListener("click",function(ev){if(ev.target===e){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal,"new-asset-modal":closeNewAssetModal,"admin-modal":closeAdminModal};if(closeFn[id])closeFn[id]();}});});
+["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal"].forEach(function(id){var el=document.getElementById(id);el.addEventListener("click",function(e){if(e.target===el){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal}[id];if(closeFn)closeFn();}});});
+
 // also need to add linked_assets column to shots
 // We'll do this via a one-time alter if needed
 async function ensureLinkedAssetsCol(){
@@ -1793,86 +1433,7 @@ async function ensureLinkedAssetsCol(){
   try{await sb.rpc("exec_sql",{sql:"alter table shots add column if not exists linked_assets text"});}catch(e){}
 }
 ensureLinkedAssetsCol();
-window.updateTaskStatus=async function(id,status){
-  await sb.from("tasks").update({status:status}).eq("id",id);
-  var t=tasks.find(function(x){return x.id===id;});if(t)t.status=status;
-  showToast("Updated!");
-};
 })();
-
 </script>
-
-    <!-- NEW ASSET MODAL -->
-    <div class="modal-bg" id="new-asset-modal">
-      <div class="modal" style="width:92%;max-width:480px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <h3 style="margin:0">New Asset</h3>
-          <button onclick="closeNewAssetModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3);line-height:1">&#215;</button>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:14px">
-          <div><label class="form-label">Asset Name</label><input id="naf-name" class="form-input" placeholder="e.g. Hero Character, Police Car..."></div>
-          <div><label class="form-label">Asset Type</label>
-            <select id="naf-type" class="form-input" onchange="updateNewAssetStages()">
-              <option value="character">Character</option><option value="prop">Prop</option>
-              <option value="environment">Environment</option><option value="vehicle">Vehicle</option><option value="fx">FX Element</option>
-            </select></div>
-          <div><label class="form-label">Pipeline Stages <span style="font-size:.72rem;color:var(--text4);font-weight:400">(click to deselect)</span></label>
-            <div id="naf-stages" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div><label class="form-label">Lead</label><input id="naf-lead" class="form-input" placeholder="Name"></div>
-            <div><label class="form-label">Start Date</label><input id="naf-start" class="form-input" type="date"></div>
-          </div>
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
-          <button class="btn btn-ghost" onclick="closeNewAssetModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveNewAsset()">Create Asset</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- ADMIN ENTRY MODAL -->
-    <div class="modal-bg" id="admin-modal">
-      <div class="modal" style="width:92%;max-width:460px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <h3 id="admin-modal-title" style="margin:0">New Entry</h3>
-          <button onclick="closeAdminModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3);line-height:1">&#215;</button>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div><label class="form-label">Title</label><input id="af-title" class="form-input" placeholder="Title or description"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div><label class="form-label">Assignee</label><input id="af-assignee" class="form-input" placeholder="Name"></div>
-            <div><label class="form-label">Date</label><input id="af-date" class="form-input" type="date"></div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div><label class="form-label">Priority</label>
-              <select id="af-priority" class="form-input"><option value="low">Low</option><option value="med" selected>Medium</option><option value="high">High</option></select></div>
-            <div><label class="form-label">Status</label>
-              <select id="af-status" class="form-input"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Done</option></select></div>
-          </div>
-          <div><label class="form-label">Notes</label><textarea id="af-notes" class="form-input" rows="2" style="resize:vertical" placeholder="Optional notes..."></textarea></div>
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
-          <button class="btn btn-ghost" onclick="closeAdminModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveAdminEntry()">Save</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- PASSWORD RESET MODAL -->
-    <div class="modal-bg" id="reset-modal" style="z-index:9999">
-      <div class="modal" style="width:92%;max-width:380px">
-        <div style="margin-bottom:16px">
-          <h3 style="margin:0 0 6px">Set New Password</h3>
-          <div style="font-size:.82rem;color:var(--text3)">Choose a new password for your account.</div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div><label class="form-label">New Password</label><input id="rp-pass" class="form-input" type="password" placeholder="Min 6 characters"></div>
-          <div><label class="form-label">Confirm Password</label><input id="rp-confirm" class="form-input" type="password" placeholder="Repeat password"></div>
-          <div id="rp-msg" style="font-size:.8rem;min-height:1rem"></div>
-        </div>
-        <div style="margin-top:20px"><button class="btn btn-primary" style="width:100%" onclick="doResetPassword()">Update Password</button></div>
-      </div>
-    </div>
-
 </body>
 </html>
