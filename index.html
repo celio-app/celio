@@ -575,33 +575,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
               <!-- ASSET GROUPS -->
               <div id="asset-sections"></div>
               <div id="shot-schedule-section"></div>
-              <!-- GENERAL TASKS -->
-              <div id="general-section" class="general-section">
-                <div class="general-section-hdr">
-                  <h2>&#128203; Milestones &amp; Admin</h2>
-                  <button class="btn btn-primary btn-sm" onclick="openModal(null)">+ Add Task</button>
-                  <select id="fstatus" class="btn btn-ghost" style="padding:4px 9px;font-size:.75rem" onchange="renderGeneralTasks()">
-                    <option value="">All Status</option><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="review">In Review</option><option value="done">Done</option>
-                  </select>
-                </div>
-                <div style="overflow-x:auto">
-                  <table style="width:100%;border-collapse:collapse">
-                    <thead><tr>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Task</th>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Lead</th>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Due</th>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Priority</th>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Status</th>
-                      <th style="padding:9px 12px;text-align:left;font-size:.69rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text4);background:var(--bg3);font-weight:700">Actions</th>
-                    </tr></thead>
-                    <tbody id="task-tbody"></tbody>
-                  </table>
-                </div>
-                <div class="prog-wrap">
-                  <div class="prog-lbl"><span>Overall Progress</span><span id="prog-pct">0%</span></div>
-                  <div class="pbar"><div class="pfill" id="prog-fill" style="width:0%"></div></div>
-                </div>
-              </div>
             </div>
             <div class="right-col">
               <div class="panel"><div class="panel-header"><h2>Handoffs</h2></div><div id="handoff-list"></div></div>
@@ -764,13 +737,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         <label class="flbl">Pipeline Stage</label>
         <div class="pipeline-stages" id="pipeline-stages-grid"></div>
       </div>
-      <div class="form-row">
-        <label class="flbl">Thumbnail <span style="font-size:.7rem;color:var(--text4);font-weight:400">Paste a Google Drive share link or direct image URL</span></label>
-        <div style="display:flex;gap:10px;align-items:center">
-          <input id="f-thumbnail" class="inp" placeholder="https://drive.google.com/file/d/..." style="flex:1" oninput="handleThumbnailInput(this.value)">
-          <div id="thumb-preview" style="width:52px;height:52px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--text4)">IMG</div>
-        </div>
-      </div>
+
     </div>
     <div class="form-row"><label class="flbl">Task Name / Notes</label><input id="f-name" class="inp" placeholder="e.g. Final rig sign-off"></div>
     <div class="form-row"><label class="flbl">Lead / Artist</label><input id="f-lead" class="inp" placeholder="e.g. Jordan"></div>
@@ -1291,7 +1258,7 @@ async function loadTasks(){
   if(name==="schedule")renderSchedule();
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
-  else if(name==="milestones")renderMilestones();
+  
 }
 
 
@@ -1313,7 +1280,6 @@ window.renderSchedule=function(){
   else{if(assetSec)assetSec.style.display="";if(generalSec)generalSec.style.display="";}
   renderAssetSections(assetTasks);
   renderShotSection();
-  renderGeneralTasks();
   renderHandoffs();renderAssetDeliverables();
 };
 
@@ -1376,20 +1342,7 @@ function renderAssetSections(assetTasks){
       var delBtn=document.createElement("button");delBtn.className="btn btn-sm btn-del";
       delBtn.style.cssText="font-size:.65rem;padding:2px 7px;flex-shrink:0;";delBtn.textContent="Delete";
       delBtn.onclick=(function(n2,at2){return function(e){e.stopPropagation();deleteAsset(n2,at2);};})(name,at);
-      // Build thumbnail for asset card header
-      var thumbSrc=null;
-      if(stageTasks.length){
-        var anyThumb=stageTasks.find(function(t){return t.thumbnail_url;});
-        if(anyThumb)thumbSrc=anyThumb.thumbnail_url;
-      }
-      if(thumbSrc){
-        var thumbEl=document.createElement("img");thumbEl.className="asset-thumb";
-        thumbEl.src=thumbSrc;thumbEl.alt="";
-        thumbEl.onerror=function(){this.style.display="none";};
-        hdr.appendChild(arrow);hdr.appendChild(thumbEl);hdr.appendChild(nameSpan);hdr.appendChild(badge);
-      } else {
-        hdr.appendChild(arrow);hdr.appendChild(nameSpan);hdr.appendChild(badge);
-      }hdr.appendChild(pbar);hdr.appendChild(ppct);hdr.appendChild(delBtn);
+      hdr.appendChild(arrow);hdr.appendChild(nameSpan);hdr.appendChild(badge);hdr.appendChild(pbar);hdr.appendChild(ppct);hdr.appendChild(delBtn);
       var body=document.createElement("div");body.style.display=isCollapsed?"none":"";
       (function(k){hdr.onclick=function(e){if(delBtn.contains(e.target))return;
         var show=body.style.display==="none";body.style.display=show?"":"none";
@@ -1919,7 +1872,7 @@ window.openModal=function(id,forceCat,forceAssetType){
       document.getElementById("f-status").value=t.status;
       document.getElementById("f-handoff").value=t.handoff_to||"";
       document.getElementById("f-deliverable").value=t.asset||"";document.getElementById("f-deliverable-url").value=t.asset_url||"";
-      document.getElementById("f-thumbnail").value=t.thumbnail_url||"";handleThumbnailInput(t.thumbnail_url||"");if(cat==="asset"){document.getElementById("f-asset-type").value=t.asset_type||"character";document.getElementById("f-asset-name").value=t.asset_name||"";updatePipelineStages();selectedPipelineStage=t.pipeline_stage;if(t.pipeline_stage){document.querySelectorAll("#pipeline-stages-grid .stage-pill").forEach(function(p){if(p.textContent===t.pipeline_stage)p.classList.add("active");});}}
+      if(cat==="asset"){document.getElementById("f-asset-type").value=t.asset_type||"character";document.getElementById("f-asset-name").value=t.asset_name||"";updatePipelineStages();selectedPipelineStage=t.pipeline_stage;if(t.pipeline_stage){document.querySelectorAll("#pipeline-stages-grid .stage-pill").forEach(function(p){if(p.textContent===t.pipeline_stage)p.classList.add("active");});}}
     }
   } else {
     selectedCat=forceCat||"general";
@@ -1937,47 +1890,19 @@ window.openModal=function(id,forceCat,forceAssetType){
 window.closeModal=function(){document.getElementById("modal").classList.remove("open");};
 
 
-function driveToThumb(url){
-  if(!url)return null;
-  // Already a direct image
-  if(url.match(/\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i))return url;
-  // drive.google.com/file/d/FILE_ID/...
-  var m=url.match(/drive\.google\.com\/file\/d\/([^/\?&]+)/);
-  if(m)return "https://drive.google.com/thumbnail?id="+m[1]+"&sz=w400";
-  // drive.google.com/open?id=FILE_ID
-  var m2=url.match(/[?&]id=([^&]+)/);
-  if(m2&&url.includes("drive.google.com"))return "https://drive.google.com/thumbnail?id="+m2[1]+"&sz=w400";
-  // lh3.googleusercontent already a thumb
-  if(url.includes("lh3.googleusercontent"))return url;
-  // Dropbox - convert dl=0 to raw=1
-  if(url.includes("dropbox.com"))return url.replace("dl=0","raw=1").replace("www.dropbox","dl.dropboxusercontent");
-  // Anything else - try as direct
-  return url;
-}
-
-window.handleThumbnailInput=function(val){
-  var converted=driveToThumb(val.trim());
-  var preview=document.getElementById("thumb-preview");
-  if(!converted){preview.innerHTML="IMG";preview.style.background="var(--bg3)";return;}
-  preview.innerHTML="";
-  var img=document.createElement("img");
-  img.style.cssText="width:100%;height:100%;object-fit:cover;";
-  img.src=converted;
-  img.onerror=function(){preview.innerHTML="&#10007;";preview.style.color="#ef4444";};
-  img.onload=function(){preview.style.background="none";};
-  preview.appendChild(img);
-};
-
 window.saveTask=async function(){
   var name=document.getElementById("f-name").value.trim(),lead=document.getElementById("f-lead").value.trim();
   if(!name||!lead){alert("Please fill in Task Name and Lead.");return;}
   if(selectedCat==="asset"&&!selectedPipelineStage){alert("Please select a pipeline stage.");return;}
   var payload={name:name,lead:lead,start_date:document.getElementById("f-start").value||null,due_date:document.getElementById("f-due").value||null,due_time:document.getElementById("f-time").value||null,priority:document.getElementById("f-priority").value,status:document.getElementById("f-status").value,category:selectedCat,user_id:currentUser.id,project_id:activeProject.id};
-  if(selectedCat==="asset"){payload.asset_type=document.getElementById("f-asset-type").value;payload.asset_name=document.getElementById("f-asset-name").value.trim();payload.pipeline_stage=selectedPipelineStage;payload.handoff_to=null;payload.asset=null;payload.asset_url=null;var rawThumb=document.getElementById("f-thumbnail").value.trim();payload.thumbnail_url=rawThumb?driveToThumb(rawThumb):null;}
+  if(selectedCat==="asset"){payload.asset_type=document.getElementById("f-asset-type").value;payload.asset_name=document.getElementById("f-asset-name").value.trim();payload.pipeline_stage=selectedPipelineStage;payload.handoff_to=null;payload.asset=null;payload.asset_url=null;}
   else{payload.handoff_to=document.getElementById("f-handoff").value.trim()||null;payload.asset=document.getElementById("f-deliverable").value.trim()||null;payload.asset_url=document.getElementById("f-deliverable-url").value.trim()||null;payload.asset_type=null;payload.asset_name=null;payload.pipeline_stage=null;}
-  if(editTaskId)await sb.from("tasks").update(payload).eq("id",editTaskId);
-  else await sb.from("tasks").insert(payload);
-  closeModal();showToast("Task saved!");loadTasks();
+  var result;
+  if(editTaskId)result=await sb.from("tasks").update(payload).eq("id",editTaskId);
+  else result=await sb.from("tasks").insert(payload).select();
+  if(result.error){alert("Error saving task: "+result.error.message);return;}
+  if(!editTaskId&&result.data&&result.data[0])tasks.push(result.data[0]);
+  closeModal();showToast("Task saved!");renderSchedule();
 };
 window.deleteTask=async function(id){if(!confirm("Remove this task?"))return;await sb.from("tasks").delete().eq("id",id);showToast("Removed.");loadTasks();};
 window.editTask=function(id){openModal(id);};
@@ -1998,18 +1923,18 @@ window.ganttToday=function(){ganttStart=new Date(today.getFullYear(),today.getMo
 
 // TABS
 window.showTab=function(name){
-  ["tab-schedule","tab-calendar","tab-gantt","tab-milestones"].forEach(function(id){
+  ["tab-schedule","tab-calendar","tab-gantt"].forEach(function(id){
     var e=document.getElementById(id);if(e){e.style.display="none";e.classList.remove("active");}
   });
   document.querySelectorAll(".nav-tab").forEach(function(e){e.classList.remove("active");});
   var tab=document.getElementById("tab-"+name);
   if(tab){tab.style.display="block";tab.classList.add("active");}
-  var ni={schedule:0,calendar:1,gantt:2,milestones:3}[name];
+  var ni={schedule:0,calendar:1,gantt:2}[name];
   var nt=document.querySelectorAll(".nav-tab");if(nt[ni])nt[ni].classList.add("active");
   if(name==="schedule")renderSchedule();
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
-  else if(name==="milestones")renderMilestones();
+  
 };
 
 // PROJECT MODAL
