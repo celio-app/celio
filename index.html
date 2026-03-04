@@ -419,6 +419,41 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   .schedule-grid{grid-template-columns:1fr;}
   .right-col{display:flex;flex-direction:column;}
 }
+
+.asset-card{background:var(--bg2);border:1px solid var(--border);border-radius:0;overflow:hidden;margin-bottom:0;}
+.asset-card-hdr{padding:9px 16px 9px 28px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;border-top:1px solid var(--border2);}
+.asset-card-hdr:hover{background:var(--bg3);}
+.asset-card-name{font-size:.85rem;font-weight:700;flex:1;}
+.asset-status-badge{font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px;}
+.asb-ready{background:#064e3b;color:#34d399;}.asb-inprog{background:#1e3a5f;color:#60a5fa;}.asb-blocked{background:#450a0a;color:#f87171;}
+.asset-prog-bar{width:80px;height:5px;background:var(--border2);border-radius:99px;overflow:hidden;flex-shrink:0;}
+.asset-prog-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);}
+.asset-prog-pct{font-size:.7rem;font-weight:700;color:var(--text3);width:28px;text-align:right;flex-shrink:0;}
+.type-group-hdr{padding:7px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--bg3);border-top:1px solid var(--border2);user-select:none;}
+.type-group-hdr:hover{background:var(--bg4);}
+.type-group-arrow{font-size:.55rem;color:var(--text4);transition:transform .15s;display:inline-block;}
+.type-group-arrow.open{transform:rotate(90deg);}
+.shot-status-pill{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:5px;}
+.ssp-ready{background:var(--bg3);color:var(--text4);}.ssp-inprogress{background:#1e3a5f;color:#60a5fa;}.ssp-review{background:#3b2f00;color:#fbbf24;}.ssp-approved{background:#064e3b;color:#34d399;}.ssp-final{background:#2e1065;color:#a78bfa;}
+.shot-arrow{font-size:.6rem;color:var(--text4);transition:transform .15s;flex-shrink:0;}
+.shot-arrow.open{transform:rotate(90deg);}
+
+.asset-card{background:var(--bg2);border:1px solid var(--border);border-radius:0;overflow:hidden;}
+.asset-card-hdr{padding:9px 16px 9px 28px;display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;border-top:1px solid var(--border2);}
+.asset-card-hdr:hover{background:var(--bg3);}
+.asset-card-name{font-size:.85rem;font-weight:700;flex:1;}
+.asset-status-badge{font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:999px;}
+.asb-ready{background:#064e3b;color:#34d399;}.asb-inprog{background:#1e3a5f;color:#60a5fa;}.asb-blocked{background:#450a0a;color:#f87171;}
+.asset-prog-bar{width:80px;height:5px;background:var(--border2);border-radius:99px;overflow:hidden;flex-shrink:0;}
+.asset-prog-fill{height:100%;background:linear-gradient(90deg,#7c3aed,#a78bfa);}
+.asset-prog-pct{font-size:.7rem;font-weight:700;color:var(--text3);width:28px;text-align:right;flex-shrink:0;}
+.type-group-hdr{padding:7px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--bg3);border-top:1px solid var(--border2);user-select:none;}
+.type-group-hdr:hover{background:var(--bg4);}
+.type-group-arrow{font-size:.55rem;color:var(--text4);transition:transform .15s;display:inline-block;}
+.type-group-arrow.open{transform:rotate(90deg);}
+.shot-status-pill{font-size:.68rem;font-weight:700;padding:2px 8px;border-radius:5px;}
+.ssp-ready{background:var(--bg3);color:var(--text4);}.ssp-inprogress{background:#1e3a5f;color:#60a5fa;}.ssp-review{background:#3b2f00;color:#fbbf24;}.ssp-approved{background:#064e3b;color:#34d399;}.ssp-final{background:#2e1065;color:#a78bfa;}
+.shot-arrow{font-size:.6rem;color:var(--text4);transition:transform .15s;flex-shrink:0;}.shot-arrow.open{transform:rotate(90deg);}
 </style>
 </head>
 <body>
@@ -518,12 +553,12 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
               <button class="sched-tab" onclick="setSchedView('assets',this)">&#127912; Assets</button>
               <button class="sched-tab" onclick="setSchedView('general',this)">&#128203; Milestones &amp; Admin</button>
             </div>
-            <button class="btn btn-primary btn-sm" onclick="openModal(null)">+ Add Task</button>
           </div>
           <div class="schedule-grid">
             <div style="display:flex;flex-direction:column;gap:14px">
               <!-- ASSET GROUPS -->
               <div id="asset-sections"></div>
+              <div id="shot-schedule-section"></div>
               <!-- GENERAL TASKS -->
               <div id="general-section" class="general-section">
                 <div class="general-section-hdr">
@@ -843,7 +878,7 @@ var calYear,calMonth,ganttStart;
 var today=new Date();today.setHours(0,0,0,0);
 var COL_W=34,selectedColor="#7c3aed",selectedCat="general",selectedPipelineStage=null,selectedShotTaskType=null;
 var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16","#f97316","#8b5cf6","#64748b","#0ea5e9"];
-var projExpanded={},seqOpen={},schedView="all";
+var projExpanded={},seqOpen={},schedView="all",assetGroupCollapsed={},typeGroupCollapsed={},shotSectionCollapsed={};
 var assetLinkSelection=[];
 
 // Pipeline stages by asset type
@@ -976,7 +1011,7 @@ window.selectProject=function(id){
 };
 function setHeaderProject(p){
   document.getElementById("hdr-bc").innerHTML='<div class="proj-badge"><span class="dot" style="background:'+p.color+'"></span><span>'+p.name+'</span></div>';
-  document.getElementById("hdr-actions").innerHTML='<button class="btn btn-primary" onclick="openModal(null)">+ Add Task</button>';
+  document.getElementById("hdr-actions").innerHTML="";
   document.getElementById("no-proj").style.display="none";
   document.getElementById("nav-tabs").style.display="";
 }
@@ -1192,12 +1227,18 @@ async function loadTasks(){
   var r=await sb.from("tasks").select("*").eq("user_id",currentUser.id).eq("project_id",activeProject.id).order("due_date",{ascending:true,nullsFirst:false});
   if(r.error){console.error(r.error);return;}
   tasks=r.data||[];
+  var pids2=shots.filter(function(s){return s.project_id===activeProject.id;}).map(function(s){return s.id;});
+  if(pids2.length){
+    var rst=await sb.from("shot_tasks").select("*").in("shot_id",pids2);
+    shotTasks=rst.data||[];
+  } else { shotTasks=[]; }
   var active=document.querySelector(".tab-content.active");
   var name=active?active.id.replace("tab-",""):"schedule";
   if(name==="schedule")renderSchedule();
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
 }
+
 
 // SCHEDULE VIEW FILTER
 window.setSchedView=function(v,el){
@@ -1208,96 +1249,173 @@ window.setSchedView=function(v,el){
 };
 
 window.renderSchedule=function(){
-  var assetTasks=tasks.filter(function(t){return t.category==="asset";});
-  var generalTasks=tasks.filter(function(t){return !t.category||t.category==="general";});
-  // update stats (all tasks)
   updateStats();
-  // asset sections
+  var assetTasks=tasks.filter(function(t){return t.category==="asset";});
   var assetSec=document.getElementById("asset-sections");
   var generalSec=document.getElementById("general-section");
-  if(schedView==="general"){assetSec.style.display="none";generalSec.style.display="";}
-  else if(schedView==="assets"){assetSec.style.display="";generalSec.style.display="none";}
-  else{assetSec.style.display="";generalSec.style.display="";}
+  if(schedView==="general"){if(assetSec)assetSec.style.display="none";if(generalSec)generalSec.style.display="";}
+  else if(schedView==="assets"){if(assetSec)assetSec.style.display="";if(generalSec)generalSec.style.display="none";}
+  else{if(assetSec)assetSec.style.display="";if(generalSec)generalSec.style.display="";}
   renderAssetSections(assetTasks);
-  renderGeneralTasks(generalTasks);
+  renderShotSection();
   renderHandoffs();renderAssetDeliverables();
 };
 
 function renderAssetSections(assetTasks){
-  var el=document.getElementById("asset-sections");
+  var container=document.getElementById("asset-sections");container.innerHTML="";
+  var secWrap=document.createElement("div");secWrap.className="asset-section";
+  var secHdr=document.createElement("div");secHdr.className="asset-section-hdr";
+  var h2=document.createElement("h2");h2.innerHTML="&#127912; Asset Pipeline";
+  var addBtn=document.createElement("button");addBtn.className="btn btn-primary btn-sm";
+  addBtn.textContent="+ New Asset";addBtn.onclick=function(){openModal(null,"asset");};
+  secHdr.appendChild(h2);secHdr.appendChild(addBtn);secWrap.appendChild(secHdr);
   if(!assetTasks.length){
-    el.innerHTML='<div class="asset-section"><div class="asset-section-hdr"><h2>&#127912; Asset Pipeline</h2><button class="btn btn-ghost btn-sm" onclick="openModal(null,\'asset\')">+ Add Asset Task</button></div><div style="padding:24px;text-align:center;color:var(--text4);font-size:.82rem">No asset tasks yet. Click + Add Asset Task to track characters, props and environments through the pre-production pipeline.</div></div>';
-    return;
+    var empty=document.createElement("div");
+    empty.style.cssText="padding:24px;text-align:center;color:var(--text4);font-size:.82rem";
+    empty.textContent="No asset tasks yet.";secWrap.appendChild(empty);container.appendChild(secWrap);return;
   }
-  // group by asset_type then asset_name
   var byType={};
   assetTasks.forEach(function(t){
-    var at=t.asset_type||"other";
-    if(!byType[at])byType[at]=[];
-    byType[at].push(t);
+    var at=t.asset_type||"other",n=t.asset_name||"Unnamed";
+    if(!byType[at])byType[at]={};
+    if(!byType[at][n])byType[at][n]=[];
+    byType[at][n].push(t);
   });
   var typeOrder=["character","prop","environment","vehicle","fx","other"];
-  var html="";
+  var typeLabels={character:"Characters",prop:"Props",environment:"Environments",vehicle:"Vehicles",fx:"FX Elements",other:"Other"};
   typeOrder.forEach(function(at){
     if(!byType[at])return;
-    var typeTasks=byType[at];
-    // group by asset_name
-    var byName={};
-    typeTasks.forEach(function(t){var n=t.asset_name||"Unnamed";if(!byName[n])byName[n]=[];byName[n].push(t);});
-    html+='<div class="asset-section"><div class="asset-section-hdr"><h2><span class="asset-type-icon">'+assetTypeIcon(at)+'</span>'+assetTypeLabel(at)+'s<span style="font-size:.75rem;font-weight:400;color:var(--text3);margin-left:8px">'+Object.keys(byName).length+' assets</span></h2><button class="btn btn-ghost btn-sm" onclick="openModal(null,\'asset\',\''+at+'\')">+ Add</button></div>';
-    Object.keys(byName).forEach(function(name){
-      var ntasks=byName[name];
-      var total=ntasks.length,done=ntasks.filter(function(t){return t.status==="done";}).length;
+    var names=Object.keys(byType[at]);
+    var isTypeCollapsed=typeGroupCollapsed[at]===true;
+    var typeRow=document.createElement("div");typeRow.className="type-group-hdr";
+    var typeArrow=document.createElement("span");typeArrow.className="type-group-arrow"+(isTypeCollapsed?"":" open");typeArrow.innerHTML="&#9658;";
+    var typeIcon=document.createElement("span");typeIcon.innerHTML=assetTypeIcon(at);typeIcon.style.fontSize=".9rem";
+    var typeLbl=document.createElement("span");typeLbl.style.cssText="font-size:.78rem;font-weight:800;flex:1;";typeLbl.textContent=typeLabels[at];
+    var typeCnt=document.createElement("span");typeCnt.style.cssText="font-size:.68rem;color:var(--text4);";typeCnt.textContent=names.length+" asset"+(names.length!==1?"s":"");
+    var addTBtn=document.createElement("button");addTBtn.className="btn btn-ghost btn-sm";addTBtn.style.fontSize=".68rem";addTBtn.textContent="+ Add";
+    addTBtn.onclick=function(e){e.stopPropagation();openModal(null,"asset",at);};
+    typeRow.appendChild(typeArrow);typeRow.appendChild(typeIcon);typeRow.appendChild(typeLbl);typeRow.appendChild(typeCnt);typeRow.appendChild(addTBtn);
+    var typeBody=document.createElement("div");typeBody.style.display=isTypeCollapsed?"none":"";
+    (function(atype,arr,bdy){typeRow.onclick=function(e){
+      if(addTBtn.contains(e.target))return;
+      var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
+      arr.classList.toggle("open",!hiding);typeGroupCollapsed[atype]=hiding;
+    };})(at,typeArrow,typeBody);
+    secWrap.appendChild(typeRow);
+    names.forEach(function(name){
+      var stageTasks=byType[at][name];
+      var total=stageTasks.length,done=stageTasks.filter(function(t){return t.status==="done";}).length;
       var pct=total?Math.round(done/total*100):0;
-      var allDone=done===total,anyLate=ntasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
-      var gid="ag-"+at+"-"+name.replace(/\s/g,"-");
-      html+='<div class="asset-group"><div class="asset-group-hdr" onclick="toggleAssetGroup(\''+gid+'\')">';
-      html+='<span class="asset-group-arrow open" id="arr-'+gid+'">&#9658;</span>';
-      html+='<span class="asset-group-name">'+name+'</span>';
-      if(anyLate)html+='<span style="font-size:.7rem;color:#ef4444;font-weight:700">&#9888; Overdue</span>';
-      else if(allDone)html+='<span style="font-size:.7rem;color:#10b981;font-weight:700">&#10003; Ready</span>';
-      html+='<div class="asset-progress-bar"><div class="asset-progress-fill" style="width:'+pct+'%"></div></div>';
-      html+='<span class="asset-progress-lbl">'+pct+'%</span></div>';
-      html+='<div id="'+gid+'">';
-      html+='<table class="asset-tasks-table"><thead><tr><th>Stage</th><th>Lead</th><th>Start</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead><tbody>';
-      ntasks.forEach(function(t){
+      var anyLate=stageTasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
+      var isReady=done===total&&total>0;
+      var key=at+"|"+name;var isCollapsed=assetGroupCollapsed[key]!==false;
+      var card=document.createElement("div");card.className="asset-card";
+      var hdr=document.createElement("div");hdr.className="asset-card-hdr";
+      var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
+      var nameSpan=document.createElement("span");nameSpan.className="asset-card-name";nameSpan.textContent=name;
+      var badge=document.createElement("span");badge.className="asset-status-badge "+(isReady?"asb-ready":anyLate?"asb-blocked":"asb-inprog");
+      badge.textContent=isReady?"Ready":anyLate?"Blocked":"In Progress";
+      var pbar=document.createElement("div");pbar.className="asset-prog-bar";
+      var pfill=document.createElement("div");pfill.className="asset-prog-fill";pfill.style.width=pct+"%";pbar.appendChild(pfill);
+      var ppct=document.createElement("span");ppct.className="asset-prog-pct";ppct.textContent=pct+"%";
+      var delBtn=document.createElement("button");delBtn.className="btn btn-sm btn-del";
+      delBtn.style.cssText="font-size:.65rem;padding:2px 7px;flex-shrink:0;";delBtn.textContent="Delete";
+      delBtn.onclick=(function(n2,at2){return function(e){e.stopPropagation();deleteAsset(n2,at2);};})(name,at);
+      hdr.appendChild(arrow);hdr.appendChild(nameSpan);hdr.appendChild(badge);hdr.appendChild(pbar);hdr.appendChild(ppct);hdr.appendChild(delBtn);
+      var body=document.createElement("div");body.style.display=isCollapsed?"none":"";
+      (function(k){hdr.onclick=function(e){if(delBtn.contains(e.target))return;
+        var show=body.style.display==="none";body.style.display=show?"":"none";
+        arrow.classList.toggle("open",show);assetGroupCollapsed[k]=!show;
+      };})(key);
+      var tbl=document.createElement("table");tbl.className="asset-body-table";
+      tbl.innerHTML="<thead><tr><th>Stage</th><th>Lead</th><th>Start</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>";
+      var tbody=document.createElement("tbody");
+      stageTasks.forEach(function(t){
+        var tr=document.createElement("tr");
         var d=t.due_date?daysUntil(t.due_date):null;
-        var dl=!t.due_date?"--":t.status==="done"?fmtDate(t.due_date):d<0?Math.abs(d)+"d late":fmtDate(t.due_date);
-        var dCls=!t.due_date?"":t.status==="done"?"d-ok":d<0?"d-late":d<=2?"d-soon":"d-ok";
-        html+='<tr><td><span class="pipeline-stage-badge">'+(t.pipeline_stage||t.name)+'</span></td>';
-        html+='<td><span class="chip">'+t.lead+'</span></td>';
-        html+='<td style="font-size:.78rem">'+fmtDate(t.start_date)+'</td>';
-        html+='<td style="font-size:.78rem"><span class="'+dCls+'">'+dl+'</span></td>';
-        html+=mkStatusCell(t);
-        html+='<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="editTask(\''+t.id+'\')">Edit</button> <button class="btn btn-sm btn-del" onclick="deleteTask(\''+t.id+'\')">Remove</button></td></tr>';
+        var c1=document.createElement("td");var sb2=document.createElement("span");sb2.className="pipeline-stage-badge";sb2.textContent=t.pipeline_stage||t.name;c1.appendChild(sb2);
+        var c2=document.createElement("td");if(t.lead){var ch=document.createElement("span");ch.className="chip";ch.textContent=t.lead;c2.appendChild(ch);}else{c2.textContent="\u2014";c2.style.color="var(--text4)";}
+        var c3=document.createElement("td");c3.style.fontSize=".75rem";c3.textContent=fmtDate(t.start_date)||"\u2014";
+        var c4=document.createElement("td");if(t.due_date){var ds=document.createElement("span");ds.className=t.status==="done"?"d-ok":d<0?"d-late":d<=2?"d-soon":"d-ok";ds.textContent=fmtDate(t.due_date);c4.appendChild(ds);}else{c4.textContent="\u2014";}
+        var c5=document.createElement("td");
+        var sel=document.createElement("select");sel.style.cssText="font-size:.72rem;border:1px solid var(--border);border-radius:5px;padding:2px 4px;background:var(--bg3);color:var(--text);cursor:pointer;";
+        [["todo","To Do"],["inprogress","In Progress"],["review","In Review"],["done","Done"]].forEach(function(pair){var o=document.createElement("option");o.value=pair[0];o.textContent=pair[1];if(t.status===pair[0])o.selected=true;sel.appendChild(o);});
+        sel.onchange=(function(tid){return function(){sb.from("tasks").update({status:this.value}).eq("id",tid);var tk=tasks.find(function(x){return x.id===tid;});if(tk)tk.status=this.value;showToast("Updated!");};})(t.id);
+        c5.appendChild(sel);
+        var c6=document.createElement("td");c6.style.whiteSpace="nowrap";
+        var eb=document.createElement("button");eb.className="btn btn-ghost btn-sm";eb.style.fontSize=".68rem";eb.textContent="Edit";eb.onclick=(function(tid){return function(){editTask(tid);};})(t.id);
+        var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="Remove";db.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
+        c6.appendChild(eb);c6.appendChild(db);
+        tr.appendChild(c1);tr.appendChild(c2);tr.appendChild(c3);tr.appendChild(c4);tr.appendChild(c5);tr.appendChild(c6);tbody.appendChild(tr);
       });
-      html+='</tbody></table></div></div>';
+      tbl.appendChild(tbody);body.appendChild(tbl);
+      card.appendChild(hdr);card.appendChild(body);typeBody.appendChild(card);
     });
-    html+='</div>';
+    secWrap.appendChild(typeBody);
   });
-  el.innerHTML=html;
+  container.appendChild(secWrap);
 }
 
-window.toggleAssetGroup=function(id){
-  var el=document.getElementById(id);var arr=document.getElementById("arr-"+id);
-  if(!el)return;
-  var hidden=el.style.display==="none";
-  el.style.display=hidden?"":"none";
-  if(arr)arr.classList.toggle("open",hidden);
-};
-
-function renderGeneralTasks(generalTasks){
-  var fs=document.getElementById("fstatus").value;
-  var filtered=generalTasks.filter(function(t){return !fs||t.status===fs;});
-  var tbody=document.getElementById("task-tbody");
-  if(!filtered.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text3);font-size:.82rem">No milestone or admin tasks yet.</td></tr>';return;}
-  var rows="";
-  filtered.forEach(function(t){
-    var d=t.due_date?daysUntil(t.due_date):null;
-    var dl=!t.due_date?"--":t.status==="done"?fmtDate(t.due_date):d<0?Math.abs(d)+"d late":d===0?"Today":fmtDue(t);
-    rows+='<tr><td><strong>'+t.name+'</strong></td><td><span class="chip">'+t.lead+'</span></td><td><span class="'+(t.due_date?dueClass(t):"d-ok")+'">'+dl+'</span></td><td><span class="pdot p-'+t.priority+'"></span>'+t.priority.charAt(0).toUpperCase()+t.priority.slice(1)+'</td>'+mkStatusCell(t)+'<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" onclick="editTask(\''+t.id+'\')">Edit</button> <button class="btn btn-sm btn-del" onclick="deleteTask(\''+t.id+'\')">Remove</button></td></tr>';
+function renderShotSection(){
+  var container=document.getElementById("shot-schedule-section");if(!container)return;
+  container.innerHTML="";if(!activeProject)return;
+  var projShots=shots.filter(function(s){return s.project_id===activeProject.id;});
+  var wrap=document.createElement("div");wrap.className="asset-section";
+  var sh2=document.createElement("div");sh2.className="asset-section-hdr";
+  var shTitle=document.createElement("h2");shTitle.innerHTML="&#127916; Shot Progression";
+  sh2.appendChild(shTitle);wrap.appendChild(sh2);
+  if(!projShots.length){
+    var emp=document.createElement("div");emp.style.cssText="padding:20px;text-align:center;color:var(--text4);font-size:.82rem";
+    emp.textContent="No shots yet.";wrap.appendChild(emp);container.appendChild(wrap);return;
+  }
+  projShots.forEach(function(sh){
+    var shTasks=(shotTasks||[]).filter(function(t){return t.shot_id===sh.id;});
+    var total=shTasks.length,done=shTasks.filter(function(t){return t.status==="approved"||t.status==="final";}).length;
+    var pct=total?Math.round(done/total*100):0;
+    var isCollapsed=shotSectionCollapsed[sh.id]!==false;
+    var card=document.createElement("div");card.className="asset-card";
+    var hdr=document.createElement("div");hdr.className="asset-card-hdr";hdr.style.paddingLeft="16px";
+    var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
+    var dot=document.createElement("span");dot.style.cssText="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:"+shotStatusColor(sh.status);
+    var code=document.createElement("span");code.style.cssText="font-size:.85rem;font-weight:800;color:var(--purple);";code.textContent=sh.code;
+    var desc=document.createElement("span");desc.style.cssText="font-size:.75rem;color:var(--text3);flex:1;";desc.textContent=sh.description||"";
+    var pbar=document.createElement("div");pbar.className="asset-prog-bar";
+    var pfill=document.createElement("div");pfill.className="asset-prog-fill";pfill.style.width=pct+"%";pbar.appendChild(pfill);
+    var ppct=document.createElement("span");ppct.className="asset-prog-pct";ppct.textContent=pct+"%";
+    var openBtn=document.createElement("button");openBtn.className="btn btn-ghost btn-sm";openBtn.style.fontSize=".68rem";openBtn.textContent="Open Shot";
+    openBtn.onclick=function(e){e.stopPropagation();openShot(sh.id);};
+    hdr.appendChild(arrow);hdr.appendChild(dot);hdr.appendChild(code);hdr.appendChild(desc);hdr.appendChild(pbar);hdr.appendChild(ppct);hdr.appendChild(openBtn);
+    var body=document.createElement("div");body.style.display=isCollapsed?"none":"";
+    (function(sid){hdr.onclick=function(e){if(openBtn.contains(e.target))return;
+      var show=body.style.display==="none";body.style.display=show?"":"none";
+      arrow.classList.toggle("open",show);shotSectionCollapsed[sid]=!show;
+    };})(sh.id);
+    if(shTasks.length){
+      var tbl=document.createElement("table");tbl.style.cssText="width:100%;border-collapse:collapse;";
+      tbl.innerHTML="<thead style='background:var(--bg3)'><tr>"
+        +"<th style='padding:6px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;color:var(--text4);font-weight:700'>Task</th>"
+        +"<th style='padding:6px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;color:var(--text4);font-weight:700'>Assignee</th>"
+        +"<th style='padding:6px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;color:var(--text4);font-weight:700'>Due</th>"
+        +"<th style='padding:6px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;color:var(--text4);font-weight:700'>Status</th>"
+        +"</tr></thead>";
+      var stMap={ready:"ssp-ready",inprogress:"ssp-inprogress",review:"ssp-review",approved:"ssp-approved",final:"ssp-final"};
+      var stLbl={ready:"Ready",inprogress:"In Progress",review:"In Review",approved:"Approved",final:"Final"};
+      var tbody=document.createElement("tbody");
+      shTasks.forEach(function(t){
+        var tr=document.createElement("tr");
+        var td1=document.createElement("td");td1.style.cssText="padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2)";var pb=document.createElement("span");pb.className="pipeline-stage-badge";pb.textContent=t.task_type;td1.appendChild(pb);
+        var td2=document.createElement("td");td2.style.cssText="padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2)";if(t.assignee){var ch=document.createElement("span");ch.className="chip";ch.style.fontSize=".7rem";ch.textContent=t.assignee;td2.appendChild(ch);}else td2.textContent="\u2014";
+        var td3=document.createElement("td");td3.style.cssText="padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2)";td3.textContent=t.due_date?fmtDate(t.due_date):"\u2014";
+        var td4=document.createElement("td");td4.style.cssText="padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2)";var pill=document.createElement("span");pill.className="shot-status-pill "+(stMap[t.status]||"ssp-ready");pill.textContent=stLbl[t.status]||t.status;td4.appendChild(pill);
+        tr.appendChild(td1);tr.appendChild(td2);tr.appendChild(td3);tr.appendChild(td4);tbody.appendChild(tr);
+      });
+      tbl.appendChild(tbody);body.appendChild(tbl);
+    } else {
+      var nt=document.createElement("div");nt.style.cssText="padding:10px 16px;font-size:.78rem;color:var(--text4)";nt.textContent="No pipeline tasks yet.";body.appendChild(nt);
+    }
+    card.appendChild(hdr);card.appendChild(body);wrap.appendChild(card);
   });
-  tbody.innerHTML=rows;
+  container.appendChild(wrap);
 }
 
 function updateStats(){
