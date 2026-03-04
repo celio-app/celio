@@ -952,7 +952,7 @@ window.onerror=function(msg,src,line,col,err){
 
 var SB_URL="https://uwocrciwfgggnopszpjb.supabase.co";
 var SB_KEY="sb_publishable_D4TCcLpL7elN7q0c0igLxA_PoOKl7Y0";
-var sb=supabase.createClient(SB_URL,SB_KEY);
+var sb=supabase.createClient(SB_URL,SB_KEY,{auth:{storage:window.localStorage,storageKey:"celio-auth",flowType:"implicit",detectSessionInUrl:true,persistSession:true}});
 var currentUser=null,tasks=[],projects=[],sequences=[],shots=[],shotTasks=[],shotAssetLinks=[];
 var activeProject=null,activeShot=null;
 var editTaskId=null,editProjId=null,editSeqId=null,currentSeqId=null;
@@ -962,6 +962,8 @@ var COL_W=34,selectedColor="#7c3aed",selectedCat="general",selectedPipelineStage
 var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16","#f97316","#8b5cf6","#64748b","#0ea5e9"];
 var projExpanded={},seqOpen={},schedView="all",assetGroupCollapsed={},shotSectionCollapsed={};
 var assetLinkSelection=[];
+function el(id){return document.getElementById(id);}
+function ce(tag){return document.createElement(tag);}
 
 // Pipeline stages by asset type
 var PIPELINE_STAGES={
@@ -1783,8 +1785,7 @@ window.closeProjModal=function(){document.getElementById("proj-modal").classList
 window.saveProject=async function(){var name=document.getElementById("pf-name").value.trim();if(!name){alert("Please enter a project name.");return;}var payload={name:name,description:document.getElementById("pf-desc").value.trim(),color:selectedColor,user_id:currentUser.id};var r;if(editProjId)r=await sb.from("projects").update(payload).eq("id",editProjId);else r=await sb.from("projects").insert(payload).select();if(r.error){alert("Error: "+r.error.message);return;}closeProjModal();if(!editProjId&&r.data&&r.data[0]){projects.push(r.data[0]);projExpanded[r.data[0].id]=true;activeProject=r.data[0];localStorage.setItem("celio-proj-"+currentUser.id,r.data[0].id);setHeaderProject(r.data[0]);showTab("schedule");loadTasks();}else{var idx=projects.findIndex(function(p){return p.id===editProjId;});if(idx>=0)projects[idx]=Object.assign(projects[idx],payload);}renderSidebar();showToast("Project saved!");};
 
 // MODAL CLOSE ON BG CLICK
-["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal","new-asset-modal","admin-modal","reset-modal"].forEach(function(id){var el=document.getElementById(id);el.addEventListener("click",function(e){if(e.target===el){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal,"new-asset-modal":closeNewAssetModal,"admin-modal":closeAdminModal}[id];if(closeFn)closeFn();}});});
-
+["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal","new-asset-modal","admin-modal","reset-modal"].forEach(function(id){var e=document.getElementById(id);if(!e)return;e.addEventListener("click",function(ev){if(ev.target===e){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal,"new-asset-modal":closeNewAssetModal,"admin-modal":closeAdminModal};if(closeFn[id])closeFn[id]();}});});
 // also need to add linked_assets column to shots
 // We'll do this via a one-time alter if needed
 async function ensureLinkedAssetsCol(){
@@ -1792,13 +1793,13 @@ async function ensureLinkedAssetsCol(){
   try{await sb.rpc("exec_sql",{sql:"alter table shots add column if not exists linked_assets text"});}catch(e){}
 }
 ensureLinkedAssetsCol();
-})();
-
 window.updateTaskStatus=async function(id,status){
   await sb.from("tasks").update({status:status}).eq("id",id);
   var t=tasks.find(function(x){return x.id===id;});if(t)t.status=status;
   showToast("Updated!");
 };
+})();
+
 </script>
 
     <!-- NEW ASSET MODAL -->
