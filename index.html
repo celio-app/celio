@@ -1046,6 +1046,11 @@ window.toggleSeq=function(pid,sid){if(!seqOpen[pid])seqOpen[pid]={};seqOpen[pid]
 window.selectProject=function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
   if(activeShot)backToProject();
+  // If already active, toggle collapse; otherwise select and expand
+  if(activeProject&&activeProject.id===id){
+    projExpanded[id]=!projExpanded[id];
+    renderSidebar();return;
+  }
   activeProject=p;projExpanded[id]=true;
   localStorage.setItem("celio-proj-"+currentUser.id,id);
   setHeaderProject(p);renderSidebar();showShotPage(false);showTab("schedule");loadTasks();
