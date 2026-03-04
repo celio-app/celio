@@ -900,10 +900,10 @@ var assetLinkSelection=[];
 
 // Pipeline stages by asset type
 var PIPELINE_STAGES={
-  character:["Design","Modelling","Rigging","Surfacing","Texturing","Blend Shapes"],
-  prop:["Design","Modelling","Surfacing","Texturing"],
-  environment:["Design","Modelling","Surfacing","Texturing","Dressing"],
-  vehicle:["Design","Modelling","Rigging","Surfacing","Texturing"],
+  character:["Design","Modelling","Rigging","Surfacing","Blend Shapes"],
+  prop:["Design","Modelling","Surfacing"],
+  environment:["Design","Modelling","Surfacing","Dressing"],
+  vehicle:["Design","Modelling","Rigging","Surfacing"],
   fx:["Design","Development","Sign-off"]
 };
 var SHOT_TASK_TYPES=["Layout","Animation","CFX","FX","Lighting","Rendering","Compositing","Custom..."];
@@ -1518,7 +1518,7 @@ window.selectCat=function(cat,el){
   document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.remove("active");});
   el.classList.add("active");
   document.getElementById("asset-fields").style.display=cat==="asset"?"block":"none";
-  document.getElementById("general-extra-fields").style.display=cat==="asset"?"none":"block";
+  document.getElementById("general-extra-fields").style.display="block";
   if(cat==="asset")updatePipelineStages();
 };
 
@@ -1551,7 +1551,7 @@ window.openModal=function(id,forceCat,forceAssetType){
       selectedCat=cat;
       document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.toggle("active",p.dataset.cat===cat);});
       document.getElementById("asset-fields").style.display=cat==="asset"?"block":"none";
-      document.getElementById("general-extra-fields").style.display=cat==="asset"?"none":"block";
+      document.getElementById("general-extra-fields").style.display="block";
       document.getElementById("f-name").value=t.name;document.getElementById("f-icon-url").value=t.icon_url||"";previewIcon(t.icon_url||"");document.getElementById("f-lead").value=t.lead;
       document.getElementById("f-start").value=t.start_date||"";document.getElementById("f-due").value=t.due_date||"";
       document.getElementById("f-time").value=t.due_time||"";document.getElementById("f-priority").value=t.priority;
