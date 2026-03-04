@@ -2086,7 +2086,260 @@ window.saveProject=async function(){
           <button class="btn btn-primary" style="width:100%" onclick="doResetPassword()">Update Password</button>
         </div>
       </div>
+    <
+    <!-- TASK MODAL -->
+    <div class="modal-bg" id="modal">
+      <div class="modal" style="width:92%;max-width:560px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 id="modal-title" style="margin:0">Add Task</h3>
+          <button onclick="closeModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text3);line-height:1">&#215;</button>
+        </div>
+        <!-- Category pills -->
+        <div style="margin-bottom:14px">
+          <div class="form-label" style="margin-bottom:6px">Category</div>
+          <div class="cat-pills">
+            <button class="cat-pill active" data-cat="general" onclick="selectCat('general',this)">&#128203; General</button>
+            <button class="cat-pill" data-cat="asset" onclick="selectCat('asset',this)">&#127912; Asset</button>
+          </div>
+        </div>
+        <!-- Asset fields -->
+        <div id="asset-fields" style="display:none;margin-bottom:14px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="form-row">
+              <label class="form-label">Asset Type</label>
+              <select id="f-asset-type" class="form-input" onchange="updatePipelineStages()">
+                <option value="character">Character</option>
+                <option value="prop">Prop</option>
+                <option value="environment">Environment</option>
+                <option value="vehicle">Vehicle</option>
+                <option value="fx">FX Element</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label class="form-label">Asset Name</label>
+              <input id="f-asset-name" class="form-input" placeholder="e.g. Hero, Police Car">
+            </div>
+          </div>
+          <div class="form-row" style="margin-bottom:10px">
+            <label class="form-label">Pipeline Stage</label>
+            <div id="pipeline-stages-grid" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+          </div>
+        </div>
+        <!-- General fields -->
+        <div id="general-extra-fields">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+            <div class="form-row">
+              <label class="form-label">Deliverable</label>
+              <input id="f-deliverable" class="form-input" placeholder="Asset or output name">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Deliverable URL</label>
+              <input id="f-deliverable-url" class="form-input" placeholder="https://...">
+            </div>
+          </div>
+          <div class="form-row" style="margin-bottom:10px">
+            <label class="form-label">Handoff To</label>
+            <input id="f-handoff" class="form-input" placeholder="Who receives this?">
+          </div>
+        </div>
+        <!-- Common fields -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="form-row">
+            <label class="form-label">Task Name</label>
+            <input id="f-name" class="form-input" placeholder="Task name">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Lead</label>
+            <input id="f-lead" class="form-input" placeholder="Person responsible">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:10px">
+          <div class="form-row">
+            <label class="form-label">Start Date</label>
+            <input id="f-start" class="form-input" type="date">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Due Date</label>
+            <input id="f-due" class="form-input" type="date">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Due Time</label>
+            <input id="f-time" class="form-input" type="time">
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+          <div class="form-row">
+            <label class="form-label">Priority</label>
+            <select id="f-priority" class="form-input">
+              <option value="low">Low</option>
+              <option value="med" selected>Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Status</label>
+            <select id="f-status" class="form-input">
+              <option value="todo">To Do</option>
+              <option value="inprogress">In Progress</option>
+              <option value="review">In Review</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px">
+          <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+        </div>
+      </div>
     </div>
+
+    <!-- PROJECT MODAL -->
+    <div class="modal-bg" id="proj-modal">
+      <div class="modal" style="width:92%;max-width:440px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 id="proj-modal-title" style="margin:0">New Project</h3>
+          <button onclick="closeProjModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text3);line-height:1">&#215;</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="form-row">
+            <label class="form-label">Project Name</label>
+            <input id="pf-name" class="form-input" placeholder="Project name">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Description</label>
+            <input id="pf-desc" class="form-input" placeholder="Optional description">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Color</label>
+            <div id="color-row" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:4px"></div>
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+          <button class="btn btn-ghost" onclick="closeProjModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SEQUENCE MODAL -->
+    <div class="modal-bg" id="seq-modal">
+      <div class="modal" style="width:92%;max-width:400px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 id="seq-modal-title" style="margin:0">New Sequence</h3>
+          <button onclick="closeSeqModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text3);line-height:1">&#215;</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="form-row">
+            <label class="form-label">Sequence Code</label>
+            <input id="sf-code" class="form-input" placeholder="e.g. SQ010">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Name</label>
+            <input id="sf-name" class="form-input" placeholder="e.g. Opening Chase">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+          <button class="btn btn-ghost" onclick="closeSeqModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveSeq()">Save Sequence</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHOT MODAL -->
+    <div class="modal-bg" id="shot-modal">
+      <div class="modal" style="width:92%;max-width:400px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 style="margin:0">New Shot</h3>
+          <button onclick="closeShotModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text3);line-height:1">&#215;</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="form-row">
+            <label class="form-label">Shot Code</label>
+            <input id="shf-code" class="form-input" placeholder="e.g. SH010">
+          </div>
+          <div class="form-row">
+            <label class="form-label">Description</label>
+            <input id="shf-desc" class="form-input" placeholder="Brief description">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+          <button class="btn btn-ghost" onclick="closeShotModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveShot()">Save Shot</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SHOT TASK MODAL -->
+    <div class="modal-bg" id="shot-task-modal">
+      <div class="modal" style="width:92%;max-width:480px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 style="margin:0">Add Pipeline Task</h3>
+          <button onclick="closeShotTaskModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text3);line-height:1">&#215;</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="form-row">
+            <label class="form-label">Task Type</label>
+            <div id="shot-task-type-grid" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+          </div>
+          <div id="custom-type-row" style="display:none" class="form-row">
+            <label class="form-label">Custom Task Name</label>
+            <input id="stf-custom" class="form-input" placeholder="Enter task name">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-row">
+              <label class="form-label">Assignee</label>
+              <input id="stf-assignee" class="form-input" placeholder="Name">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Status</label>
+              <select id="stf-status" class="form-input">
+                <option value="ready">Ready</option>
+                <option value="inprogress">In Progress</option>
+                <option value="review">In Review</option>
+                <option value="approved">Approved</option>
+                <option value="final">Final</option>
+              </select>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="form-row">
+              <label class="form-label">Start Date</label>
+              <input id="stf-start" class="form-input" type="date">
+            </div>
+            <div class="form-row">
+              <label class="form-label">Due Date</label>
+              <input id="stf-due" class="form-input" type="date">
+            </div>
+          </div>
+          <div class="form-row">
+            <label class="form-label">Notes</label>
+            <input id="stf-notes" class="form-input" placeholder="Optional notes">
+          </div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+          <button class="btn btn-ghost" onclick="closeShotTaskModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveShotTask()">Add Task</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ASSET LINK MODAL -->
+    <div class="modal-bg" id="asset-link-modal">
+      <div class="modal" style="width:92%;max-width:440px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 style="margin:0">Link Assets to Shot</h3>
+          <button onclick="closeAssetLinkModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text3);line-height:1">&#215;</button>
+        </div>
+        <input id="asset-search-inp" class="form-input" placeholder="Search assets..." oninput="filterAssetSearch(this.value)" style="margin-bottom:12px">
+        <div id="asset-search-list" style="max-height:300px;overflow-y:auto;display:flex;flex-direction:column;gap:4px"></div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+          <button class="btn btn-ghost" onclick="closeAssetLinkModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveAssetLinks()">Save Links</button>
+        </div>
+      </div>
+    </div>
+
+/div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
