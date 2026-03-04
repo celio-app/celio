@@ -566,7 +566,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
             <div class="sched-tabs">
               <button class="sched-tab active" onclick="setSchedView('all',this)">All Tasks</button>
               <button class="sched-tab" onclick="setSchedView('assets',this)">&#127912; Assets</button>
-              <button class="sched-tab" onclick="setSchedView('general',this)">&#128203; Milestones &amp; Admin</button>
             </div>
             
           </div>
@@ -1275,8 +1274,7 @@ window.renderSchedule=function(){
   var assetTasks=tasks.filter(function(t){return t.category==="asset";});
   var assetSec=document.getElementById("asset-sections");
   var generalSec=document.getElementById("general-section");
-  if(schedView==="general"){if(assetSec)assetSec.style.display="none";if(generalSec)generalSec.style.display="";}
-  else if(schedView==="assets"){if(assetSec)assetSec.style.display="";if(generalSec)generalSec.style.display="none";}
+  if(schedView==="assets"){if(assetSec)assetSec.style.display="";if(generalSec)generalSec.style.display="none";}
   else{if(assetSec)assetSec.style.display="";if(generalSec)generalSec.style.display="";}
   renderAssetSections(assetTasks);
   renderShotSection();
