@@ -1347,7 +1347,7 @@ function renderAssetSections(assetTasks){
         var c5=document.createElement("td");
         var sel=document.createElement("select");sel.style.cssText="font-size:.72rem;border:1px solid var(--border);border-radius:5px;padding:2px 4px;background:var(--bg3);color:var(--text);cursor:pointer;";
         [["todo","To Do"],["inprogress","In Progress"],["review","In Review"],["done","Done"]].forEach(function(pair){var o=document.createElement("option");o.value=pair[0];o.textContent=pair[1];if(t.status===pair[0])o.selected=true;sel.appendChild(o);});
-        sel.onchange=(function(tid){return function(){sb.from("tasks").update({status:this.value}).eq("id",tid);var tk=tasks.find(function(x){return x.id===tid;});if(tk)tk.status=this.value;showToast("Updated!");};})(t.id);
+        sel.onchange=(function(tid){return function(){var newStatus=this.value;sb.from("tasks").update({status:newStatus}).eq("id",tid);var tk=tasks.find(function(x){return x.id===tid;});if(tk){tk.status=newStatus;}showToast("Updated!");renderAssetSections(tasks.filter(function(t){return t.category==="asset";}));};})(t.id);
         c5.appendChild(sel);
         var c6=document.createElement("td");c6.style.whiteSpace="nowrap";
         var eb=document.createElement("button");eb.className="btn btn-ghost btn-sm";eb.style.fontSize=".68rem";eb.textContent="Edit";eb.onclick=(function(tid){return function(){editTask(tid);};})(t.id);
