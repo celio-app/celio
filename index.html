@@ -1481,155 +1481,12 @@ function renderShotSection(){
   container.appendChild(wrap);
 }
 
-window.deleteProject=function(id){
-  var p=projects.find(function(x){return x.id===id;});if(!p)return;
-  
-  showConfirm(
-    'Delete "'+p.name+'"?',
-    'This will permanently remove all sequences, shots, tasks and pipeline stages. This cannot be undone.',
-    'Delete Project',
-    async function(){
-  var shotIds=shots.filter(function(s){return s.project_id===id;}).map(function(s){return s.id;});
-  if(shotIds.length)await sb.from("shot_tasks").delete().in("shot_id",shotIds);
-  await sb.from("tasks").delete().eq("project_id",id);
-  var seqIds=sequences.filter(function(s){return s.project_id===id;}).map(function(s){return s.id;});
-  if(seqIds.length){
-    await sb.from("shots").delete().in("sequence_id",seqIds);
-    await sb.from("sequences").delete().eq("project_id",id);
-  }
-  await sb.from("projects").delete().eq("id",id);
-  projects=projects.filter(function(x){return x.id!==id;});
-  sequences=sequences.filter(function(x){return x.project_id!==id;});
-  shots=shots.filter(function(x){return x.project_id!==id;});
-  tasks=tasks.filter(function(x){return x.project_id!==id;});
-  if(activeProject&&activeProject.id===id){
-    activeProject=projects.length?projects[0]:null;
-    if(activeProject){projExpanded[activeProject.id]=true;setHeaderProject(activeProject);showTab("schedule");loadTasks();}
-    else showNoProject();
-  }
-  renderSidebar();showToast("Project deleted.");renderMilestones();
-
-    }
-  );
-};
-window.exportProject=async function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
   showToast("Preparing export\u2026");
-  var projSeqs=sequences.filter(function(s){return s.project_id===id;});
-  var projShots=shots.filter(function(s){return s.project_id===id;});
-  var projTasks=tasks.filter(function(t){return t.project_id===id;});
-  var shotIds=projShots.map(function(s){return s.id;});
-  var projShotTasks=[];
-  if(shotIds.length){var rst=await sb.from("shot_tasks").select("*").in("shot_id",shotIds);projShotTasks=rst.data||[];}
-  var pkg={exportedAt:new Date().toISOString(),exportedBy:currentUser.email,project:p,sequences:projSeqs,shots:projShots,tasks:projTasks,shotTasks:projShotTasks};
-  var blob=new Blob([JSON.stringify(pkg,null,2)],{type:"application/json"});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement("a");a.href=url;
-  a.download="celio-"+p.name.replace(/[^a-z0-9]/gi,"-").toLowerCase()+"-"+new Date().toISOString().slice(0,10)+".json";
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
-  showToast("Downloaded!");
-};
-
-window.renderMilestones=function(){
-  var projList=document.getElementById("admin-list-projects");
-  if(projList){
-    projList.innerHTML="";
-    if(!projects.length){
-      var noP=document.createElement("div");noP.className="admin-empty";noP.textContent="No projects yet.";projList.appendChild(noP);
-    }else{
-      projects.forEach(function(p){
-        var seqCnt=sequences.filter(function(s){return s.project_id===p.id;}).length;
-        var shotCnt=shots.filter(function(s){return s.project_id===p.id;}).length;
-        var entry=document.createElement("div");entry.className="admin-entry";
-        var dot=document.createElement("span");dot.style.cssText="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:"+p.color;
-        var main=document.createElement("div");main.className="admin-entry-main";
-        var nm=document.createElement("div");nm.className="admin-entry-title";nm.textContent=p.name;
-        var mt=document.createElement("div");mt.className="admin-entry-meta";mt.textContent=seqCnt+" sequences \xb7 "+shotCnt+" shots";
-        main.appendChild(nm);main.appendChild(mt);
-        var editBtn=document.createElement("button");editBtn.className="btn btn-ghost btn-sm";editBtn.style.fontSize=".68rem";editBtn.textContent="Edit";
-        editBtn.onclick=(function(pid){return function(){openProjModal(pid);};})(p.id);
-        var expBtn=document.createElement("button");expBtn.className="btn btn-ghost btn-sm";expBtn.style.fontSize=".68rem";expBtn.innerHTML="\u2b07 Export";
-        expBtn.onclick=(function(pid){return function(){exportProject(pid);};})(p.id);
-        var delBtn=document.createElement("button");delBtn.className="btn btn-sm btn-del";delBtn.style.fontSize=".68rem";delBtn.textContent="Delete";
-        delBtn.onclick=(function(pid){return function(){deleteProject(pid);};})(p.id);
-        entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(delBtn);
-        projList.appendChild(entry);
-      });
-    }
-  }
-  if(!activeProject)return;
-  ["client","marketing","meetings","team"].forEach(function(cat){
-    var items=tasks.filter(function(t){return t.category===cat&&t.project_id===activeProject.id;});
-    items.sort(function(a,b){var p={high:0,med:1,low:2};if(a.status==="done"&&b.status!=="done")return 1;if(b.status==="done"&&a.status!=="done")return -1;return(p[a.priority]||1)-(p[b.priority]||1);});
-    var cont=document.getElementById("admin-list-"+cat);if(!cont)return;
-    cont.innerHTML="";
-    if(!items.length){var empty=document.createElement("div");empty.className="admin-empty";empty.textContent="No entries yet.";cont.appendChild(empty);return;}
-    items.forEach(function(t){
-      var entry=document.createElement("div");entry.className="admin-entry";
-      var main=document.createElement("div");main.className="admin-entry-main";
-      var title=document.createElement("div");title.className="admin-entry-title";title.textContent=t.name;
-      var meta=document.createElement("div");meta.className="admin-entry-meta";
-      if(t.lead){var a=document.createElement("span");a.textContent="\ud83d\udc64 "+t.lead;meta.appendChild(a);}
-      if(t.due_date){var d=daysUntil(t.due_date);var dm=document.createElement("span");dm.style.color=t.status==="done"?"var(--text4)":d<0?"#ef4444":d<=3?"#f59e0b":"var(--text4)";dm.textContent=" \ud83d\udcc5 "+(d<0&&t.status!=="done"?Math.abs(d)+"d overdue":fmtDate(t.due_date));meta.appendChild(dm);}
-      main.appendChild(title);main.appendChild(meta);
-      if(t.asset){var notes=document.createElement("div");notes.className="admin-entry-notes";notes.textContent=t.asset;main.appendChild(notes);}
-      var priCls={high:"admin-pri-high",med:"admin-pri-med",low:"admin-pri-low"};
-      var pri=document.createElement("span");pri.className="admin-pri "+(priCls[t.priority]||"admin-pri-low");pri.textContent={high:"High",med:"Med",low:"Low"}[t.priority]||"";
-      var stCls={todo:"admin-stat-todo",inprogress:"admin-stat-inprogress",done:"admin-stat-done"};
-      var stat=document.createElement("span");stat.className="admin-stat "+(stCls[t.status]||"admin-stat-todo");stat.textContent={todo:"To Do",inprogress:"In Progress",done:"Done"}[t.status]||t.status;
-      var eb=document.createElement("button");eb.className="btn btn-ghost btn-sm";eb.style.fontSize=".68rem";eb.textContent="Edit";
-      eb.onclick=(function(tid,c2){return function(){openAdminModal(c2,tid);};})(t.id,cat);
-      var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="\u2715";
-      db.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
-      entry.appendChild(main);entry.appendChild(pri);entry.appendChild(stat);entry.appendChild(eb);entry.appendChild(db);
-      cont.appendChild(entry);
-    });
-  });
-};
-
-var adminCat=null,adminEditId=null;
-window.openAdminModal=function(cat,editId){
-  adminCat=cat||null;adminEditId=editId||null;
-  var labels={client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Production Team"};
-  if(editId){
-    var t=tasks.find(function(x){return x.id===editId;});
-    if(t){adminCat=t.category;
-      document.getElementById("admin-modal-title").textContent="Edit \u2014 "+(labels[t.category]||t.category);
-      document.getElementById("af-title").value=t.name;
-      document.getElementById("af-assignee").value=t.lead||"";
-      document.getElementById("af-date").value=t.due_date||"";
-      document.getElementById("af-priority").value=t.priority||"med";
-      document.getElementById("af-status").value=t.status||"todo";
-      document.getElementById("af-notes").value=t.asset||"";
-    }
-  }else{
-    document.getElementById("admin-modal-title").textContent="New \u2014 "+(labels[cat]||cat);
-    document.getElementById("af-title").value="";
-    document.getElementById("af-assignee").value="";
-    document.getElementById("af-date").value="";
-    document.getElementById("af-priority").value="med";
-    document.getElementById("af-status").value="todo";
-    document.getElementById("af-notes").value="";
-  }
-  document.getElementById("admin-modal").classList.add("open");
-};
-window.closeAdminModal=function(){document.getElementById("admin-modal").classList.remove("open");};
-window.saveAdminEntry=async function(){
-  var title=document.getElementById("af-title").value.trim();if(!title){alert("Please enter a title.");return;}
-  var payload={name:title,lead:document.getElementById("af-assignee").value.trim()||null,
-    due_date:document.getElementById("af-date").value||null,
-    priority:document.getElementById("af-priority").value,
-    status:document.getElementById("af-status").value,
-    category:adminCat,asset:document.getElementById("af-notes").value.trim()||null,
-    user_id:currentUser.id,project_id:activeProject.id};
-  if(adminEditId)await sb.from("tasks").update(payload).eq("id",adminEditId);
-  else await sb.from("tasks").insert(payload);
-  closeAdminModal();showToast("Saved!");loadTasks();
-};
 
 window.deleteProject=async function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
-  if(!confirm('Delete "'+p.name+'" and ALL its data?\n\nThis will permanently remove all sequences, shots, tasks and pipeline stages.\n\nThis cannot be undone.'))return;
+  if(!confirm('Delete "'+p.name+'" and ALL its data?\n\nThis cannot be undone.'))return;
   var shotIds=shots.filter(function(s){return s.project_id===id;}).map(function(s){return s.id;});
   if(shotIds.length)await sb.from("shot_tasks").delete().in("shot_id",shotIds);
   await sb.from("tasks").delete().eq("project_id",id);
@@ -1650,13 +1507,13 @@ window.deleteProject=async function(id){
 
 window.exportProject=async function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
-  showToast("Preparing export...");
+  showToast("Preparing export…");
   var projSeqs=sequences.filter(function(s){return s.project_id===id;});
   var projShots=shots.filter(function(s){return s.project_id===id;});
   var projTasks=tasks.filter(function(t){return t.project_id===id;});
   var shotIds=projShots.map(function(s){return s.id;});
   var projShotTasks=[];
-  if(shotIds.length){var r=await sb.from("shot_tasks").select("*").in("shot_id",shotIds);projShotTasks=r.data||[];}
+  if(shotIds.length){var rst=await sb.from("shot_tasks").select("*").in("shot_id",shotIds);projShotTasks=rst.data||[];}
   var pkg={exportedAt:new Date().toISOString(),exportedBy:currentUser.email,project:p,sequences:projSeqs,shots:projShots,tasks:projTasks,shotTasks:projShotTasks};
   var blob=new Blob([JSON.stringify(pkg,null,2)],{type:"application/json"});
   var url=URL.createObjectURL(blob);
