@@ -469,6 +469,17 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .admin-empty{padding:20px 16px;font-size:.8rem;color:var(--text4);text-align:center;}
 .admin-pri{font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:999px;}
 .admin-pri-high{background:#450a0a;color:#f87171;}.admin-pri-med{background:#3b2f00;color:#fbbf24;}.admin-pri-low{background:var(--bg3);color:var(--text4);}
+
+.gantt-section-hdr{display:flex;align-items:center;gap:8px;padding:6px 0;background:var(--bg2);border-bottom:2px solid var(--border);cursor:pointer;user-select:none;position:sticky;left:0;}
+.gantt-section-hdr:hover{background:var(--bg3);}
+.gantt-section-arrow{font-size:.55rem;color:var(--text4);transition:transform .15s;margin-left:6px;}
+.gantt-section-arrow.open{transform:rotate(90deg);}
+.gantt-section-title{font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.6px;color:var(--text3);}
+.gantt-label-shot{font-size:.75rem;font-weight:700;color:var(--purple);}
+.gantt-label-sub-shot{font-size:.67rem;color:var(--text4);margin-top:1px;}
+.gb-shot{background:linear-gradient(90deg,#4c1d95,#7c3aed);color:#e9d5ff;}
+.gb-shot-done{background:linear-gradient(90deg,#064e3b,#059669);color:#a7f3d0;}
+.gb-shot-late{background:linear-gradient(90deg,#450a0a,#b91c1c);color:#fca5a5;}
 </style>
 </head>
 <body>
@@ -1045,9 +1056,9 @@ window.saveSeq=async function(){var code=document.getElementById("sf-code").valu
 window.deleteSeq=async function(id){if(!confirm("Delete this sequence and all its shots?"))return;await sb.from("shots").delete().eq("sequence_id",id);await sb.from("sequences").delete().eq("id",id);sequences=sequences.filter(function(s){return s.id!==id;});shots=shots.filter(function(s){return s.sequence_id!==id;});renderSidebar();showToast("Deleted.");};
 
 // SHOTS
-window.openShotModal=function(seqId){currentSeqId=seqId;document.getElementById("shf-code").value="";document.getElementById("shf-desc").value="";document.getElementById("shot-modal").classList.add("open");};
+window.openShotModal=function(seqId){currentSeqId=seqId;document.getElementById("shf-code").value="";if(document.getElementById("shf-start"))document.getElementById("shf-start").value="";if(document.getElementById("shf-due"))document.getElementById("shf-due").value="";document.getElementById("shf-desc").value="";document.getElementById("shot-modal").classList.add("open");};
 window.closeShotModal=function(){document.getElementById("shot-modal").classList.remove("open");};
-window.saveShot=async function(){var code=document.getElementById("shf-code").value.trim().toUpperCase();if(!code){alert("Please enter a shot code.");return;}var seq=sequences.find(function(s){return s.id===currentSeqId;});var pid=seq?seq.project_id:activeProject.id;var payload={code:code,description:document.getElementById("shf-desc").value.trim(),sequence_id:currentSeqId,project_id:pid,user_id:currentUser.id,status:"pending"};var r=await sb.from("shots").insert(payload).select();if(r.error){alert("Error: "+r.error.message);return;}shots=shots.concat(r.data);closeShotModal();renderSidebar();showToast("Shot added!");};
+window.saveShot=async function(){var code=document.getElementById("shf-code").value.trim().toUpperCase();if(!code){alert("Please enter a shot code.");return;}var seq=sequences.find(function(s){return s.id===currentSeqId;});var pid=seq?seq.project_id:activeProject.id;var payload={code:code,description:document.getElementById("shf-desc").value.trim(),sequence_id:currentSeqId,project_id:pid,user_id:currentUser.id,status:"pending",start_date:document.getElementById("shf-start")?document.getElementById("shf-start").value||null:null,due_date:document.getElementById("shf-due")?document.getElementById("shf-due").value||null:null};var r=await sb.from("shots").insert(payload).select();if(r.error){alert("Error: "+r.error.message);return;}shots=shots.concat(r.data);closeShotModal();renderSidebar();showToast("Shot added!");};
 window.deleteShot=async function(id){if(!confirm("Delete this shot?"))return;if(activeShot&&activeShot.id===id)backToProject();await sb.from("shots").delete().eq("id",id);shots=shots.filter(function(s){return s.id!==id;});renderSidebar();showToast("Deleted.");};
 
 // SHOT PAGE
@@ -1612,7 +1623,196 @@ window.calNext=function(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}rende
 window.calToday=function(){calYear=today.getFullYear();calMonth=today.getMonth();renderCalendar();};
 
 // GANTT
-function renderGantt(){var months=["January","February","March","April","May","June","July","August","September","October","November","December"];var numDays=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,0).getDate();document.getElementById("gantt-label").textContent=months[ganttStart.getMonth()]+" "+ganttStart.getFullYear();var inner=document.getElementById("gantt-inner");var allTasks=tasks.filter(function(t){return t.due_date;});if(!allTasks.length){inner.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">No tasks with dates yet.</div>';return;}var dates=[];for(var i=0;i<numDays;i++)dates.push(new Date(ganttStart.getFullYear(),ganttStart.getMonth(),i+1));var labelsDiv=document.createElement("div");labelsDiv.className="gantt-labels";var lhd=document.createElement("div");lhd.className="gantt-label-header";lhd.textContent="Task";labelsDiv.appendChild(lhd);allTasks.forEach(function(t){var lr=document.createElement("div");lr.className="gantt-label-row";var lbl=t.category==="asset"&&t.asset_name?(t.asset_name+" — "+(t.pipeline_stage||t.name)):t.name;lr.innerHTML='<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px"><div style="font-size:.78rem;font-weight:600">'+lbl+'</div>'+(t.category==="asset"?'<div class="gantt-label-sub">'+assetTypeLabel(t.asset_type)+'</div>':'')+'</div>';labelsDiv.appendChild(lr);});var chartDiv=document.createElement("div");chartDiv.className="gantt-chart";var datesRow=document.createElement("div");datesRow.className="gantt-dates";dates.forEach(function(d){var dc=document.createElement("div");dc.className="gantt-date-cell"+(d.getTime()===today.getTime()?" today-col":"");dc.textContent=d.getDate();datesRow.appendChild(dc);});chartDiv.appendChild(datesRow);var rowsDiv=document.createElement("div");rowsDiv.className="gantt-rows";allTasks.forEach(function(t){var row=document.createElement("div");row.className="gantt-row";dates.forEach(function(d){var cell=document.createElement("div");cell.className="gantt-cell"+(d.getTime()===today.getTime()?" today-col":"");row.appendChild(cell);});var som=new Date(ganttStart.getFullYear(),ganttStart.getMonth(),1);var bed=new Date(t.due_date+"T00:00:00");var bsd=t.start_date?new Date(t.start_date+"T00:00:00"):bed;bed.setHours(0,0,0,0);bsd.setHours(0,0,0,0);var si=Math.round((bsd-som)/86400000),ei=Math.round((bed-som)/86400000);var vs=Math.max(0,si),ve=Math.min(numDays-1,ei);if(ve>=0){var bar=document.createElement("div");bar.className="gantt-bar "+ganttBarCls(t);bar.style.left=(vs*COL_W)+"px";bar.style.width=((ve-vs+1)*COL_W-4)+"px";var lbl=t.category==="asset"&&t.asset_name?(t.asset_name+" — "+(t.pipeline_stage||t.name)):t.name;bar.textContent=lbl;bar.title=lbl+" | Due: "+fmtDate(t.due_date);var lh2=document.createElement("div");lh2.className="gantt-resize-handle-left";bar.appendChild(lh2);var rh=document.createElement("div");rh.className="gantt-resize-handle";bar.appendChild(rh);mkDraggable(bar,row,t,si,ei,numDays,som,"move");mkDraggable(lh2,row,t,si,ei,numDays,som,"left");mkDraggable(rh,row,t,si,ei,numDays,som,"right");row.appendChild(bar);}rowsDiv.appendChild(row);});chartDiv.appendChild(rowsDiv);inner.innerHTML="";inner.appendChild(labelsDiv);inner.appendChild(chartDiv);}
+function renderGantt(){
+  var months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var numDays=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,0).getDate();
+  document.getElementById("gantt-label").textContent=months[ganttStart.getMonth()]+" "+ganttStart.getFullYear();
+  var inner=document.getElementById("gantt-inner");
+  var som=new Date(ganttStart.getFullYear(),ganttStart.getMonth(),1);
+
+  // Build data: asset tasks (with dates) + shots grouped by sequence
+  var assetTasks=tasks.filter(function(t){return t.due_date;});
+  var projShots=activeProject?shots.filter(function(s){return s.project_id===activeProject.id&&(s.due_date||s.start_date);}):[];
+  var projSeqs=activeProject?sequences.filter(function(s){return s.project_id===activeProject.id;}):[];
+
+  if(!assetTasks.length&&!projShots.length){
+    inner.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">No tasks or shots with dates yet.</div>';return;
+  }
+
+  var dates=[];
+  for(var i=0;i<numDays;i++)dates.push(new Date(ganttStart.getFullYear(),ganttStart.getMonth(),i+1));
+
+  // State for section collapse
+  if(!window.ganttCollapsed)window.ganttCollapsed={tasks:false,shots:{}};
+
+  // ── Helper: build one full row (label + chart row) ──
+  function mkRow(labelEl,barFn,visible){
+    var lr=document.createElement("div");lr.className="gantt-label-row";lr.appendChild(labelEl);
+    var row=document.createElement("div");row.className="gantt-row";
+    dates.forEach(function(d){
+      var cell=document.createElement("div");
+      cell.className="gantt-cell"+(d.getTime()===today.getTime()?" today-col":"");
+      row.appendChild(cell);
+    });
+    if(barFn)barFn(row);
+    if(!visible){lr.style.display="none";row.style.display="none";}
+    return{lr:lr,row:row};
+  }
+
+  // ── Helper: make a section header row ──
+  function mkSectionHdr(title,icon,collapsed,toggleFn){
+    var lbl=document.createElement("div");lbl.style.cssText="display:flex;align-items:center;gap:6px;padding:4px 8px;";
+    var arr=document.createElement("span");arr.className="gantt-section-arrow"+(collapsed?"":" open");arr.innerHTML="&#9658;";
+    var ico=document.createElement("span");ico.style.cssText="font-size:.85rem;";ico.innerHTML=icon;
+    var ttl=document.createElement("span");ttl.className="gantt-section-title";ttl.textContent=title;
+    lbl.appendChild(arr);lbl.appendChild(ico);lbl.appendChild(ttl);
+    // chart side header (just shaded background)
+    var chartHdr=document.createElement("div");chartHdr.style.cssText="height:32px;background:var(--bg3);border-bottom:2px solid var(--border);position:relative;";
+    // Today line
+    var todayIdx=dates.findIndex(function(d){return d.getTime()===today.getTime();});
+    if(todayIdx>=0){var tl=document.createElement("div");tl.style.cssText="position:absolute;top:0;bottom:0;left:"+(todayIdx*COL_W+COL_W/2)+"px;width:2px;background:#7c3aed;opacity:.4;";chartHdr.appendChild(tl);}
+    lbl.style.cursor="pointer";lbl.style.background="var(--bg3)";lbl.style.borderBottom="2px solid var(--border)";
+    lbl.style.height="32px";
+    lbl.addEventListener("click",toggleFn);
+    chartHdr.addEventListener("click",toggleFn);
+    return{lbl:lbl,chartHdr:chartHdr,arrow:arr};
+  }
+
+  var labelsDiv=document.createElement("div");labelsDiv.className="gantt-labels";
+  var lhd=document.createElement("div");lhd.className="gantt-label-header";lhd.textContent="Task / Shot";
+  labelsDiv.appendChild(lhd);
+
+  var chartDiv=document.createElement("div");chartDiv.className="gantt-chart";
+  var datesRow=document.createElement("div");datesRow.className="gantt-dates";
+  dates.forEach(function(d){
+    var dc=document.createElement("div");
+    dc.className="gantt-date-cell"+(d.getTime()===today.getTime()?" today-col":"");
+    dc.textContent=d.getDate();datesRow.appendChild(dc);
+  });
+  chartDiv.appendChild(datesRow);
+  var rowsDiv=document.createElement("div");rowsDiv.className="gantt-rows";
+
+  // ── SECTION 1: Asset Tasks ──
+  var taskRows=[];
+  if(assetTasks.length){
+    var tasksCollapsed=ganttCollapsed.tasks;
+    var taskHdr=mkSectionHdr("Asset & Milestone Tasks","&#127912;",tasksCollapsed,function(){
+      ganttCollapsed.tasks=!ganttCollapsed.tasks;
+      taskRows.forEach(function(r){r.lr.style.display=ganttCollapsed.tasks?"none":"";r.row.style.display=ganttCollapsed.tasks?"none":"";});
+      taskHdr.arrow.classList.toggle("open",!ganttCollapsed.tasks);
+    });
+    labelsDiv.appendChild(taskHdr.lbl);rowsDiv.appendChild(taskHdr.chartHdr);
+
+    assetTasks.forEach(function(t){
+      var labelEl=document.createElement("div");
+      var lbl=t.category==="asset"&&t.asset_name?(t.asset_name+" \u2014 "+(t.pipeline_stage||t.name)):t.name;
+      labelEl.innerHTML='<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px"><div style="font-size:.78rem;font-weight:600">'+lbl+'</div>'+(t.category==="asset"?'<div class="gantt-label-sub">'+assetTypeLabel(t.asset_type)+'</div>':'')+'</div>';
+      var rr=mkRow(labelEl,function(row){
+        var bed=new Date(t.due_date+"T00:00:00");
+        var bsd=t.start_date?new Date(t.start_date+"T00:00:00"):bed;
+        bed.setHours(0,0,0,0);bsd.setHours(0,0,0,0);
+        var si=Math.round((bsd-som)/86400000),ei=Math.round((bed-som)/86400000);
+        var vs=Math.max(0,si),ve=Math.min(numDays-1,ei);
+        if(ve>=0&&vs<=numDays-1){
+          var bar=document.createElement("div");bar.className="gantt-bar "+ganttBarCls(t);
+          bar.style.left=(vs*COL_W)+"px";bar.style.width=((ve-vs+1)*COL_W-4)+"px";
+          bar.textContent=lbl;bar.title=lbl+" | Due: "+fmtDate(t.due_date);
+          var lh2=document.createElement("div");lh2.className="gantt-resize-handle-left";bar.appendChild(lh2);
+          var rh=document.createElement("div");rh.className="gantt-resize-handle";bar.appendChild(rh);
+          mkDraggable(bar,row,t,si,ei,numDays,som,"move");
+          mkDraggable(lh2,row,t,si,ei,numDays,som,"left");
+          mkDraggable(rh,row,t,si,ei,numDays,som,"right");
+          row.appendChild(bar);
+        }
+      },!tasksCollapsed);
+      taskRows.push(rr);
+      labelsDiv.appendChild(rr.lr);rowsDiv.appendChild(rr.row);
+    });
+  }
+
+  // ── SECTION 2: Shots per sequence ──
+  if(projShots.length){
+    // Group by sequence
+    var bySeq={};
+    projShots.forEach(function(sh){
+      var sid=sh.sequence_id||"__unassigned__";
+      if(!bySeq[sid])bySeq[sid]=[];
+      bySeq[sid].push(sh);
+    });
+
+    // Sequences that have shots with dates
+    var seqOrder=projSeqs.filter(function(sq){return bySeq[sq.id]&&bySeq[sq.id].length;});
+    if(bySeq["__unassigned__"]&&bySeq["__unassigned__"].length)seqOrder.push({id:"__unassigned__",code:"",name:"Unassigned"});
+
+    seqOrder.forEach(function(seq){
+      var seqShots=bySeq[seq.id]||[];
+      if(!seqShots.length)return;
+      var seqCollapsed=ganttCollapsed.shots[seq.id]===true;
+      var seqRows=[];
+
+      var seqHdr=mkSectionHdr(
+        (seq.code?(seq.code+(seq.name?" \u2014 "+seq.name:"")):"Unassigned Shots"),
+        "&#127916;",seqCollapsed,
+        function(){
+          ganttCollapsed.shots[seq.id]=!ganttCollapsed.shots[seq.id];
+          var nowCollapsed=ganttCollapsed.shots[seq.id];
+          seqRows.forEach(function(r){r.lr.style.display=nowCollapsed?"none":"";r.row.style.display=nowCollapsed?"none":"";});
+          seqHdr.arrow.classList.toggle("open",!nowCollapsed);
+        }
+      );
+      labelsDiv.appendChild(seqHdr.lbl);rowsDiv.appendChild(seqHdr.chartHdr);
+
+      seqShots.forEach(function(sh){
+        var labelEl=document.createElement("div");
+        labelEl.innerHTML='<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px"><div class="gantt-label-shot">'+sh.code+'</div><div class="gantt-label-sub-shot">'+(sh.description||"")+'</div></div>';
+        var rr=mkRow(labelEl,function(row){
+          if(!sh.due_date)return;
+          var bed=new Date(sh.due_date+"T00:00:00");
+          var bsd=sh.start_date?new Date(sh.start_date+"T00:00:00"):bed;
+          bed.setHours(0,0,0,0);bsd.setHours(0,0,0,0);
+          var si=Math.round((bsd-som)/86400000),ei=Math.round((bed-som)/86400000);
+          var vs=Math.max(0,si),ve=Math.min(numDays-1,ei);
+          if(ve>=0&&vs<=numDays-1){
+            var isDone=sh.status==="approved"||sh.status==="final";
+            var isLate=!isDone&&sh.due_date&&daysUntil(sh.due_date)<0;
+            var barCls=isDone?"gb-shot-done":isLate?"gb-shot-late":"gb-shot";
+            var bar=document.createElement("div");bar.className="gantt-bar "+barCls;
+            bar.style.left=(vs*COL_W)+"px";bar.style.width=((ve-vs+1)*COL_W-4)+"px";
+            var lbl=sh.code+(sh.description?" \u2014 "+sh.description:"");
+            bar.textContent=lbl;bar.title=lbl+" | Due: "+fmtDate(sh.due_date);
+            // Shots are draggable too — update shot start/due in DB
+            bar.style.cursor="grab";
+            bar.addEventListener("mousedown",function(e){
+              if(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left"))return;
+              e.preventDefault();bar.style.cursor="grabbing";
+              var startX=e.clientX,cs=si,ce=ei,sp=ce-cs;
+              function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W);var ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));var ne=ns+sp;bar.style.left=(ns*COL_W)+"px";}
+              async function onUp(ev){
+                document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);
+                bar.style.cursor="grab";
+                var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;
+                var ns=Math.max(0,Math.min(numDays-1-sp,cs+dd)),ne=ns+sp;
+                var nsd=new Date(som.getTime()+ns*86400000),ned=new Date(som.getTime()+ne*86400000);
+                await sb.from("shots").update({start_date:fmtYMD(nsd),due_date:fmtYMD(ned)}).eq("id",sh.id);
+                sh.start_date=fmtYMD(nsd);sh.due_date=fmtYMD(ned);
+                showToast("Shot dates updated!");renderGantt();
+              }
+              document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);
+            });
+            row.appendChild(bar);
+          }
+        },!seqCollapsed);
+        seqRows.push(rr);
+        labelsDiv.appendChild(rr.lr);rowsDiv.appendChild(rr.row);
+      });
+    });
+  }
+
+  chartDiv.appendChild(rowsDiv);
+  inner.innerHTML="";inner.appendChild(labelsDiv);inner.appendChild(chartDiv);
+}
+
+
 function mkDraggable(el,row,task,origStart,origEnd,numDays,startOfMonth,mode){el.addEventListener("mousedown",function(e){if(mode==="move"&&(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left")))return;e.preventDefault();var bar=row.querySelector(".gantt-bar");bar.classList.add("dragging");var startX=e.clientX,cs=origStart,ce=origEnd;function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W),ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));bar.style.left=(ns*COL_W)+"px";bar.style.width=((ne-ns+1)*COL_W-4)+"px";}async function onUp(ev){document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);bar.classList.remove("dragging");var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;var ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));var nsd=new Date(startOfMonth.getTime()+ns*86400000),ned=new Date(startOfMonth.getTime()+ne*86400000);var payload={due_date:fmtYMD(ned)};if(task.start_date||mode!=="right")payload.start_date=fmtYMD(nsd);await sb.from("tasks").update(payload).eq("id",task.id).eq("user_id",currentUser.id);showToast("Dates updated!");loadTasks();}document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);});}
 window.ganttPrev=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()-1,1);renderGantt();};
 window.ganttNext=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,1);renderGantt();};
