@@ -1653,8 +1653,13 @@ function renderGantt(){
   var projShots=activeProject?shots.filter(function(s){return s.project_id===activeProject.id;}):[];
   var projSeqs=activeProject?sequences.filter(function(s){return s.project_id===activeProject.id;}):[];
 
-  if(!assetTasks.length&&!projShots.length){
-    inner.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">No tasks or shots yet.</div>';return;
+  // Include shots that have tasks with dates even if shot itself has no due_date
+  var shotsWithData=projShots.filter(function(sh){
+    if(sh.due_date)return true;
+    return (shotTasks||[]).some(function(t){return t.shot_id===sh.id&&t.due_date;});
+  });
+  if(!assetTasks.length&&!shotsWithData.length){
+    inner.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">No tasks or shots with dates yet.</div>';return;
   }
 
   var dates=[];
@@ -1784,13 +1789,17 @@ function renderGantt(){
         var labelEl=document.createElement("div");
         labelEl.innerHTML='<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px"><div class="gantt-label-shot">'+sh.code+'</div><div class="gantt-label-sub-shot">'+(sh.description||"")+'</div></div>';
         var rr=mkRow(labelEl,function(row){
-          if(!sh.due_date){
+          // Derive date range: prefer shot.due_date, fall back to shot_tasks dates
+          var shTasks=(shotTasks||[]).filter(function(t){return t.shot_id===sh.id&&t.due_date;});
+          var effectiveDue=sh.due_date||(shTasks.length?shTasks.reduce(function(mx,t){return t.due_date>mx?t.due_date:mx;},""):null);
+          var effectiveStart=sh.start_date||(shTasks.length?shTasks.reduce(function(mn,t){return t.due_date<mn?t.due_date:mn;},"9999"):null);
+          if(!effectiveDue){
             var noDateEl=document.createElement("div");
             noDateEl.style.cssText="position:absolute;left:6px;top:9px;height:28px;display:flex;align-items:center;font-size:.68rem;color:var(--text4);font-style:italic;";
-            noDateEl.textContent="No date set — open shot to add";row.appendChild(noDateEl);return;
+            noDateEl.textContent="No tasks with dates yet";row.appendChild(noDateEl);return;
           }
-          var bed=new Date(sh.due_date+"T00:00:00");
-          var bsd=sh.start_date?new Date(sh.start_date+"T00:00:00"):bed;
+          var bed=new Date(effectiveDue+"T00:00:00");
+          var bsd=new Date((effectiveStart||effectiveDue)+"T00:00:00");
           bed.setHours(0,0,0,0);bsd.setHours(0,0,0,0);
           var si=Math.round((bsd-som)/86400000),ei=Math.round((bed-som)/86400000);
           var vs=Math.max(0,si),ve=Math.min(numDays-1,ei);
