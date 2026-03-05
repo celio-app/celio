@@ -1006,11 +1006,40 @@ function assetTypeLabel(t){return{character:"Character",prop:"Prop",environment:
 function showToast(m){var el=document.getElementById("toast");el.textContent=m||"Saved!";el.classList.add("show");setTimeout(function(){el.classList.remove("show");},1800);}
 
 // SIDEBAR / THEME
-window.toggleSidebar=function(){var sb=document.getElementById("sidebar");if(isMobile()){openMobileSidebar();return;}sb.classList.toggle("expanded");localStorage.setItem("celio-sb-exp",sb.classList.contains("expanded")?"1":"0");};
+window.toggleSidebar = function() {
+  var sb = document.getElementById("sidebar");
+  
+  // Mobile uses the sliding overlay panel
+  if (isMobile()) {
+    openMobileSidebar();
+    return;
+  }
+  
+  // Desktop expects ".collapsed" to shrink
+  if (window.innerWidth > 860) {
+    sb.classList.toggle("collapsed");
+    localStorage.setItem("celio-sb-col", sb.classList.contains("collapsed") ? "1" : "0");
+  } 
+  // Tablet expects ".expanded" to grow
+  else {
+    sb.classList.toggle("expanded");
+    localStorage.setItem("celio-sb-exp", sb.classList.contains("expanded") ? "1" : "0");
+  }
+};
 window.openMobileSidebar=function(){document.getElementById("sidebar").classList.add("mobile-open");document.getElementById("sb-overlay").classList.add("show");};
 window.closeMobileSidebar=function(){document.getElementById("sidebar").classList.remove("mobile-open");document.getElementById("sb-overlay").classList.remove("show");};
 window.toggleTheme=function(){var html=document.documentElement,isDark=html.getAttribute("data-theme")==="dark";html.setAttribute("data-theme",isDark?"light":"dark");document.getElementById("theme-btn").innerHTML=isDark?"&#127769; <span>Dark</span>":"&#9728; <span>Light</span>";localStorage.setItem("celio-theme",isDark?"light":"dark");};
-(function(){var t=localStorage.getItem("celio-theme")||"dark";document.documentElement.setAttribute("data-theme",t);window.addEventListener("DOMContentLoaded",function(){var btn=document.getElementById("theme-btn");if(btn)btn.innerHTML=t==="dark"?"&#9728; <span>Light</span>":"&#127769; <span>Dark</span>";if(!isMobile()&&localStorage.getItem("celio-sb-exp")==="1")document.getElementById("sidebar").classList.add("expanded");});})();
+(function(){
+  var t=localStorage.getItem("celio-theme")||"dark";
+  document.documentElement.setAttribute("data-theme",t);
+  window.addEventListener("DOMContentLoaded",function(){
+    var btn=document.getElementById("theme-btn");
+    if(btn)btn.innerHTML=t==="dark"?"&#9728; <span>Light</span>":"&#127769; <span>Dark</span>";
+    
+    // REPLACE THIS LINE:
+    if(!isMobile()&&localStorage.getItem("celio-sb-exp")==="1")document.getElementById("sidebar").classList.add("expanded");
+  });
+})();
 
 // AUTH
 function setMsg(m,type){var el=document.getElementById("auth-msg");el.textContent=m;el.className="auth-msg"+(type?" "+type:"");}
