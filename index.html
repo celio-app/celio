@@ -686,6 +686,14 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
           <div class="shot-meta-row">
             <span class="chip" id="sp-proj-chip"></span>
             <span class="chip" id="sp-seq-chip"></span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text3);">
+              <span style="color:var(--text4)">Start:</span>
+              <input id="sp-start-date" type="date" style="background:transparent;border:none;border-bottom:1px dashed var(--border);color:var(--text);font-size:.75rem;padding:1px 2px;outline:none;cursor:pointer;" onchange="saveShotField('start_date',this.value||null)">
+            </span>
+            <span style="display:flex;align-items:center;gap:6px;font-size:.75rem;color:var(--text3);">
+              <span style="color:var(--text4)">Due:</span>
+              <input id="sp-due-date" type="date" style="background:transparent;border:none;border-bottom:1px dashed var(--border);color:var(--text);font-size:.75rem;padding:1px 2px;outline:none;cursor:pointer;" onchange="saveShotField('due_date',this.value||null)">
+            </span>
           </div>
         </div>
         <div class="shot-body">
@@ -838,6 +846,10 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
       <div class="hint">Use increments of 10 — easier to insert shots later.</div>
     </div>
     <div class="form-row"><label class="flbl">Description (optional)</label><input id="shf-desc" class="inp" placeholder="e.g. Hero enters the lab"></div>
+    <div class="form-row-2" style="margin-top:8px">
+      <div><label class="flbl">Start Date <span style="font-size:.7rem;color:var(--text4);font-weight:400">(optional)</span></label><input id="shf-start" type="date" class="inp"></div>
+      <div><label class="flbl">Due Date <span style="font-size:.7rem;color:var(--text4);font-weight:400">(for Gantt)</span></label><input id="shf-due" type="date" class="inp"></div>
+    </div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeShotModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveShot()">Save Shot</button>
@@ -1056,7 +1068,7 @@ window.saveSeq=async function(){var code=document.getElementById("sf-code").valu
 window.deleteSeq=async function(id){if(!confirm("Delete this sequence and all its shots?"))return;await sb.from("shots").delete().eq("sequence_id",id);await sb.from("sequences").delete().eq("id",id);sequences=sequences.filter(function(s){return s.id!==id;});shots=shots.filter(function(s){return s.sequence_id!==id;});renderSidebar();showToast("Deleted.");};
 
 // SHOTS
-window.openShotModal=function(seqId){currentSeqId=seqId;document.getElementById("shf-code").value="";if(document.getElementById("shf-start"))document.getElementById("shf-start").value="";if(document.getElementById("shf-due"))document.getElementById("shf-due").value="";document.getElementById("shf-desc").value="";document.getElementById("shot-modal").classList.add("open");};
+window.openShotModal=function(seqId){currentSeqId=seqId;document.getElementById("shf-code").value="";if(document.getElementById("shf-start"))document.getElementById("shf-start").value="";if(document.getElementById("shf-due"))document.getElementById("shf-due").value="";if(document.getElementById("shf-start"))document.getElementById("shf-start").value="";if(document.getElementById("shf-due"))document.getElementById("shf-due").value="";document.getElementById("shf-desc").value="";document.getElementById("shot-modal").classList.add("open");};
 window.closeShotModal=function(){document.getElementById("shot-modal").classList.remove("open");};
 window.saveShot=async function(){var code=document.getElementById("shf-code").value.trim().toUpperCase();if(!code){alert("Please enter a shot code.");return;}var seq=sequences.find(function(s){return s.id===currentSeqId;});var pid=seq?seq.project_id:activeProject.id;var payload={code:code,description:document.getElementById("shf-desc").value.trim(),sequence_id:currentSeqId,project_id:pid,user_id:currentUser.id,status:"pending",start_date:document.getElementById("shf-start")?document.getElementById("shf-start").value||null:null,due_date:document.getElementById("shf-due")?document.getElementById("shf-due").value||null:null};var r=await sb.from("shots").insert(payload).select();if(r.error){alert("Error: "+r.error.message);return;}shots=shots.concat(r.data);closeShotModal();renderSidebar();showToast("Shot added!");};
 window.deleteShot=async function(id){if(!confirm("Delete this shot?"))return;if(activeShot&&activeShot.id===id)backToProject();await sb.from("shots").delete().eq("id",id);shots=shots.filter(function(s){return s.id!==id;});renderSidebar();showToast("Deleted.");};
@@ -1080,6 +1092,8 @@ window.openShot=async function(id){
   document.getElementById("sp-code-edit").value=sh.code;
   document.getElementById("sp-seq-edit").value=seq?seq.code+(seq.name?" \u2014 "+seq.name:""):"";
   document.getElementById("sp-frames").value=sh.frame_count||"";
+  if(document.getElementById("sp-start-date"))document.getElementById("sp-start-date").value=sh.start_date||"";
+  if(document.getElementById("sp-due-date"))document.getElementById("sp-due-date").value=sh.due_date||"";
   document.getElementById("sp-camera").value=sh.camera||"";
   document.getElementById("sp-storyboard").value=sh.storyboard_notes||"";
   showShotPage(true);
@@ -1114,7 +1128,9 @@ window.deleteShotConfirm=function(){if(activeShot)deleteShot(activeShot.id);};
 async function loadShotTasks(){
   if(!activeShot)return;
   var r=await sb.from("shot_tasks").select("*").eq("shot_id",activeShot.id).order("order_index",{ascending:true});
-  shotTasks=r.data||[];
+  // Merge: remove old entries for this shot, add fresh ones
+  var sid=activeShot.id;
+  shotTasks=shotTasks.filter(function(t){return t.shot_id!==sid;}).concat(r.data||[]);
   renderShotTasks();
 }
 function renderShotTasks(){
@@ -1259,6 +1275,8 @@ async function loadTasks(){
   var r=await sb.from("tasks").select("*").eq("user_id",currentUser.id).eq("project_id",activeProject.id).order("due_date",{ascending:true,nullsFirst:false});
   if(r.error){console.error(r.error);return;}
   tasks=r.data||[];
+  var rshots=await sb.from("shots").select("*").eq("project_id",activeProject.id).order("code",{ascending:true});
+  if(!rshots.error){shots=shots.filter(function(s){return s.project_id!==activeProject.id;}).concat(rshots.data||[]);}
   var shotIds=shots.filter(function(s){return s.project_id===activeProject.id;}).map(function(s){return s.id;});
   if(shotIds.length){var rst=await sb.from("shot_tasks").select("*").in("shot_id",shotIds);shotTasks=rst.data||[];}
   else{shotTasks=[];}
@@ -1631,12 +1649,12 @@ function renderGantt(){
   var som=new Date(ganttStart.getFullYear(),ganttStart.getMonth(),1);
 
   // Build data: asset tasks (with dates) + shots grouped by sequence
-  var assetTasks=tasks.filter(function(t){return t.due_date;});
-  var projShots=activeProject?shots.filter(function(s){return s.project_id===activeProject.id&&(s.due_date||s.start_date);}):[];
+  var assetTasks=tasks.filter(function(t){return t.due_date&&t.category!=="shot";});
+  var projShots=activeProject?shots.filter(function(s){return s.project_id===activeProject.id;}):[];
   var projSeqs=activeProject?sequences.filter(function(s){return s.project_id===activeProject.id;}):[];
 
   if(!assetTasks.length&&!projShots.length){
-    inner.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">No tasks or shots with dates yet.</div>';return;
+    inner.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">No tasks or shots yet.</div>';return;
   }
 
   var dates=[];
@@ -1766,7 +1784,11 @@ function renderGantt(){
         var labelEl=document.createElement("div");
         labelEl.innerHTML='<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px"><div class="gantt-label-shot">'+sh.code+'</div><div class="gantt-label-sub-shot">'+(sh.description||"")+'</div></div>';
         var rr=mkRow(labelEl,function(row){
-          if(!sh.due_date)return;
+          if(!sh.due_date){
+            var noDateEl=document.createElement("div");
+            noDateEl.style.cssText="position:absolute;left:6px;top:9px;height:28px;display:flex;align-items:center;font-size:.68rem;color:var(--text4);font-style:italic;";
+            noDateEl.textContent="No date set — open shot to add";row.appendChild(noDateEl);return;
+          }
           var bed=new Date(sh.due_date+"T00:00:00");
           var bsd=sh.start_date?new Date(sh.start_date+"T00:00:00"):bed;
           bed.setHours(0,0,0,0);bsd.setHours(0,0,0,0);
