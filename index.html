@@ -705,7 +705,11 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
       <div class="tab-content" id="tab-milestones" style="display:none">
         <div class="admin-wrap">
           <div class="admin-section">
-            <div class="admin-sec-hdr"><span style="font-size:1.1rem">&#128193;</span><span class="admin-sec-title">Projects</span></div>
+            <div class="admin-sec-hdr">
+              <span style="font-size:1.1rem">&#128193;</span>
+              <span class="admin-sec-title">Projects</span>
+              <button class="btn btn-ghost btn-sm" onclick="promptProjectImport()">Import Archive</button>
+            </div>
             <div class="admin-list" id="admin-list-projects"></div>
           </div>
           <div class="admin-section">
@@ -2219,23 +2223,31 @@ window.saveProject=async function(){
   closeProjModal();
   
   if(!editProjId&&r.data&&r.data[0]){
-    // It's a new project. 
-    // Add to project list
-    projects.push(r.data[0]);
-    projExpanded[r.data[0].id]=true;
-    activeProject=r.data[0];
-    
-    // Instantly add Owner to local projectMembers array so they show up in UI
-    // (The SQL Trigger already did this in the DB, this just updates the browser memory)
-    projectMembers.push({
-      project_id: r.data[0].id,
+    var newProj = r.data[0];
+
+    await sb.from("project_members").upsert({
+      project_id: newProj.id,
       user_id: currentUser.id,
-      role: 'Owner'
+      role: "Owner",
+      invited_by: currentUser.id,
+      accepted_at: new Date().toISOString()
+    }, {
+      onConflict: "project_id,user_id"
     });
-    userRole = 'Owner';
-    
-    localStorage.setItem("celio-proj-"+currentUser.id,r.data[0].id);
-    setHeaderProject(r.data[0]);
+
+    projects.push(newProj);
+    projectMembers.push({
+      project_id: newProj.id,
+      user_id: currentUser.id,
+      role: "Owner",
+      invited_by: currentUser.id,
+      accepted_at: new Date().toISOString()
+    });
+
+    projExpanded[newProj.id]=true;
+    activeProject=newProj;
+    localStorage.setItem("celio-proj-"+currentUser.id,newProj.id);
+    setHeaderProject(newProj);
     showTab("schedule");
     loadTasks();
   } else {
@@ -2278,67 +2290,452 @@ window.deleteProject=async function(id){
 window.exportProject = async function(id) {
   var p = projects.find(function(x) { return x.id === id; });
   if (!p) return;
-  showToast("Preparing export…");
-  var rTasks = await sb.from("tasks").select("*").eq("project_id", id);
-  var projTasks = rTasks.data || [];
+
+  showToast("Preparing archive...");
+
   var projSeqs = sequences.filter(function(s) { return s.project_id === id; });
   var projShots = shots.filter(function(s) { return s.project_id === id; });
   var shotIds = projShots.map(function(s) { return s.id; });
-  var projShotTasks = [];
-  if (shotIds.length) {
-    var rShotTasks = await sb.from("shot_tasks").select("*").in("shot_id", shotIds);
-    projShotTasks = rShotTasks.data || [];
+
+  var results = await Promise.all([
+    sb.from("tasks").select("*").eq("project_id", id),
+    shotIds.length
+      ? sb.from("shot_tasks").select("*").in("shot_id", shotIds)
+      : Promise.resolve({ data: [] }),
+    sb.from("project_members").select("*").eq("project_id", id)
+  ]);
+
+  var rTasks = results[0];
+  var rShotTasks = results[1];
+  var rMembers = results[2];
+
+  if (rTasks.error) {
+    showToast("Export failed: " + rTasks.error.message, "error");
+    return;
   }
-  var pkg = { exportedAt: new Date().toISOString(), exportedBy: currentUser.email, project: p, sequences: projSeqs, shots: projShots, tasks: projTasks, shotTasks: projShotTasks };
+  if (rShotTasks.error) {
+    showToast("Export failed: " + rShotTasks.error.message, "error");
+    return;
+  }
+  if (rMembers.error) {
+    showToast("Export failed: " + rMembers.error.message, "error");
+    return;
+  }
+
+  var pkg = {
+    schemaVersion: 2,
+    app: "Celio",
+    exportedAt: new Date().toISOString(),
+    exportedBy: currentUser.email,
+    project: p,
+    sequences: projSeqs,
+    shots: projShots,
+    tasks: rTasks.data || [],
+    shotTasks: rShotTasks.data || [],
+    projectMembers: rMembers.data || []
+  };
+
   var blob = new Blob([JSON.stringify(pkg, null, 2)], { type: "application/json" });
   var url = URL.createObjectURL(blob);
-  var a = document.createElement("a"); a.href = url;
-  a.download = "celio-" + p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() + "-" + new Date().toISOString().slice(0, 10) + ".json";
-  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast("Downloaded!");
+
+  var a = document.createElement("a");
+  a.href = url;
+  a.download =
+    "celio-archive-" +
+    p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() +
+    "-" +
+    new Date().toISOString().slice(0, 10) +
+    ".json";
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showToast("Archive downloaded!");
 };
 
 window.exportCSV = async function(id) {
   var p = projects.find(function(x) { return x.id === id; });
   if (!p) return;
+
   showToast("Preparing CSV...");
-  var rTasks = await sb.from("tasks").select("*").eq("project_id", id);
-  var projTasks = rTasks.data || [];
+
+  var projSeqs = sequences.filter(function(s) { return s.project_id === id; });
   var projShots = shots.filter(function(s) { return s.project_id === id; });
   var shotIds = projShots.map(function(s) { return s.id; });
-  var projShotTasks = [];
-  if (shotIds.length) {
-    var rShotTasks = await sb.from("shot_tasks").select("*").in("shot_id", shotIds);
-    projShotTasks = rShotTasks.data || [];
+
+  var results = await Promise.all([
+    sb.from("tasks").select("*").eq("project_id", id),
+    shotIds.length
+      ? sb.from("shot_tasks").select("*").in("shot_id", shotIds)
+      : Promise.resolve({ data: [] }),
+    sb.from("project_members").select("*").eq("project_id", id)
+  ]);
+
+  if (results[0].error) {
+    showToast("CSV export failed: " + results[0].error.message, "error");
+    return;
   }
-  var csvRows = [ ["Category", "Sequence", "Shot/Asset", "Task Name", "Assignee", "Start Date", "Due Date", "Status", "Notes"] ];
-  function esc(str) {
-    if (!str) return "";
-    var s = String(str).replace(/"/g, '""');
-    if (s.indexOf(",") >= 0 || s.indexOf("\n") >= 0 || s.indexOf('"') >= 0) return '"' + s + '"';
+  if (results[1].error) {
+    showToast("CSV export failed: " + results[1].error.message, "error");
+    return;
+  }
+  if (results[2].error) {
+    showToast("CSV export failed: " + results[2].error.message, "error");
+    return;
+  }
+
+  var projTasks = results[0].data || [];
+  var projShotTasks = results[1].data || [];
+  var projMembers = results[2].data || [];
+
+  function esc(v) {
+    if (v === null || v === undefined) return "";
+    var s = String(v).replace(/"/g, '""');
+    if (/[",\n]/.test(s)) return '"' + s + '"';
     return s;
   }
+
+  var headers = [
+    "row_type",
+    "project_id",
+    "project_name",
+    "project_description",
+    "project_color",
+
+    "sequence_id",
+    "sequence_code",
+    "sequence_name",
+
+    "shot_id",
+    "shot_sequence_id",
+    "shot_code",
+    "shot_description",
+    "shot_status",
+    "shot_start_date",
+    "shot_due_date",
+    "shot_frame_count",
+    "shot_camera",
+    "shot_storyboard_notes",
+    "shot_linked_assets",
+
+    "task_id",
+    "task_category",
+    "task_name",
+    "task_lead",
+    "task_start_date",
+    "task_due_date",
+    "task_due_time",
+    "task_priority",
+    "task_status",
+    "task_revision_count",
+    "task_handoff_to",
+    "task_asset",
+    "task_asset_url",
+    "task_asset_type",
+    "task_asset_name",
+    "task_pipeline_stage",
+
+    "shot_task_id",
+    "shot_task_shot_id",
+    "shot_task_type",
+    "shot_task_department",
+    "shot_task_assignee",
+    "shot_task_start_date",
+    "shot_task_due_date",
+    "shot_task_status",
+    "shot_task_notes",
+    "shot_task_version",
+    "shot_task_order_index",
+
+    "member_user_id",
+    "member_role",
+    "member_invited_by",
+    "member_accepted_at"
+  ];
+
+  var rows = [headers];
+
+  function makeBlankRow() {
+    var row = {};
+    headers.forEach(function(h) { row[h] = ""; });
+    row.project_id = p.id || "";
+    row.project_name = p.name || "";
+    row.project_description = p.description || "";
+    row.project_color = p.color || "";
+    return row;
+  }
+
+  var projectRow = makeBlankRow();
+  projectRow.row_type = "PROJECT";
+  rows.push(headers.map(function(h) { return esc(projectRow[h]); }));
+
+  projSeqs.forEach(function(seq) {
+    var row = makeBlankRow();
+    row.row_type = "SEQUENCE";
+    row.sequence_id = seq.id || "";
+    row.sequence_code = seq.code || "";
+    row.sequence_name = seq.name || "";
+    rows.push(headers.map(function(h) { return esc(row[h]); }));
+  });
+
+  projShots.forEach(function(sh) {
+    var row = makeBlankRow();
+    row.row_type = "SHOT";
+    row.shot_id = sh.id || "";
+    row.shot_sequence_id = sh.sequence_id || "";
+    row.shot_code = sh.code || "";
+    row.shot_description = sh.description || "";
+    row.shot_status = sh.status || "";
+    row.shot_start_date = sh.start_date || "";
+    row.shot_due_date = sh.due_date || "";
+    row.shot_frame_count = sh.frame_count || "";
+    row.shot_camera = sh.camera || "";
+    row.shot_storyboard_notes = sh.storyboard_notes || "";
+    row.shot_linked_assets = sh.linked_assets || "";
+    rows.push(headers.map(function(h) { return esc(row[h]); }));
+  });
+
   projTasks.forEach(function(t) {
-    var assetRef = t.category === "asset" ? (t.asset_type + ": " + t.asset_name) : (t.category || "general");
-    csvRows.push([ esc(t.category), "", esc(assetRef), esc(t.name || t.pipeline_stage), esc(t.lead), esc(t.start_date), esc(t.due_date), esc(t.status), esc(t.asset_url || t.asset || "") ]);
+    var row = makeBlankRow();
+    row.row_type = "TASK";
+    row.task_id = t.id || "";
+    row.task_category = t.category || "";
+    row.task_name = t.name || "";
+    row.task_lead = t.lead || "";
+    row.task_start_date = t.start_date || "";
+    row.task_due_date = t.due_date || "";
+    row.task_due_time = t.due_time || "";
+    row.task_priority = t.priority || "";
+    row.task_status = t.status || "";
+    row.task_revision_count = t.revision_count || 0;
+    row.task_handoff_to = t.handoff_to || "";
+    row.task_asset = t.asset || "";
+    row.task_asset_url = t.asset_url || "";
+    row.task_asset_type = t.asset_type || "";
+    row.task_asset_name = t.asset_name || "";
+    row.task_pipeline_stage = t.pipeline_stage || "";
+    rows.push(headers.map(function(h) { return esc(row[h]); }));
   });
-  projShotTasks.forEach(function(t) {
-    var sh = projShots.find(function(x) { return x.id === t.shot_id; });
-    var seqCode = "";
-    var shotCode = sh ? sh.code : "Unknown";
-    if (sh && sh.sequence_id) {
-      var sq = sequences.find(function(x) { return x.id === sh.sequence_id; });
-      if (sq) seqCode = sq.code;
-    }
-    csvRows.push([ "shot_task", esc(seqCode), esc(shotCode), esc(t.task_type), esc(t.assignee), esc(t.start_date), esc(t.due_date), esc(t.status), esc(t.notes || "") ]);
+
+  projShotTasks.forEach(function(st) {
+    var row = makeBlankRow();
+    row.row_type = "SHOT_TASK";
+    row.shot_task_id = st.id || "";
+    row.shot_task_shot_id = st.shot_id || "";
+    row.shot_task_type = st.task_type || "";
+    row.shot_task_department = st.department || "";
+    row.shot_task_assignee = st.assignee || "";
+    row.shot_task_start_date = st.start_date || "";
+    row.shot_task_due_date = st.due_date || "";
+    row.shot_task_status = st.status || "";
+    row.shot_task_notes = st.notes || "";
+    row.shot_task_version = st.version || 1;
+    row.shot_task_order_index = st.order_index || 0;
+    rows.push(headers.map(function(h) { return esc(row[h]); }));
   });
-  var csvString = csvRows.map(function(row) { return row.join(","); }).join("\n");
+
+  projMembers.forEach(function(m) {
+    var row = makeBlankRow();
+    row.row_type = "MEMBER";
+    row.member_user_id = m.user_id || "";
+    row.member_role = m.role || "";
+    row.member_invited_by = m.invited_by || "";
+    row.member_accepted_at = m.accepted_at || "";
+    rows.push(headers.map(function(h) { return esc(row[h]); }));
+  });
+
+  var csvString = rows.map(function(r) { return r.join(","); }).join("\n");
   var blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
   var url = URL.createObjectURL(blob);
-  var a = document.createElement("a"); a.href = url;
-  a.download = "celio-" + p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() + "-tasks.csv";
-  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
-  showToast("CSV Downloaded!");
+
+  var a = document.createElement("a");
+  a.href = url;
+  a.download =
+    "celio-full-export-" +
+    p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() +
+    "-" +
+    new Date().toISOString().slice(0, 10) +
+    ".csv";
+
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+
+  showToast("CSV downloaded!");
+};
+
+window.promptProjectImport = function() {
+  var input = document.getElementById("import-project-file");
+  if (!input) return;
+  input.value = "";
+  input.click();
+};
+
+window.handleProjectImport = async function(event) {
+  var file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  try {
+    showToast("Reading archive...");
+    var text = await file.text();
+    var archive = JSON.parse(text);
+
+    if (
+      !archive ||
+      !archive.project ||
+      !Array.isArray(archive.sequences) ||
+      !Array.isArray(archive.shots) ||
+      !Array.isArray(archive.tasks) ||
+      !Array.isArray(archive.shotTasks)
+    ) {
+      showToast("Invalid archive format.", "error");
+      return;
+    }
+
+    var importedProjectName = (archive.project.name || "Imported Project") + " (Imported)";
+
+    var projRes = await sb.from("projects").insert({
+      name: importedProjectName,
+      description: archive.project.description || "",
+      color: archive.project.color || "#7c3aed",
+      user_id: currentUser.id
+    }).select().single();
+
+    if (projRes.error) throw projRes.error;
+
+    var newProject = projRes.data;
+
+    await sb.from("project_members").upsert({
+      project_id: newProject.id,
+      user_id: currentUser.id,
+      role: "Owner",
+      invited_by: currentUser.id,
+      accepted_at: new Date().toISOString()
+    }, {
+      onConflict: "project_id,user_id"
+    });
+
+    var seqIdMap = {};
+    var shotIdMap = {};
+
+    if (archive.sequences.length) {
+      var seqPayload = archive.sequences.map(function(seq) {
+        return {
+          code: seq.code || "",
+          name: seq.name || "",
+          project_id: newProject.id,
+          user_id: currentUser.id
+        };
+      });
+
+      var seqRes = await sb.from("sequences").insert(seqPayload).select();
+      if (seqRes.error) throw seqRes.error;
+
+      seqRes.data.forEach(function(newSeq, i) {
+        seqIdMap[archive.sequences[i].id] = newSeq.id;
+      });
+    }
+
+    if (archive.shots.length) {
+      var shotPayload = archive.shots.map(function(sh) {
+        return {
+          code: sh.code || "",
+          description: sh.description || "",
+          sequence_id: sh.sequence_id ? (seqIdMap[sh.sequence_id] || null) : null,
+          project_id: newProject.id,
+          user_id: currentUser.id,
+          status: sh.status || "pending",
+          start_date: sh.start_date || null,
+          due_date: sh.due_date || null,
+          frame_count: sh.frame_count || null,
+          camera: sh.camera || null,
+          storyboard_notes: sh.storyboard_notes || null,
+          linked_assets: sh.linked_assets || null
+        };
+      });
+
+      var shotRes = await sb.from("shots").insert(shotPayload).select();
+      if (shotRes.error) throw shotRes.error;
+
+      shotRes.data.forEach(function(newShot, i) {
+        shotIdMap[archive.shots[i].id] = newShot.id;
+      });
+    }
+
+    if (archive.tasks.length) {
+      var taskPayload = archive.tasks.map(function(t) {
+        return {
+          name: t.name || "",
+          lead: t.lead || null,
+          start_date: t.start_date || null,
+          due_date: t.due_date || null,
+          due_time: t.due_time || null,
+          priority: t.priority || "med",
+          status: t.status || "todo",
+          category: t.category || "general",
+          user_id: currentUser.id,
+          project_id: newProject.id,
+          handoff_to: t.handoff_to || null,
+          asset: t.asset || null,
+          asset_url: t.asset_url || null,
+          asset_type: t.asset_type || null,
+          asset_name: t.asset_name || null,
+          pipeline_stage: t.pipeline_stage || null,
+          revision_count: t.revision_count || 0
+        };
+      });
+
+      var taskRes = await sb.from("tasks").insert(taskPayload);
+      if (taskRes.error) throw taskRes.error;
+    }
+
+    if (archive.shotTasks.length) {
+      var shotTaskPayload = archive.shotTasks
+        .filter(function(st) {
+          return !!shotIdMap[st.shot_id];
+        })
+        .map(function(st) {
+          return {
+            shot_id: shotIdMap[st.shot_id],
+            project_id: newProject.id,
+            user_id: currentUser.id,
+            task_type: st.task_type || "",
+            department: st.department || null,
+            assignee: st.assignee || null,
+            start_date: st.start_date || null,
+            due_date: st.due_date || null,
+            status: st.status || "ready",
+            notes: st.notes || null,
+            version: st.version || 1,
+            order_index: st.order_index || 0
+          };
+        });
+
+      if (shotTaskPayload.length) {
+        var shotTaskRes = await sb.from("shot_tasks").insert(shotTaskPayload);
+        if (shotTaskRes.error) throw shotTaskRes.error;
+      }
+    }
+
+    showToast("Project imported!");
+    await loadAll();
+
+    activeProject = newProject;
+    projExpanded[newProject.id] = true;
+    localStorage.setItem("celio-proj-" + currentUser.id, newProject.id);
+    setHeaderProject(newProject);
+    renderSidebar();
+    showTab("schedule");
+    await loadTasks();
+  } catch (err) {
+    console.error(err);
+    showToast("Import failed: " + (err.message || err), "error");
+  } finally {
+    event.target.value = "";
+  }
 };
 
 // ============================================================
@@ -2416,73 +2813,66 @@ window.submitInviteCode = async function() {
 window.openInviteModal = async function(projectId) {
   var project = projects.find(function(p){ return p.id === projectId; });
   if(!project) return;
-  
-  // Populate dropdown with roles from Team Roster
+
   var teamRoles = tasks.filter(function(t){
     return t.category === "team" && t.project_id === projectId;
   });
+
   var roleSet = {};
-  teamRoles.forEach(function(t){ if(t.lead) roleSet[t.lead] = true; });
-  
+  teamRoles.forEach(function(t){
+    if(t.lead) roleSet[t.lead] = true;
+  });
+
   var roleSelect = document.getElementById("invite-role");
   roleSelect.innerHTML = '<option value="">Let them choose their role</option>';
   Object.keys(roleSet).sort().forEach(function(role){
     roleSelect.innerHTML += '<option value="' + role + '">' + role + '</option>';
   });
-  
-  // Fetch existing active invite
+
   var r = await sb.from("project_invites")
     .select("*")
     .eq("project_id", projectId)
     .eq("created_by", currentUser.id)
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
-  
+
   var inviteCode;
-  var currentInviteId;
+  var selectedRole = roleSelect.value || null;
 
   if(r.data) {
-    // Reuse existing invite
     inviteCode = r.data.invite_code;
-    currentInviteId = r.data.id;
-    // Visually update the dropdown to match the database role!
-    if(r.data.role) {
-       roleSelect.value = r.data.role;
-    } else {
-       roleSelect.value = "";
-    }
   } else {
-    // Create new invite
     inviteCode = Math.random().toString(36).substring(2, 10);
     var expires = new Date();
-    expires.setDate(expires.getDate() + 90); 
-    
+    expires.setDate(expires.getDate() + 90);
+
     var insertRes = await sb.from("project_invites").insert({
       project_id: projectId,
       invite_code: inviteCode,
-      role: null,
+      role: selectedRole,
       created_by: currentUser.id,
       expires_at: expires.toISOString(),
-      max_uses: 999
-    }).select();
+      max_uses: 999,
+      uses: 0
+    });
 
-    if(insertRes.data && insertRes.data[0]) {
-      currentInviteId = insertRes.data[0].id;
+    if (insertRes.error) {
+      showToast("Could not create invite: " + insertRes.error.message, "error");
+      return;
     }
   }
 
-  // Live Sync: Instantly update the database when they change the dropdown!
-  roleSelect.onchange = async function() {
-    if(currentInviteId) {
-      var newRole = this.value || null;
-      await sb.from("project_invites").update({ role: newRole }).eq("id", currentInviteId);
-      showToast("Link updated for role!");
-    }
-  };
-  
   var inviteUrl = window.location.origin + window.location.pathname + "?invite=" + inviteCode;
   document.getElementById("invite-link").value = inviteUrl;
-  
+
+  roleSelect.onchange = async function() {
+    var newRole = this.value || null;
+    await sb.from("project_invites")
+      .update({ role: newRole })
+      .eq("project_id", projectId)
+      .eq("invite_code", inviteCode);
+  };
+
   renderProjectMembers(projectId);
   document.getElementById("invite-modal").classList.add("open");
 };
@@ -2559,10 +2949,10 @@ window.renderMilestones=function(){
       var editBtn=document.createElement("button");editBtn.className="btn btn-ghost btn-sm";editBtn.style.fontSize=".68rem";editBtn.textContent="Edit";
       editBtn.onclick=(function(pid){return function(){openProjectModal(pid);};})(p.id);
       
-      var expBtn=document.createElement("button");expBtn.className="btn btn-ghost btn-sm";expBtn.style.fontSize=".68rem";expBtn.innerHTML="⬇ JSON";
+      var expBtn=document.createElement("button");expBtn.className="btn btn-ghost btn-sm";expBtn.style.fontSize=".68rem";expBtn.innerHTML="⬇ Export Archive (JSON)";
       expBtn.onclick=(function(pid){return function(){exportProject(pid);};})(p.id);
 
-      var csvBtn=document.createElement("button");csvBtn.className="btn btn-ghost btn-sm";csvBtn.style.fontSize=".68rem";csvBtn.innerHTML="⬇ CSV";
+      var csvBtn=document.createElement("button");csvBtn.className="btn btn-ghost btn-sm";csvBtn.style.fontSize=".68rem";csvBtn.innerHTML="⬇ Export Report (CSV)";
       csvBtn.onclick=(function(pid){return function(){exportCSV(pid);};})(p.id);
       
       var inviteBtn=document.createElement("button");inviteBtn.className="btn btn-ghost btn-sm";inviteBtn.style.fontSize=".68rem";inviteBtn.innerHTML="👥 Invite";
@@ -2834,5 +3224,12 @@ window.addEventListener("DOMContentLoaded", function () {
       </div>
     </div>
 
+    <input
+      type="file"
+      id="import-project-file"
+      accept=".json,application/json"
+      style="display:none"
+      onchange="handleProjectImport(event)"
+    >
 </body>
 </html>
