@@ -2327,9 +2327,16 @@ window.closeAdminModal=function(){document.getElementById("admin-modal").classLi
 window.saveAdminEntry = async function() {
   var title = document.getElementById("af-title").value.trim();
   if (!title) { showToast("Please enter a title.", "error"); return; }
+  
+  // Team members don't need real due dates - use a default value to satisfy NOT NULL constraint
+  var dueDate = document.getElementById("af-date").value || null;
+  if (adminCat === "team" && !dueDate) {
+    dueDate = "2099-12-31"; // Default far-future date for team roster entries
+  }
+  
   var payload = {
     name: title, lead: document.getElementById("af-assignee").value.trim() || null,
-    due_date: document.getElementById("af-date").value || null, priority: document.getElementById("af-priority").value,
+    due_date: dueDate, priority: document.getElementById("af-priority").value,
     status: document.getElementById("af-status").value, category: adminCat,
     asset: document.getElementById("af-notes").value.trim() || null, user_id: currentUser.id, project_id: activeProject.id
   };
