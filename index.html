@@ -804,172 +804,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   </div>
 </div>
 
-<div class="modal-bg" id="modal">
-  <div class="modal">
-    <h3 id="modal-title">Add Task</h3>
-    <div class="form-row">
-      <label class="flbl">Category</label>
-      <div class="cat-pills">
-        <button class="cat-pill active" data-cat="general" onclick="selectCat('general',this)">&#128203; Milestone / Admin</button>
-        <button class="cat-pill" data-cat="asset" onclick="selectCat('asset',this)">&#127912; Asset Task</button>
-      </div>
-    </div>
-    <div id="asset-fields" style="display:none">
-      <div class="form-row-2">
-        <div>
-          <label class="flbl">Asset Type</label>
-          <select id="f-asset-type" class="inp" onchange="updatePipelineStages()">
-            <option value="character">&#128100; Character</option>
-            <option value="prop">&#128218; Prop</option>
-            <option value="environment">&#127758; Environment</option>
-            <option value="vehicle">&#128663; Vehicle</option>
-            <option value="fx">&#10024; FX Element</option>
-          </select>
-        </div>
-        <div>
-          <label class="flbl">Asset Name</label>
-          <input id="f-asset-name" class="inp" placeholder="e.g. Hero Character">
-        </div>
-      </div>
-      <div class="form-row">
-        <label class="flbl">Pipeline Stage</label>
-        <div class="pipeline-stages" id="pipeline-stages-grid"></div>
-      </div>
-    </div>
-    <div class="form-row"><label class="flbl">Task Name / Notes</label><input id="f-name" class="inp" placeholder="e.g. Final rig sign-off"></div>
-    <div class="form-row"><label class="flbl">Lead / Artist</label><select id="f-lead" class="inp"></select></div>
-    <div class="form-row-2">
-      <div><label class="flbl">Start Date</label><input id="f-start" type="date" class="inp"></div>
-      <div><label class="flbl">Due Date</label><input id="f-due" type="date" class="inp"></div>
-    </div>
-    <div class="form-row-2">
-      <div><label class="flbl">Due Time (optional)</label><input id="f-time" type="time" class="inp"></div>
-      <div><label class="flbl">Priority</label>
-        <select id="f-priority" class="inp"><option value="high">High</option><option value="med" selected>Medium</option><option value="low">Low</option></select>
-      </div>
-    </div>
-    <div class="form-row"><label class="flbl">Status</label>
-      <select id="f-status" class="inp"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="review">In Review</option><option value="done">Done</option></select>
-    </div>
-    <div class="adv-toggle" id="adv-toggle" onclick="toggleAdv()">&#9658; Show Advanced Options</div>
-    <div id="general-extra-fields" style="display:none">
-      <div class="form-row"><label class="flbl">Handoff To (optional)</label><select id="f-handoff" class="inp"></select></div>
-      <div class="form-row-2">
-        <div><label class="flbl">Deliverable Name (optional)</label><input id="f-deliverable" class="inp"></div>
-        <div><label class="flbl">Deliverable URL (optional)</label><input id="f-deliverable-url" class="inp" placeholder="https://..."></div>
-      </div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-bg" id="proj-modal">
-  <div class="modal" style="width:420px">
-    <h3 id="proj-modal-title">New Project</h3>
-    <div class="form-row"><label class="flbl">Project Name</label><input id="pf-name" class="inp" placeholder="e.g. Season 2 Production"></div>
-    <div class="form-row"><label class="flbl">Description (optional)</label><input id="pf-desc" class="inp" placeholder="Short description"></div>
-    <div class="form-row"><label class="flbl">Project Colour</label><div class="color-row" id="color-row"></div></div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeProjModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-bg" id="seq-modal">
-  <div class="modal" style="width:420px">
-    <h3 id="seq-modal-title">New Sequence</h3>
-    <div class="form-row">
-      <label class="flbl">Sequence Code</label>
-      <input id="sf-code" class="inp" placeholder="e.g. SQ010">
-      <div class="hint">Use increments of 10 — easier to insert sequences later.</div>
-    </div>
-    <div class="form-row"><label class="flbl">Sequence Name (optional)</label><input id="sf-name" class="inp" placeholder="e.g. Opening Chase"></div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeSeqModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveSeq()">Save Sequence</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-bg" id="shot-modal">
-  <div class="modal" style="width:420px">
-    <h3>New Shot</h3>
-    <div class="form-row">
-      <label class="flbl">Shot Code</label>
-      <input id="shf-code" class="inp" placeholder="e.g. SH010">
-      <div class="hint">Use increments of 10 — easier to insert shots later.</div>
-    </div>
-    <div class="form-row"><label class="flbl">Description (optional)</label><input id="shf-desc" class="inp" placeholder="e.g. Hero enters the lab"></div>
-    <div class="form-row-2" style="margin-top:8px">
-      <div><label class="flbl">Start Date <span style="font-size:.7rem;color:var(--text4);font-weight:400">(optional)</span></label><input id="shf-start" type="date" class="inp"></div>
-      <div><label class="flbl">Due Date <span style="font-size:.7rem;color:var(--text4);font-weight:400">(for Gantt)</span></label><input id="shf-due" type="date" class="inp"></div>
-    </div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeShotModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveShot()">Save Shot</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-bg" id="shot-task-modal">
-  <div class="modal" style="width:460px">
-    <h3>Add Shot Task</h3>
-    <div class="form-row">
-      <label class="flbl">Task Type</label>
-      <div class="pipeline-stages" id="shot-task-type-grid"></div>
-    </div>
-    <div class="form-row" id="custom-type-row" style="display:none">
-      <label class="flbl">Custom Task Name</label>
-      <input id="stf-custom" class="inp" placeholder="e.g. Matte Painting">
-    </div>
-    <div class="form-row"><label class="flbl">Assignee</label><select id="stf-assignee" class="inp"></select></div>
-    <div class="form-row-2">
-      <div><label class="flbl">Start Date</label><input id="stf-start" type="date" class="inp"></div>
-      <div><label class="flbl">Due Date</label><input id="stf-due" type="date" class="inp"></div>
-    </div>
-    <div class="form-row"><label class="flbl">Status</label>
-      <select id="stf-status" class="inp">
-        <option value="ready">Ready to Start</option>
-        <option value="inprogress">In Progress</option>
-        <option value="review">Supervisor Review</option>
-        <option value="approved">Approved</option>
-        <option value="final">Final</option>
-      </select>
-    </div>
-    <div class="form-row"><label class="flbl">Notes (optional)</label><input id="stf-notes" class="inp" placeholder="Any notes..."></div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeShotTaskModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveShotTask()">Add Task</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-bg" id="asset-link-modal">
-  <div class="modal" style="width:460px">
-    <h3>Link Assets to Shot</h3>
-    <p style="font-size:.8rem;color:var(--text3);margin-bottom:14px">Select assets from the schedule that appear in this shot. Their pipeline readiness will show on the shot page.</p>
-    <input class="inp" id="asset-search-inp" placeholder="Search assets..." oninput="filterAssetSearch(this.value)" style="margin-bottom:4px">
-    <div class="asset-search-list" id="asset-search-list"></div>
-    <div class="form-actions">
-      <button class="btn btn-ghost" onclick="closeAssetLinkModal()">Cancel</button>
-      <button class="btn btn-primary" onclick="saveAssetLinks()">Save Links</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-bg" id="cmd-palette">
-  <div class="modal">
-    <input class="cmd-input" id="cmd-input" placeholder="Search shots, tasks... (e.g. SH010)" oninput="filterCmd(this.value)" autocomplete="off">
-    <div class="cmd-list" id="cmd-list"></div>
-  </div>
-</div>
-
 <div class="toast" id="toast">Saved!</div>
-
 <script>
 (function(){
 var SB_URL="https://uwocrciwfgggnopszpjb.supabase.co";
@@ -2077,7 +1912,6 @@ function renderGantt(){
 
   var dates=[];
   for(var i=0;i<numDays;i++)dates.push(new Date(ganttStart.getFullYear(),ganttStart.getMonth(),i+1));
-  if(!uiState.ganttCollapsed)uiState.ganttCollapsed={tasks:false,shots:{}};
 
   function mkRow(labelEl,barFn,visible){
     var lr=document.createElement("div");lr.className="gantt-label-row";lr.appendChild(labelEl);
@@ -2915,3 +2749,97 @@ window.addEventListener("DOMContentLoaded", function () {
         <div style="font-size:2rem;text-align:center;margin-bottom:10px;">&#9888;&#65039;</div>
         <h3 id="confirm-title" style="font-size:1rem;font-weight:800;margin:0 0 8px;text-align:center;"></h3>
         <p id="confirm-msg" style="font-size:.82rem;color:var(--text3);text-align:center;margin:0 0 22px;line-height:1.5;"></p>
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <button class="btn btn-ghost" onclick="closeConfirm()" style="min-width:100px;">Cancel</button>
+          <button id="confirm-ok-btn" class="btn btn-del" onclick="confirmOk()" style="min-width:120px;padding:8px 16px;font-size:.82rem;font-weight:700;">Delete</button>
+        </div>
+      </div>
+    </div>
+    <div class="modal-bg" id="admin-modal">
+      <div class="modal" style="width:92%;max-width:460px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 id="admin-modal-title" style="margin:0">New Entry</h3>
+          <button onclick="closeAdminModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">&#215;</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><label class="flbl" id="lbl-af-title">Title</label><input id="af-title" class="inp"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><label class="flbl" id="lbl-af-assignee">Assignee</label><input id="af-assignee" class="inp"></div>
+            <div id="wrap-af-date"><label class="flbl">Date</label><input id="af-date" class="inp" type="date"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="wrap-af-status">
+            <div><label class="flbl">Priority</label>
+              <select id="af-priority" class="inp"><option value="low">Low</option><option value="med" selected>Medium</option><option value="high">High</option></select>
+            </div>
+            <div><label class="flbl">Status</label>
+              <select id="af-status" class="inp"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Done</option></select>
+            </div>
+          </div>
+          <div><label class="flbl">Notes</label><textarea id="af-notes" class="inp" rows="2" style="resize:vertical"></textarea></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+          <button class="btn btn-ghost" onclick="closeAdminModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveAdminEntry()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="invite-code-modal">
+      <div class="modal" style="width:92%;max-width:420px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 style="margin:0">Enter Invite Code</h3>
+          <button onclick="closeInviteCodeModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">×</button>
+        </div>
+        <div style="margin-bottom:16px">
+          <input id="invite-code-input" class="inp" placeholder="e.g. abc123xyz" style="text-align:center;font-size:1.1rem;letter-spacing:2px">
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px">
+          <button class="btn btn-ghost" onclick="closeInviteCodeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitInviteCode()">Join Project</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="invite-modal">
+      <div class="modal" style="width:92%;max-width:540px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 style="margin:0">Invite Team Members</h3>
+          <button onclick="closeInviteModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">×</button>
+        </div>
+        
+        <div style="margin-bottom:20px">
+          <label class="flbl">Pre-select Role (Optional)</label>
+          <select id="invite-role" class="inp">
+            <option value="">Let them choose their role</option>
+          </select>
+          <div style="font-size:.72rem;color:var(--text4);margin-top:4px">If you select a role, it will be pre-filled when they join</div>
+        </div>
+        
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px">
+          <div style="font-size:.75rem;color:var(--text4);margin-bottom:6px;font-weight:700">SHARE THIS LINK:</div>
+          <div style="display:flex;gap:8px">
+            <input id="invite-link" class="inp" readonly style="flex:1;font-size:.78rem;font-family:monospace">
+            <button class="btn btn-primary btn-sm" onclick="copyInviteLink()">📋 Copy</button>
+          </div>
+        </div>
+        
+        <div id="invite-members-section">
+          <h4 style="font-size:.88rem;margin-bottom:10px;font-weight:700">Current Members</h4>
+          <div id="members-list-container"></div>
+        </div>
+        
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+          <button class="btn btn-ghost" onclick="closeInviteModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <input
+      type="file"
+      id="import-project-file"
+      accept=".json,application/json"
+      style="display:none"
+      onchange="handleProjectImport(event)"
+    >
+</body>
+</html>
