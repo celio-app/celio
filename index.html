@@ -542,7 +542,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 </head>
 <body>
 
-<!-- AUTH -->
 <div id="auth-screen">
   <div class="auth-box">
     <div class="auth-logo">
@@ -567,12 +566,10 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   </div>
 </div>
 
-<!-- APP -->
 <div id="app-screen">
   <div class="app-layout">
     <div class="sb-overlay" id="sb-overlay" onclick="closeMobileSidebar()"></div>
 
-    <!-- SIDEBAR -->
     <nav class="sidebar-nav" id="sidebar">
       <div class="sb-top">
         <div class="sb-logo">C<span class="e">e</span>lio</div>
@@ -596,7 +593,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
       </div>
     </nav>
 
-    <!-- MAIN -->
     <div class="main-content">
       <header>
         <div class="header-left">
@@ -622,7 +618,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         <button class="btn btn-primary" onclick="openProjectModal()">+ New Project</button>
       </div>
 
-      <!-- SCHEDULE TAB -->
       <div class="tab-content" id="tab-schedule" style="display:none">
         <div class="stats">
           <div class="stat-card"><div class="sval c-blue" id="s-total">0</div><div class="slbl">Total Tasks</div></div>
@@ -631,7 +626,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
           <div class="stat-card"><div class="sval c-red" id="s-late">0</div><div class="slbl">Overdue</div></div>
         </div>
         <div class="schedule-body">
-          <!-- filter tabs -->
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div class="sched-tabs">
               <button class="sched-tab active" onclick="setSchedView('all',this)">All Tasks</button>
@@ -641,7 +635,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
           </div>
           <div class="schedule-grid">
             <div style="display:flex;flex-direction:column;gap:14px">
-              <!-- ASSET GROUPS -->
               <div id="asset-sections"></div>
               <div id="shot-schedule-section"></div>
               <div class="prog-wrap" style="margin-top:12px">
@@ -657,7 +650,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         </div>
       </div>
 
-      <!-- CALENDAR TAB -->
       <div class="tab-content" id="tab-calendar" style="display:none">
         <div class="calendar-wrap">
           <div class="cal-header">
@@ -676,7 +668,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         </div>
       </div>
 
-      <!-- GANTT TAB -->
       <div class="tab-content" id="tab-gantt" style="display:none">
         <div class="gantt-wrap">
           <div class="gantt-header">
@@ -697,7 +688,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         </div>
       </div>
 
-      <!-- SHOT PAGE -->
       <div class="tab-content" id="tab-milestones" style="display:none">
         <div class="admin-wrap">
           <div class="admin-section">
@@ -755,7 +745,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
           </div>
         </div>
         <div class="shot-body">
-          <!-- Storyboard -->
           <div class="shot-section">
             <div class="shot-section-hdr">
               <h3>&#127916; Storyboard Notes</h3>
@@ -765,7 +754,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
               <textarea class="storyboard-textarea" id="sp-storyboard" placeholder="Camera angle, action, dialogue cues, FX notes, composition..." onblur="saveShotField('storyboard_notes',this.value)"></textarea>
             </div>
           </div>
-          <!-- Shot Details -->
           <div class="shot-section">
             <div class="shot-section-hdr"><h3>&#128196; Shot Details</h3></div>
             <div class="shot-section-body">
@@ -777,7 +765,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
               </div>
             </div>
           </div>
-          <!-- Shot Pipeline Tasks -->
           <div class="shot-section">
             <div class="shot-section-hdr">
               <h3>&#9997;&#65039; Shot Tasks</h3>
@@ -785,7 +772,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
             </div>
             <div id="shot-tasks-list"></div>
           </div>
-          <!-- Asset Readiness -->
           <div class="shot-section">
             <div class="shot-section-hdr">
               <h3>&#127912; Asset Readiness</h3>
@@ -799,11 +785,9 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   </div>
 </div>
 
-<!-- TASK MODAL (upgraded with category) -->
 <div class="modal-bg" id="modal">
   <div class="modal">
     <h3 id="modal-title">Add Task</h3>
-    <!-- Category selector -->
     <div class="form-row">
       <label class="flbl">Category</label>
       <div class="cat-pills">
@@ -811,7 +795,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         <button class="cat-pill" data-cat="asset" onclick="selectCat('asset',this)">&#127912; Asset Task</button>
       </div>
     </div>
-    <!-- Asset fields (shown when category=asset) -->
     <div id="asset-fields" style="display:none">
       <div class="form-row-2">
         <div>
@@ -863,7 +846,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   </div>
 </div>
 
-<!-- PROJECT MODAL -->
 <div class="modal-bg" id="proj-modal">
   <div class="modal" style="width:420px">
     <h3 id="proj-modal-title">New Project</h3>
@@ -877,7 +859,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   </div>
 </div>
 
-<!-- SEQUENCE MODAL -->
 <div class="modal-bg" id="seq-modal">
   <div class="modal" style="width:420px">
     <h3 id="seq-modal-title">New Sequence</h3>
@@ -894,7 +875,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   </div>
 </div>
 
-<!-- SHOT MODAL -->
 <div class="modal-bg" id="shot-modal">
   <div class="modal" style="width:420px">
     <h3>New Shot</h3>
@@ -915,7 +895,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   </div>
 </div>
 
-<!-- SHOT TASK MODAL -->
 <div class="modal-bg" id="shot-task-modal">
   <div class="modal" style="width:460px">
     <h3>Add Shot Task</h3>
@@ -949,7 +928,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   </div>
 </div>
 
-<!-- ASSET LINK MODAL -->
 <div class="modal-bg" id="asset-link-modal">
   <div class="modal" style="width:460px">
     <h3>Link Assets to Shot</h3>
@@ -1003,7 +981,15 @@ function ganttBarCls(t){if(t.status==="done")return"gb-done";if(t.status!=="done
 function shotStatusColor(s){return{pending:"#64748b",inprogress:"#3b82f6",review:"#f59e0b",approved:"#10b981",final:"#7c3aed"}[s]||"#64748b";}
 function assetTypeIcon(t){return{character:"&#128100;",prop:"&#128218;",environment:"&#127758;",vehicle:"&#128663;",fx:"&#10024;"}[t]||"&#127912;";}
 function assetTypeLabel(t){return{character:"Character",prop:"Prop",environment:"Environment",vehicle:"Vehicle",fx:"FX Element"}[t]||t;}
-function showToast(m){var el=document.getElementById("toast");el.textContent=m||"Saved!";el.classList.add("show");setTimeout(function(){el.classList.remove("show");},1800);}
+
+function showToast(m, type) {
+  var el = document.getElementById("toast");
+  el.textContent = m || "Saved!";
+  // Use red for errors, green for standard success
+  el.style.background = type === "error" ? "#ef4444" : "#10b981"; 
+  el.classList.add("show");
+  setTimeout(function() { el.classList.remove("show"); }, 2500); 
+}
 
 // SIDEBAR / THEME
 window.toggleSidebar = function() {
@@ -1036,15 +1022,21 @@ window.toggleTheme=function(){var html=document.documentElement,isDark=html.getA
     var btn=document.getElementById("theme-btn");
     if(btn)btn.innerHTML=t==="dark"?"&#9728; <span>Light</span>":"&#127769; <span>Dark</span>";
     
-    // REPLACE THIS LINE:
-    if(!isMobile()&&localStorage.getItem("celio-sb-exp")==="1")document.getElementById("sidebar").classList.add("expanded");
+    if (!isMobile()) {
+      var sb = document.getElementById("sidebar");
+      if (window.innerWidth > 860 && localStorage.getItem("celio-sb-col") === "1") {
+        sb.classList.add("collapsed");
+      } else if (window.innerWidth <= 860 && localStorage.getItem("celio-sb-exp") === "1") {
+        sb.classList.add("expanded");
+      }
+    }
   });
 })();
 
 // AUTH
 function setMsg(m,type){var el=document.getElementById("auth-msg");el.textContent=m;el.className="auth-msg"+(type?" "+type:"");}
 window.switchTab=function(n){document.getElementById("login-form").style.display=n===0?"block":"none";document.getElementById("signup-form").style.display=n===1?"block":"none";document.getElementById("atab0").classList.toggle("active",n===0);document.getElementById("atab1").classList.toggle("active",n===1);setMsg("","");};
-window.doSignIn=async function(){var e=document.getElementById("li-email").value.trim(),p=document.getElementById("li-pass").value;if(!e||!p){setMsg("Please enter email and password.","error");return;}setMsg("Signing in...","");var r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error)setMsg(r.error.message,"error");};
+window.doSignIn=async function(){var e=document.getElementById("li-email").value.trim(),p=document.getElementById("li-pass").value;if(!e||p){setMsg("Please enter email and password.","error");return;}setMsg("Signing in...","");var r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error)setMsg(r.error.message,"error");};
 window.doSignUp=async function(){var e=document.getElementById("su-email").value.trim(),p=document.getElementById("su-pass").value;if(!e||!p){setMsg("Fill in all fields.","error");return;}if(p.length<6){setMsg("Password min 6 characters.","error");return;}setMsg("Creating account...","");var r=await sb.auth.signUp({email:e,password:p});if(r.error)setMsg(r.error.message,"error");else setMsg("Check your email to confirm.","success");};
 window.doSignOut=async function(){await sb.auth.signOut();};
 
@@ -1058,7 +1050,16 @@ sb.auth.onAuthStateChange(function(event,session){
     var t=localStorage.getItem("celio-theme")||"dark";
     var btn=document.getElementById("theme-btn");
     if(btn)btn.innerHTML=t==="dark"?"&#9728; <span>Light</span>":"&#127769; <span>Dark</span>";
-    if(!isMobile()&&localStorage.getItem("celio-sb-exp")==="1")document.getElementById("sidebar").classList.add("expanded");
+    
+    if (!isMobile()) {
+      var sb = document.getElementById("sidebar");
+      if (window.innerWidth > 860 && localStorage.getItem("celio-sb-col") === "1") {
+        sb.classList.add("collapsed");
+      } else if (window.innerWidth <= 860 && localStorage.getItem("celio-sb-exp") === "1") {
+        sb.classList.add("expanded");
+      }
+    }
+
     calYear=today.getFullYear();calMonth=today.getMonth();
     ganttStart=new Date(today.getFullYear(),today.getMonth(),1);
     loadAll();
@@ -1151,14 +1152,51 @@ function showNoProject(){document.getElementById("no-proj").style.display="flex"
 // SEQUENCES
 window.openSeqModal=function(id,projId){editSeqId=id||null;if(projId)currentSeqId=projId;document.getElementById("seq-modal-title").textContent=id?"Edit Sequence":"New Sequence";if(id){var s=sequences.find(function(x){return x.id===id;});if(s){document.getElementById("sf-code").value=s.code;document.getElementById("sf-name").value=s.name||"";}}else{document.getElementById("sf-code").value="";document.getElementById("sf-name").value="";}document.getElementById("seq-modal").classList.add("open");};
 window.closeSeqModal=function(){document.getElementById("seq-modal").classList.remove("open");};
-window.saveSeq=async function(){var code=document.getElementById("sf-code").value.trim().toUpperCase();if(!code){alert("Please enter a sequence code.");return;}var pid=editSeqId?(sequences.find(function(s){return s.id===editSeqId;})||{project_id:activeProject.id}).project_id:(currentSeqId||activeProject.id);var payload={code:code,name:document.getElementById("sf-name").value.trim(),project_id:pid,user_id:currentUser.id};var r;if(editSeqId)r=await sb.from("sequences").update(payload).eq("id",editSeqId);else r=await sb.from("sequences").insert(payload);if(r.error){alert("Error: "+r.error.message);return;}closeSeqModal();var pids=projects.map(function(p){return p.id;});var rs=await sb.from("sequences").select("*").in("project_id",pids).order("code",{ascending:true});sequences=rs.data||[];renderSidebar();renderSchedule();showToast("Sequence saved!");loadTasks();};
-window.deleteSeq=async function(id){if(!confirm("Delete this sequence and all its shots?"))return;await sb.from("shots").delete().eq("sequence_id",id);await sb.from("sequences").delete().eq("id",id);sequences=sequences.filter(function(s){return s.id!==id;});shots=shots.filter(function(s){return s.sequence_id!==id;});renderSidebar();renderSchedule();showToast("Deleted.");};
+window.saveSeq=async function(){var code=document.getElementById("sf-code").value.trim().toUpperCase();if(!code){showToast("Please enter a sequence code.", "error");return;}var pid=editSeqId?(sequences.find(function(s){return s.id===editSeqId;})||{project_id:activeProject.id}).project_id:(currentSeqId||activeProject.id);var payload={code:code,name:document.getElementById("sf-name").value.trim(),project_id:pid,user_id:currentUser.id};var r;if(editSeqId)r=await sb.from("sequences").update(payload).eq("id",editSeqId);else r=await sb.from("sequences").insert(payload);if(r.error){showToast("Error: "+r.error.message, "error");return;}closeSeqModal();var pids=projects.map(function(p){return p.id;});var rs=await sb.from("sequences").select("*").in("project_id",pids).order("code",{ascending:true});sequences=rs.data||[];renderSidebar();renderSchedule();showToast("Sequence saved!");loadTasks();};
+window.deleteSeq = async function(id) {
+  if (!confirm("Delete this sequence and all its shots?")) return;
+  
+  // Find all shots in this sequence to delete their tasks
+  var seqShots = shots.filter(function(s) { return s.sequence_id === id; });
+  var shotIds = seqShots.map(function(s) { return s.id; });
+  
+  if (shotIds.length) {
+    await sb.from("shot_tasks").delete().in("shot_id", shotIds);
+    shotTasks = shotTasks.filter(function(t) { return shotIds.indexOf(t.shot_id) === -1; });
+  }
+
+  // Delete shots and sequence
+  await sb.from("shots").delete().eq("sequence_id", id);
+  await sb.from("sequences").delete().eq("id", id);
+  
+  sequences = sequences.filter(function(s) { return s.id !== id; });
+  shots = shots.filter(function(s) { return s.sequence_id !== id; });
+  
+  renderSidebar();
+  renderSchedule();
+  showToast("Deleted.");
+};
 
 // SHOTS
-window.openShotModal=function(seqId){currentSeqId=seqId;document.getElementById("shf-code").value="";if(document.getElementById("shf-start"))document.getElementById("shf-start").value="";if(document.getElementById("shf-due"))document.getElementById("shf-due").value="";if(document.getElementById("shf-start"))document.getElementById("shf-start").value="";if(document.getElementById("shf-due"))document.getElementById("shf-due").value="";document.getElementById("shf-desc").value="";document.getElementById("shot-modal").classList.add("open");};
+window.openShotModal=function(seqId){currentSeqId=seqId;document.getElementById("shf-code").value="";if(document.getElementById("shf-start"))document.getElementById("shf-start").value="";if(document.getElementById("shf-due"))document.getElementById("shf-due").value="";document.getElementById("shf-desc").value="";document.getElementById("shot-modal").classList.add("open");};
 window.closeShotModal=function(){document.getElementById("shot-modal").classList.remove("open");};
-window.saveShot=async function(){var code=document.getElementById("shf-code").value.trim().toUpperCase();if(!code){alert("Please enter a shot code.");return;}var seq=sequences.find(function(s){return s.id===currentSeqId;});var pid=seq?seq.project_id:activeProject.id;var payload={code:code,description:document.getElementById("shf-desc").value.trim(),sequence_id:currentSeqId,project_id:pid,user_id:currentUser.id,status:"pending",start_date:document.getElementById("shf-start")?document.getElementById("shf-start").value||null:null,due_date:document.getElementById("shf-due")?document.getElementById("shf-due").value||null:null};var r=await sb.from("shots").insert(payload).select();if(r.error){alert("Error: "+r.error.message);return;}shots=shots.concat(r.data);closeShotModal();renderSidebar();renderSchedule();showToast("Shot added!");};
-window.deleteShot=async function(id){if(!confirm("Delete this shot?"))return;if(activeShot&&activeShot.id===id)backToProject();await sb.from("shots").delete().eq("id",id);shots=shots.filter(function(s){return s.id!==id;});renderSidebar();renderSchedule();showToast("Deleted.");};
+window.saveShot=async function(){var code=document.getElementById("shf-code").value.trim().toUpperCase();if(!code){showToast("Please enter a shot code.", "error");return;}var seq=sequences.find(function(s){return s.id===currentSeqId;});var pid=seq?seq.project_id:activeProject.id;var payload={code:code,description:document.getElementById("shf-desc").value.trim(),sequence_id:currentSeqId,project_id:pid,user_id:currentUser.id,status:"pending",start_date:document.getElementById("shf-start")?document.getElementById("shf-start").value||null:null,due_date:document.getElementById("shf-due")?document.getElementById("shf-due").value||null:null};var r=await sb.from("shots").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}shots=shots.concat(r.data);closeShotModal();renderSidebar();renderSchedule();showToast("Shot added!");};
+window.deleteShot = async function(id) {
+  if (!confirm("Delete this shot?")) return;
+  if (activeShot && activeShot.id === id) backToProject();
+  
+  // Clean up tasks in DB and local memory first
+  await sb.from("shot_tasks").delete().eq("shot_id", id);
+  shotTasks = shotTasks.filter(function(t) { return t.shot_id !== id; });
+
+  // Then delete the shot
+  await sb.from("shots").delete().eq("id", id);
+  shots = shots.filter(function(s) { return s.id !== id; });
+  
+  renderSidebar();
+  renderSchedule();
+  showToast("Deleted.");
+};
 
 // SHOT PAGE
 window.openShot=async function(id){
@@ -1265,11 +1303,11 @@ window.selectShotTaskType=function(t,el){
 };
 window.saveShotTask=async function(){
   var type=selectedShotTaskType;
-  if(!type){alert("Please select a task type.");return;}
-  if(type==="Custom..."){type=document.getElementById("stf-custom").value.trim();if(!type){alert("Please enter a custom task name.");return;}}
+  if(!type){showToast("Please select a task type.", "error");return;}
+  if(type==="Custom..."){type=document.getElementById("stf-custom").value.trim();if(!type){showToast("Please enter a custom task name.", "error");return;}}
   var payload={shot_id:activeShot.id,project_id:activeShot.project_id,user_id:currentUser.id,task_type:type,department:DEPT_MAP[type]||null,assignee:document.getElementById("stf-assignee").value.trim()||null,start_date:document.getElementById("stf-start").value||null,due_date:document.getElementById("stf-due").value||null,status:document.getElementById("stf-status").value,notes:document.getElementById("stf-notes").value.trim()||null,order_index:shotTasks.length};
   var r=await sb.from("shot_tasks").insert(payload).select();
-  if(r.error){alert("Error: "+r.error.message);return;}
+  if(r.error){showToast("Error: "+r.error.message, "error");return;}
   shotTasks=shotTasks.concat(r.data);
   closeShotTaskModal();renderShotTasks();showToast("Task added!");
 };
@@ -1617,8 +1655,6 @@ function renderShotSection(){
   container.appendChild(wrap);
 }
 
-
-
 var _confirmCb=null;
 function showConfirm(title,msg,okLabel,cb){
   document.getElementById("confirm-title").textContent=title;
@@ -1713,15 +1749,15 @@ window.closeModal=function(){document.getElementById("modal").classList.remove("
 
 window.saveTask=async function(){
   var name=document.getElementById("f-name").value.trim(),lead=document.getElementById("f-lead").value.trim();
-  if(!name||!lead){alert("Please fill in Task Name and Lead.");return;}
-  if(selectedCat==="asset"&&!selectedPipelineStage){alert("Please select a pipeline stage.");return;}
+  if(!name||!lead){showToast("Please fill in Task Name and Lead.", "error");return;}
+  if(selectedCat==="asset"&&!selectedPipelineStage){showToast("Please select a pipeline stage.", "error");return;}
   var payload={name:name,lead:lead,start_date:document.getElementById("f-start").value||null,due_date:document.getElementById("f-due").value||null,due_time:document.getElementById("f-time").value||null,priority:document.getElementById("f-priority").value,status:document.getElementById("f-status").value,category:selectedCat,user_id:currentUser.id,project_id:activeProject.id};
   if(selectedCat==="asset"){payload.asset_type=document.getElementById("f-asset-type").value;payload.asset_name=document.getElementById("f-asset-name").value.trim();payload.pipeline_stage=selectedPipelineStage;payload.handoff_to=null;payload.asset=null;payload.asset_url=null;}
   else{payload.handoff_to=document.getElementById("f-handoff").value.trim()||null;payload.asset=document.getElementById("f-deliverable").value.trim()||null;payload.asset_url=document.getElementById("f-deliverable-url").value.trim()||null;payload.asset_type=null;payload.asset_name=null;payload.pipeline_stage=null;}
   var result;
   if(editTaskId)result=await sb.from("tasks").update(payload).eq("id",editTaskId);
   else result=await sb.from("tasks").insert(payload).select();
-  if(result.error){alert("Error saving task: "+result.error.message);return;}
+  if(result.error){showToast("Error saving task: "+result.error.message, "error");return;}
   if(!editTaskId&&result.data&&result.data[0])tasks.push(result.data[0]);
   closeModal();showToast("Task saved!");renderSchedule();
 };
@@ -1976,7 +2012,9 @@ window.showTab=function(name){
   ["tab-schedule","tab-calendar","tab-gantt","tab-milestones"].forEach(function(id){var el=document.getElementById(id);el.style.display="none";el.classList.remove("active");});
   document.querySelectorAll(".nav-tab").forEach(function(el){el.classList.remove("active");});
   var el=document.getElementById("tab-"+name);el.style.display="block";el.classList.add("active");
-  document.querySelectorAll(".nav-tab")[{schedule:0,calendar:1,gantt:2}[name]].classList.add("active");
+  
+  document.querySelectorAll(".nav-tab")[{schedule:0,calendar:1,gantt:2,milestones:3}[name]].classList.add("active");
+  
   if(name==="schedule")renderSchedule();else if(name==="calendar")renderCalendar();else if(name==="gantt")renderGantt();
   else if(name==="milestones")renderMilestones();
 };
@@ -1984,7 +2022,7 @@ window.showTab=function(name){
 // PROJECT MODAL
 window.openProjectModal=function(id){editProjId=id||null;document.getElementById("proj-modal-title").textContent=id?"Edit Project":"New Project";selectedColor=id?(projects.find(function(p){return p.id===id;})||{color:"#7c3aed"}).color:"#7c3aed";var row=document.getElementById("color-row");row.innerHTML="";COLORS.forEach(function(c){var sw=document.createElement("div");sw.className="color-swatch"+(c===selectedColor?" selected":"");sw.style.background=c;sw.dataset.color=c;sw.onclick=function(){selectedColor=c;document.querySelectorAll(".color-swatch").forEach(function(s){s.classList.toggle("selected",s.dataset.color===c);});};row.appendChild(sw);});if(id){var p=projects.find(function(x){return x.id===id;});if(p){document.getElementById("pf-name").value=p.name;document.getElementById("pf-desc").value=p.description||"";}}else{document.getElementById("pf-name").value="";document.getElementById("pf-desc").value="";}document.getElementById("proj-modal").classList.add("open");};
 window.closeProjModal=function(){document.getElementById("proj-modal").classList.remove("open");};
-window.saveProject=async function(){var name=document.getElementById("pf-name").value.trim();if(!name){alert("Please enter a project name.");return;}var payload={name:name,description:document.getElementById("pf-desc").value.trim(),color:selectedColor,user_id:currentUser.id};var r;if(editProjId)r=await sb.from("projects").update(payload).eq("id",editProjId);else r=await sb.from("projects").insert(payload).select();if(r.error){alert("Error: "+r.error.message);return;}closeProjModal();if(!editProjId&&r.data&&r.data[0]){projects.push(r.data[0]);projExpanded[r.data[0].id]=true;activeProject=r.data[0];localStorage.setItem("celio-proj-"+currentUser.id,r.data[0].id);setHeaderProject(r.data[0]);showTab("schedule");loadTasks();}else{var idx=projects.findIndex(function(p){return p.id===editProjId;});if(idx>=0)projects[idx]=Object.assign(projects[idx],payload);}renderSidebar();showToast("Project saved!");};
+window.saveProject=async function(){var name=document.getElementById("pf-name").value.trim();if(!name){showToast("Please enter a project name.", "error");return;}var payload={name:name,description:document.getElementById("pf-desc").value.trim(),color:selectedColor,user_id:currentUser.id};var r;if(editProjId)r=await sb.from("projects").update(payload).eq("id",editProjId);else r=await sb.from("projects").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}closeProjModal();if(!editProjId&&r.data&&r.data[0]){projects.push(r.data[0]);projExpanded[r.data[0].id]=true;activeProject=r.data[0];localStorage.setItem("celio-proj-"+currentUser.id,r.data[0].id);setHeaderProject(r.data[0]);showTab("schedule");loadTasks();}else{var idx=projects.findIndex(function(p){return p.id===editProjId;});if(idx>=0)projects[idx]=Object.assign(projects[idx],payload);}renderSidebar();showToast("Project saved!");};
 
 // MODAL CLOSE ON BG CLICK
 ["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal"].forEach(function(id){var el=document.getElementById(id);el.addEventListener("click",function(e){if(e.target===el){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal}[id];if(closeFn)closeFn();}});});
@@ -2042,6 +2080,89 @@ window.exportProject=async function(id){
   showToast("Downloaded!");
 };
 
+window.exportCSV = function(id) {
+  var p = projects.find(function(x) { return x.id === id; });
+  if (!p) return;
+  
+  showToast("Preparing CSV...");
+  
+  // Gather all relevant project data
+  var projTasks = tasks.filter(function(t) { return t.project_id === id; });
+  var projShots = shots.filter(function(s) { return s.project_id === id; });
+  var shotIds = projShots.map(function(s) { return s.id; });
+  var projShotTasks = shotTasks.filter(function(t) { return shotIds.indexOf(t.shot_id) >= 0; });
+  
+  // 1. Set up the Headers
+  var csvRows = [
+    ["Category", "Sequence", "Shot/Asset", "Task Name", "Assignee", "Start Date", "Due Date", "Status", "Notes"]
+  ];
+  
+  // Helper function to safely escape commas and quotes inside text fields
+  function esc(str) {
+    if (!str) return "";
+    var s = String(str).replace(/"/g, '""');
+    if (s.indexOf(",") >= 0 || s.indexOf("\n") >= 0 || s.indexOf('"') >= 0) return '"' + s + '"';
+    return s;
+  }
+
+  // 2. Loop through General & Asset Tasks
+  projTasks.forEach(function(t) {
+    var assetRef = t.category === "asset" ? (t.asset_type + ": " + t.asset_name) : (t.category || "general");
+    csvRows.push([
+      esc(t.category),
+      "", // No sequence for general tasks
+      esc(assetRef),
+      esc(t.name || t.pipeline_stage),
+      esc(t.lead),
+      esc(t.start_date),
+      esc(t.due_date),
+      esc(t.status),
+      esc(t.asset_url || t.asset || "")
+    ]);
+  });
+  
+  // 3. Loop through Shot Pipeline Tasks
+  projShotTasks.forEach(function(t) {
+    var sh = projShots.find(function(x) { return x.id === t.shot_id; });
+    var seqCode = "";
+    var shotCode = sh ? sh.code : "Unknown";
+    
+    // Cross-reference the sequence code
+    if (sh && sh.sequence_id) {
+      var sq = sequences.find(function(x) { return x.id === sh.sequence_id; });
+      if (sq) seqCode = sq.code;
+    }
+    
+    csvRows.push([
+      "shot_task",
+      esc(seqCode),
+      esc(shotCode),
+      esc(t.task_type),
+      esc(t.assignee),
+      esc(t.start_date),
+      esc(t.due_date),
+      esc(t.status),
+      esc(t.notes || "")
+    ]);
+  });
+  
+  // 4. Convert to a formatted CSV string
+  var csvString = csvRows.map(function(row) { return row.join(","); }).join("\n");
+  
+  // 5. Trigger the browser download
+  var blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url;
+  a.download = "celio-" + p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() + "-tasks.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  
+  showToast("CSV Downloaded!");
+};
+
 window.renderMilestones=function(){
   var projList=document.getElementById("admin-list-projects");
   if(projList){
@@ -2057,11 +2178,16 @@ window.renderMilestones=function(){
       main.appendChild(nm);main.appendChild(mt);
       var editBtn=document.createElement("button");editBtn.className="btn btn-ghost btn-sm";editBtn.style.fontSize=".68rem";editBtn.textContent="Edit";
       editBtn.onclick=(function(pid){return function(){openProjectModal(pid);};})(p.id);
-      var expBtn=document.createElement("button");expBtn.className="btn btn-ghost btn-sm";expBtn.style.fontSize=".68rem";expBtn.innerHTML="⬇ Export";
+      
+      var expBtn=document.createElement("button");expBtn.className="btn btn-ghost btn-sm";expBtn.style.fontSize=".68rem";expBtn.innerHTML="⬇ JSON";
       expBtn.onclick=(function(pid){return function(){exportProject(pid);};})(p.id);
+
+      var csvBtn=document.createElement("button");csvBtn.className="btn btn-ghost btn-sm";csvBtn.style.fontSize=".68rem";csvBtn.innerHTML="⬇ CSV";
+      csvBtn.onclick=(function(pid){return function(){exportCSV(pid);};})(p.id);
+      
       var delBtn=document.createElement("button");delBtn.className="btn btn-sm btn-del";delBtn.style.fontSize=".68rem";delBtn.textContent="Delete";
       delBtn.onclick=(function(pid){return function(){deleteProject(pid);};})(p.id);
-      entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(delBtn);
+      entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(csvBtn);entry.appendChild(delBtn);
       projList.appendChild(entry);
     });
   }
@@ -2114,7 +2240,7 @@ window.openAdminModal=function(cat,editId){
 };
 window.closeAdminModal=function(){document.getElementById("admin-modal").classList.remove("open");};
 window.saveAdminEntry=async function(){
-  var title=document.getElementById("af-title").value.trim();if(!title){alert("Please enter a title.");return;}
+  var title=document.getElementById("af-title").value.trim();if(!title){showToast("Please enter a title.", "error");return;}
   var payload={name:title,lead:document.getElementById("af-assignee").value.trim()||null,
     due_date:document.getElementById("af-date").value||null,
     priority:document.getElementById("af-priority").value,status:document.getElementById("af-status").value,
