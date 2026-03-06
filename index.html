@@ -830,7 +830,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
       </div>
     </div>
     <div class="form-row"><label class="flbl">Task Name / Notes</label><input id="f-name" class="inp" placeholder="e.g. Final rig sign-off"></div>
-    <div class="form-row"><label class="flbl">Lead / Artist</label><input id="f-lead" class="inp" placeholder="e.g. Jordan"></div>
+    <div class="form-row"><label class="flbl">Lead / Artist</label><select id="f-lead" class="inp"></select></div>
     <div class="form-row-2">
       <div><label class="flbl">Start Date</label><input id="f-start" type="date" class="inp"></div>
       <div><label class="flbl">Due Date</label><input id="f-due" type="date" class="inp"></div>
@@ -846,7 +846,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
     </div>
     <div class="adv-toggle" id="adv-toggle" onclick="toggleAdv()">&#9658; Show Advanced Options</div>
     <div id="general-extra-fields" style="display:none">
-      <div class="form-row"><label class="flbl">Handoff To (optional)</label><input id="f-handoff" class="inp" placeholder="e.g. Alex"></div>
+      <div class="form-row"><label class="flbl">Handoff To (optional)</label><select id="f-handoff" class="inp"></select></div>
       <div class="form-row-2">
         <div><label class="flbl">Deliverable Name (optional)</label><input id="f-deliverable" class="inp"></div>
         <div><label class="flbl">Deliverable URL (optional)</label><input id="f-deliverable-url" class="inp" placeholder="https://..."></div>
@@ -919,7 +919,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
       <label class="flbl">Custom Task Name</label>
       <input id="stf-custom" class="inp" placeholder="e.g. Matte Painting">
     </div>
-    <div class="form-row"><label class="flbl">Assignee</label><input id="stf-assignee" class="inp" placeholder="e.g. Jordan"></div>
+    <div class="form-row"><label class="flbl">Assignee</label><select id="stf-assignee" class="inp"></select></div>
     <div class="form-row-2">
       <div><label class="flbl">Start Date</label><input id="stf-start" type="date" class="inp"></div>
       <div><label class="flbl">Due Date</label><input id="stf-due" type="date" class="inp"></div>
@@ -1426,6 +1426,7 @@ async function loadTasks(){
   else{shotTasks=[];}
   var active=document.querySelector(".tab-content.active");
   var name=active?active.id.replace("tab-",""):"schedule";
+  populateTeamDropdowns();
   if(name==="schedule")renderSchedule();
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
@@ -2084,6 +2085,46 @@ window.ganttPrev=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttSt
 window.ganttNext=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,1);renderGantt();};
 window.ganttToday=function(){ganttStart=new Date(today.getFullYear(),today.getMonth(),1);renderGantt();};
 
+window.populateTeamDropdowns = function() {
+  if (!activeProject) return;
+  // Find all tasks categorized as "team"
+  var team = tasks.filter(function(t) { return t.category === "team" && t.project_id === activeProject.id; });
+  
+  // Group them by their Role (stored in the lead field)
+  var byRole = {};
+  team.forEach(function(m) {
+    var role = m.lead || "Other";
+    if (!byRole[role]) byRole[role] = [];
+    byRole[role].push(m.name);
+  });
+
+  // Build the HTML with <optgroup> for filtering
+  var html = '<option value="">-- Unassigned --</option>';
+  Object.keys(byRole).sort().forEach(function(role) {
+    html += '<optgroup label="' + role + '">';
+    byRole[role].sort().forEach(function(name) {
+      html += '<option value="' + name + '">' + name + '</option>';
+    });
+    html += '</optgroup>';
+  });
+
+  // Safely inject options without destroying legacy string data
+  function updateSelect(id) {
+     var el = document.getElementById(id);
+     if (!el) return;
+     var currentVal = el.value;
+     el.innerHTML = html;
+     if (currentVal && !team.find(function(m){ return m.name === currentVal; })) {
+        el.innerHTML += '<option value="' + currentVal + '">' + currentVal + ' (Legacy Data)</option>';
+     }
+     el.value = currentVal;
+  }
+
+  updateSelect("f-lead");
+  updateSelect("f-handoff");
+  updateSelect("stf-assignee");
+};
+
 window.showTab=function(name){
   ["tab-schedule","tab-calendar","tab-gantt","tab-milestones"].forEach(function(id){var el=document.getElementById(id);el.style.display="none";el.classList.remove("active");});
   document.querySelectorAll(".nav-tab").forEach(function(el){el.classList.remove("active");});
@@ -2234,11 +2275,16 @@ window.renderMilestones=function(){
       var main=document.createElement("div");main.className="admin-entry-main";
       var title=document.createElement("div");title.className="admin-entry-title";title.textContent=t.name;
       var meta=document.createElement("div");meta.className="admin-entry-meta";
-      if(t.lead){var a=document.createElement("span");a.textContent="👤 "+t.lead;meta.appendChild(a);}
-      if(t.due_date){var d=daysUntil(t.due_date);var dm=document.createElement("span");dm.style.color=t.status==="done"?"var(--text4)":d<0?"#ef4444":d<=3?"#f59e0b":"var(--text4)";dm.textContent=" 📅 "+(d<0&&t.status!=="done"?Math.abs(d)+"d overdue":fmtDate(t.due_date));meta.appendChild(dm);}
+      if (cat === "team") {
+        meta.innerHTML = t.lead ? "🎭 Role: " + t.lead : "Team Member";
+      } else {
+        if(t.lead){var a=document.createElement("span");a.textContent="👤 "+t.lead;meta.appendChild(a);}
+        if(t.due_date){var d=daysUntil(t.due_date);var dm=document.createElement("span");dm.style.color=t.status==="done"?"var(--text4)":d<0?"#ef4444":d<=3?"#f59e0b":"var(--text4)";dm.textContent=" 📅 "+(d<0&&t.status!=="done"?Math.abs(d)+"d overdue":fmtDate(t.due_date));meta.appendChild(dm);}
+      }
       main.appendChild(title);main.appendChild(meta);
       var priCls={high:"admin-pri-high",med:"admin-pri-med",low:"admin-pri-low"};
       var pri=document.createElement("span");pri.className="admin-pri "+(priCls[t.priority]||"admin-pri-low");pri.textContent={high:"High",med:"Med",low:"Low"}[t.priority]||"";
+      if (cat === "team") pri.style.display = "none";
       var eb=document.createElement("button");eb.className="btn btn-ghost btn-sm";eb.style.fontSize=".68rem";eb.textContent="Edit";
       eb.onclick=(function(tid,c2){return function(){openAdminModal(c2,tid);};})(t.id,cat);
       var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="✕";
@@ -2252,7 +2298,15 @@ window.renderMilestones=function(){
 var adminCat=null,adminEditId=null;
 window.openAdminModal=function(cat,editId){
   adminCat=cat||null;adminEditId=editId||null;
-  var labels={client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Production Team"};
+  var labels={client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Team Member"};
+
+  // Dynamically change labels for Team members
+  var isTeam = cat === "team";
+  document.getElementById("lbl-af-title").textContent = isTeam ? "Name" : "Title";
+  document.getElementById("lbl-af-assignee").textContent = isTeam ? "Role (e.g. Animator, Lighter)" : "Assignee";
+  document.getElementById("wrap-af-date").style.display = isTeam ? "none" : "block";
+  document.getElementById("wrap-af-status").style.display = isTeam ? "none" : "grid";
+
   if(editId){
     var t=tasks.find(function(x){return x.id===editId;});
     if(t){adminCat=t.category;
@@ -2291,6 +2345,7 @@ window.saveAdminEntry = async function() {
   }
   closeAdminModal();
   showToast("Saved!");
+  populateTeamDropdowns();
   renderMilestones();
 };
 
@@ -2354,12 +2409,12 @@ window.addEventListener('DOMContentLoaded', function() {
           <button onclick="closeAdminModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">&#215;</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px">
-          <div><label class="flbl">Title</label><input id="af-title" class="inp"></div>
+          <div><label class="flbl" id="lbl-af-title">Title</label><input id="af-title" class="inp"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div><label class="flbl">Assignee</label><input id="af-assignee" class="inp"></div>
-            <div><label class="flbl">Date</label><input id="af-date" class="inp" type="date"></div>
+            <div><label class="flbl" id="lbl-af-assignee">Assignee</label><input id="af-assignee" class="inp"></div>
+            <div id="wrap-af-date"><label class="flbl">Date</label><input id="af-date" class="inp" type="date"></div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="wrap-af-status">
             <div><label class="flbl">Priority</label>
               <select id="af-priority" class="inp"><option value="low">Low</option><option value="med" selected>Medium</option><option value="high">High</option></select>
             </div>
