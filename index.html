@@ -2213,7 +2213,7 @@ window.renderMilestones=function(){
       var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="✕";
       db.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
       entry.appendChild(main);entry.appendChild(pri);entry.appendChild(eb);entry.appendChild(db);
-      projList.parentElement&&cont.appendChild(entry);
+      cont.appendChild(entry);
     });
   });
 };
@@ -2239,16 +2239,39 @@ window.openAdminModal=function(cat,editId){
   document.getElementById("admin-modal").classList.add("open");
 };
 window.closeAdminModal=function(){document.getElementById("admin-modal").classList.remove("open");};
-window.saveAdminEntry=async function(){
-  var title=document.getElementById("af-title").value.trim();if(!title){showToast("Please enter a title.", "error");return;}
-  var payload={name:title,lead:document.getElementById("af-assignee").value.trim()||null,
-    due_date:document.getElementById("af-date").value||null,
-    priority:document.getElementById("af-priority").value,status:document.getElementById("af-status").value,
-    category:adminCat,asset:document.getElementById("af-notes").value.trim()||null,
-    user_id:currentUser.id,project_id:activeProject.id};
-  if(adminEditId)await sb.from("tasks").update(payload).eq("id",adminEditId);
-  else await sb.from("tasks").insert(payload);
-  closeAdminModal();showToast("Saved!");loadTasks();
+window.saveAdminEntry = async function() {
+  var title = document.getElementById("af-title").value.trim();
+  if (!title) { showToast("Please enter a title.", "error"); return; }
+  
+  var payload = {
+    name: title,
+    lead: document.getElementById("af-assignee").value.trim() || null,
+    due_date: document.getElementById("af-date").value || null,
+    priority: document.getElementById("af-priority").value,
+    status: document.getElementById("af-status").value,
+    category: adminCat,
+    asset: document.getElementById("af-notes").value.trim() || null,
+    user_id: currentUser.id,
+    project_id: activeProject.id
+  };
+  
+  var r;
+  // We added .select() so the database returns the newly created row immediately
+  if (adminEditId) {
+    r = await sb.from("tasks").update(payload).eq("id", adminEditId).select();
+  } else {
+    r = await sb.from("tasks").insert(payload).select();
+  }
+  
+  // Now, if Supabase rejects the save, it will pop up a red error toast so you know!
+  if (r.error) {
+    showToast("Database Error: " + r.error.message, "error");
+    return;
+  }
+  
+  closeAdminModal();
+  showToast("Saved!");
+  loadTasks();
 };
 
 document.getElementById('confirm-overlay').addEventListener('click',function(e){if(e.target===this)closeConfirm();});
