@@ -982,10 +982,45 @@ var calYear,calMonth,ganttStart;
 var today=new Date();today.setHours(0,0,0,0);
 var COL_W=34,selectedColor="#7c3aed",selectedCat="general",selectedPipelineStage=null,selectedShotTaskType=null;
 var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16","#f97316","#8b5cf6","#64748b","#0ea5e9"];
-var projExpanded={},seqOpen={},schedView="all",assetGroupCollapsed={},typeGroupCollapsed={},shotSectionCollapsed={},seqShotCollapsed={};
 var assetLinkSelection=[];
-
 var projectMembers=[],userRole=null;
+
+// Centralized UI State Memory
+var uiState = {
+  projExpanded: {},
+  seqOpen: {},
+  typeGroupCollapsed: {},
+  assetGroupCollapsed: {},
+  seqShotCollapsed: {},
+  shotSectionCollapsed: {},
+  ganttCollapsed: { tasks: false, shots: {} },
+  schedView: "all"
+};
+
+function saveUIState() {
+  if (currentUser) {
+    localStorage.setItem("celio_ui_" + currentUser.id, JSON.stringify(uiState));
+  }
+}
+
+function loadUIState() {
+  if (currentUser) {
+    try {
+      var saved = localStorage.getItem("celio_ui_" + currentUser.id);
+      if (saved) {
+        var p = JSON.parse(saved);
+        uiState.projExpanded = p.projExpanded || {};
+        uiState.seqOpen = p.seqOpen || {};
+        uiState.typeGroupCollapsed = p.typeGroupCollapsed || {};
+        uiState.assetGroupCollapsed = p.assetGroupCollapsed || {};
+        uiState.seqShotCollapsed = p.seqShotCollapsed || {};
+        uiState.shotSectionCollapsed = p.shotSectionCollapsed || {};
+        uiState.ganttCollapsed = p.ganttCollapsed || { tasks: false, shots: {} };
+        uiState.schedView = p.schedView || "all";
+      }
+    } catch(e) {}
+  }
+}
 
 function getPendingInviteCode() {
   var url = new URL(window.location.href);
@@ -1109,6 +1144,7 @@ window.doSignOut=async function(){await sb.auth.signOut();};
 sb.auth.onAuthStateChange(function(event,session){
   if(session){
     currentUser=session.user;
+    loadUIState();
     document.getElementById("auth-screen").style.display="none";
     document.getElementById("app-screen").style.display="block";
     document.getElementById("sb-email").textContent=currentUser.email;
@@ -1156,8 +1192,8 @@ async function loadAll(){
   }
   var lastId=localStorage.getItem("celio-proj-"+currentUser.id);
   var found=projects.find(function(p){return p.id===lastId;});
-  if(found){activeProject=found;projExpanded[found.id]=true;}
-  else if(projects.length>0){activeProject=projects[0];projExpanded[projects[0].id]=true;}
+  if(found){activeProject=found; uiState.projExpanded[found.id]=true; saveUIState();}
+  else if(projects.length>0){activeProject=projects[0]; uiState.projExpanded[projects[0].id]=true; saveUIState();}
   renderSidebar();
   if(activeProject){
     var membership=projectMembers.find(function(m){return m.project_id===activeProject.id&&m.user_id===currentUser.id;});
@@ -1173,7 +1209,7 @@ function renderSidebar(){
   var html="";
   projects.forEach(function(p){
     var isActive=activeProject&&activeProject.id===p.id;
-    var isExpanded=!!projExpanded[p.id];
+    var isExpanded=!!uiState.projExpanded[p.id];
     var projSeqs=sequences.filter(function(s){return s.project_id===p.id;});
     html += '<div class="proj-row' + (isActive ? ' active' : '') + '">';
     html+='<div class="proj-row-main" onclick="selectProject(\''+p.id+'\')"><span class="proj-dot" style="background:'+p.color+'"></span><span class="proj-row-name">'+p.name+'</span></div>';
@@ -1182,7 +1218,7 @@ function renderSidebar(){
       html+='<div class="proj-tree">';
       if(!projSeqs.length)html+='<div style="padding:4px 14px 4px 22px;font-size:.69rem;color:var(--text4)">No sequences yet</div>';
       projSeqs.forEach(function(seq){
-        var isSeqOpen=!seqOpen[p.id]||seqOpen[p.id][seq.id]!==false;
+        var isSeqOpen=!uiState.seqOpen[p.id]||uiState.seqOpen[p.id][seq.id]!==false;
         var seqShots=shots.filter(function(s){return s.sequence_id===seq.id;});
         html+='<div class="seq-row" onclick="toggleSeq(\''+p.id+'\',\''+seq.id+'\')">';
         html+='<span class="seq-arrow'+(isSeqOpen?" open":"")+'">&#9658;</span>';
@@ -1203,13 +1239,13 @@ function renderSidebar(){
   list.innerHTML=html;
 }
 
-window.toggleProjExpand=function(pid,e){e.stopPropagation();projExpanded[pid]=!projExpanded[pid];renderSidebar();};
-window.toggleSeq=function(pid,sid){if(!seqOpen[pid])seqOpen[pid]={};seqOpen[pid][sid]=seqOpen[pid][sid]===false?true:false;renderSidebar();};
+window.toggleProjExpand=function(pid,e){e.stopPropagation();uiState.projExpanded[pid]=!uiState.projExpanded[pid];saveUIState();renderSidebar();};
+window.toggleSeq=function(pid,sid){if(!uiState.seqOpen[pid])uiState.seqOpen[pid]={};uiState.seqOpen[pid][sid]=uiState.seqOpen[pid][sid]===false?true:false;saveUIState();renderSidebar();};
 window.selectProject=function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
-  if(activeProject&&activeProject.id===id){ projExpanded[id]=!projExpanded[id];renderSidebar();return; }
+  if(activeProject&&activeProject.id===id){ uiState.projExpanded[id]=!uiState.projExpanded[id];saveUIState();renderSidebar();return; }
   if(activeShot)backToProject();
-  activeProject=p;projExpanded[id]=true;
+  activeProject=p; uiState.projExpanded[id]=true; saveUIState();
   
   var membership=projectMembers.find(function(m){return m.project_id===p.id&&m.user_id===currentUser.id;});
   userRole=membership?membership.role:null;
@@ -1263,7 +1299,7 @@ window.openShot=async function(id){
   if(isMobile())closeMobileSidebar();
   var seq=sequences.find(function(x){return x.id===sh.sequence_id;});
   var proj=projects.find(function(x){return x.id===sh.project_id;})||activeProject;
-  if(!activeProject||activeProject.id!==sh.project_id){activeProject=proj;projExpanded[proj.id]=true;localStorage.setItem("celio-proj-"+currentUser.id,proj.id);}
+  if(!activeProject||activeProject.id!==sh.project_id){activeProject=proj; uiState.projExpanded[proj.id]=true; saveUIState(); localStorage.setItem("celio-proj-"+currentUser.id,proj.id);}
   document.getElementById("hdr-bc").innerHTML='<div class="breadcrumb"><span class="bc-proj" onclick="backToProject()">'+proj.name+'</span><span class="bc-sep">/</span><span class="bc-seq">'+(seq?seq.code:"")+'</span><span class="bc-sep">/</span><span class="bc-shot">'+sh.code+'</span></div>';
   document.getElementById("hdr-actions").innerHTML='<button class="btn btn-ghost btn-sm" onclick="backToProject()">&#8592; Back</button>';
   document.getElementById("sp-code").textContent=sh.code;
@@ -1516,9 +1552,15 @@ async function loadTasks(){
 }
 
 window.setSchedView=function(v,el){
-  schedView=v;
+  uiState.schedView=v;
+  saveUIState();
   document.querySelectorAll(".sched-tab").forEach(function(t){t.classList.remove("active");});
-  el.classList.add("active");
+  if(el) el.classList.add("active");
+  else {
+      document.querySelectorAll(".sched-tab").forEach(function(t){
+          if((v==='all'&&t.textContent.includes('All Tasks')) || (v==='assets'&&t.textContent.includes('Assets'))) t.classList.add("active");
+      });
+  }
   renderSchedule();
 };
 
@@ -1527,7 +1569,13 @@ window.renderSchedule=function(){
   var assetTasks=tasks.filter(function(t){return t.category==="asset";});
   var assetSec=document.getElementById("asset-sections");
   var shotSec=document.getElementById("shot-schedule-section");
-  if(schedView==="assets"){
+  
+  document.querySelectorAll(".sched-tab").forEach(function(t){
+      t.classList.remove("active");
+      if((uiState.schedView==='all'&&t.textContent.includes('All Tasks')) || (uiState.schedView==='assets'&&t.textContent.includes('Assets'))) t.classList.add("active");
+  });
+
+  if(uiState.schedView==="assets"){
     if(assetSec)assetSec.style.display="";
     if(shotSec)shotSec.style.display="none";
   } else {
@@ -1564,7 +1612,7 @@ function renderAssetSections(assetTasks){
   typeOrder.forEach(function(at){
     if(!byType[at])return;
     var names=Object.keys(byType[at]);
-    var isTypeCollapsed=typeGroupCollapsed[at]===true;
+    var isTypeCollapsed=uiState.typeGroupCollapsed[at]===true;
     var typeRow=document.createElement("div");typeRow.className="type-group-hdr";
     var typeArrow=document.createElement("span");typeArrow.className="type-group-arrow"+(isTypeCollapsed?"":" open");typeArrow.innerHTML="&#9658;";
     var typeIcon=document.createElement("span");typeIcon.innerHTML=assetTypeIcon(at);typeIcon.style.fontSize=".9rem";
@@ -1577,7 +1625,7 @@ function renderAssetSections(assetTasks){
     (function(atype,arr,bdy){typeRow.onclick=function(e){
       if(addTBtn.contains(e.target))return;
       var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
-      arr.classList.toggle("open",!hiding);typeGroupCollapsed[atype]=hiding;
+      arr.classList.toggle("open",!hiding);uiState.typeGroupCollapsed[atype]=hiding;saveUIState();
     };})(at,typeArrow,typeBody);
     secWrap.appendChild(typeRow);
     names.forEach(function(name){
@@ -1586,7 +1634,7 @@ function renderAssetSections(assetTasks){
       var pct=total?Math.round(done/total*100):0;
       var anyLate=stageTasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
       var isReady=done===total&&total>0;
-      var key=at+"|"+name;var isCollapsed=assetGroupCollapsed[key]!==false;
+      var key=at+"|"+name;var isCollapsed=uiState.assetGroupCollapsed[key]!==false;
       var card=document.createElement("div");card.className="asset-card";
       var hdr=document.createElement("div");hdr.className="asset-card-hdr";
       var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
@@ -1603,7 +1651,7 @@ function renderAssetSections(assetTasks){
       var cardBody=document.createElement("div");cardBody.style.display=isCollapsed?"none":"";
       (function(k){hdr.onclick=function(e){if(delBtn.contains(e.target))return;
         var show=cardBody.style.display==="none";cardBody.style.display=show?"":"none";
-        arrow.classList.toggle("open",show);assetGroupCollapsed[k]=!show;
+        arrow.classList.toggle("open",show);uiState.assetGroupCollapsed[k]=!show;saveUIState();
       };})(key);
       var tbl=document.createElement("table");tbl.className="asset-body-table";
       tbl.innerHTML="<colgroup><col style='width:160px'><col style='width:90px'><col style='width:80px'><col style='width:90px'><col style='width:130px'><col></colgroup><thead><tr><th>Stage</th><th>Lead</th><th>Start</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>";
@@ -1676,7 +1724,7 @@ function renderShotSection(){
   }
   projSeqs.forEach(function(seq){
     var seqShots=projShots.filter(function(s){return s.sequence_id===seq.id;});
-    var isSeqCollapsed=seqShotCollapsed[seq.id]===true;
+    var isSeqCollapsed=uiState.seqShotCollapsed[seq.id]===true;
     var seqRow=document.createElement("div");seqRow.className="seq-shot-hdr";
     var seqArrow=document.createElement("span");seqArrow.className="seq-shot-arrow"+(isSeqCollapsed?"":" open");seqArrow.innerHTML="&#9658;";
     var seqLbl=document.createElement("span");seqLbl.className="seq-shot-label";
@@ -1689,7 +1737,7 @@ function renderShotSection(){
     var seqBody=document.createElement("div");seqBody.style.display=isSeqCollapsed?"none":"";
     (function(sid,arr,bdy){seqRow.onclick=function(){
       var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
-      arr.classList.toggle("open",!hiding);seqShotCollapsed[sid]=hiding;
+      arr.classList.toggle("open",!hiding);uiState.seqShotCollapsed[sid]=hiding;saveUIState();
     };})(seq.id,seqArrow,seqBody);
     wrap.appendChild(seqRow);
     if(!seqShots.length){
@@ -1700,7 +1748,7 @@ function renderShotSection(){
       var shTasks=(shotTasks||[]).filter(function(t){return t.shot_id===sh.id;});
       var total=shTasks.length,done=shTasks.filter(function(t){return t.status==="approved"||t.status==="final";}).length;
       var pct=total?Math.round(done/total*100):0;
-      var isCollapsed=shotSectionCollapsed[sh.id]!==false;
+      var isCollapsed=uiState.shotSectionCollapsed[sh.id]!==false;
       var card=document.createElement("div");card.className="asset-card";
       var hdr=document.createElement("div");hdr.className="asset-card-hdr";hdr.style.paddingLeft="28px";
       var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
@@ -1716,7 +1764,7 @@ function renderShotSection(){
       var shotBody=document.createElement("div");shotBody.style.display=isCollapsed?"none":"";
       (function(sid2){hdr.onclick=function(e){if(openBtn.contains(e.target))return;
         var show=shotBody.style.display==="none";shotBody.style.display=show?"":"none";
-        arrow.classList.toggle("open",show);shotSectionCollapsed[sid2]=!show;
+        arrow.classList.toggle("open",show);uiState.shotSectionCollapsed[sid2]=!show;saveUIState();
       };})(sh.id);
       if(shTasks.length){
         var stMap={ready:"ssp-ready",inprogress:"ssp-inprogress",review:"ssp-review",approved:"ssp-approved",final:"ssp-final"};
@@ -2029,7 +2077,7 @@ function renderGantt(){
 
   var dates=[];
   for(var i=0;i<numDays;i++)dates.push(new Date(ganttStart.getFullYear(),ganttStart.getMonth(),i+1));
-  if(!window.ganttCollapsed)window.ganttCollapsed={tasks:false,shots:{}};
+  if(!uiState.ganttCollapsed)uiState.ganttCollapsed={tasks:false,shots:{}};
 
   function mkRow(labelEl,barFn,visible){
     var lr=document.createElement("div");lr.className="gantt-label-row";lr.appendChild(labelEl);
@@ -2076,11 +2124,11 @@ function renderGantt(){
 
   var taskRows=[];
   if(assetTasks.length){
-    var tasksCollapsed=ganttCollapsed.tasks;
+    var tasksCollapsed=uiState.ganttCollapsed.tasks;
     var taskHdr=mkSectionHdr("Asset & Milestone Tasks","&#127912;",tasksCollapsed,function(){
-      ganttCollapsed.tasks=!ganttCollapsed.tasks;
-      taskRows.forEach(function(r){r.lr.style.display=ganttCollapsed.tasks?"none":"";r.row.style.display=ganttCollapsed.tasks?"none":"";});
-      taskHdr.arrow.classList.toggle("open",!ganttCollapsed.tasks);
+      uiState.ganttCollapsed.tasks=!uiState.ganttCollapsed.tasks; saveUIState();
+      taskRows.forEach(function(r){r.lr.style.display=uiState.ganttCollapsed.tasks?"none":"";r.row.style.display=uiState.ganttCollapsed.tasks?"none":"";});
+      taskHdr.arrow.classList.toggle("open",!uiState.ganttCollapsed.tasks);
     });
     labelsDiv.appendChild(taskHdr.lbl);rowsDiv.appendChild(taskHdr.chartHdr);
 
@@ -2125,15 +2173,15 @@ function renderGantt(){
     seqOrder.forEach(function(seq){
       var seqShots=bySeq[seq.id]||[];
       if(!seqShots.length)return;
-      var seqCollapsed=ganttCollapsed.shots[seq.id]===true;
+      var seqCollapsed=uiState.ganttCollapsed.shots[seq.id]===true;
       var seqRows=[];
 
       var seqHdr=mkSectionHdr(
         (seq.code?(seq.code+(seq.name?" \u2014 "+seq.name:"")):"Unassigned Shots"),
         "&#127916;",seqCollapsed,
         function(){
-          ganttCollapsed.shots[seq.id]=!ganttCollapsed.shots[seq.id];
-          var nowCollapsed=ganttCollapsed.shots[seq.id];
+          uiState.ganttCollapsed.shots[seq.id]=!uiState.ganttCollapsed.shots[seq.id]; saveUIState();
+          var nowCollapsed=uiState.ganttCollapsed.shots[seq.id];
           seqRows.forEach(function(r){r.lr.style.display=nowCollapsed?"none":"";r.row.style.display=nowCollapsed?"none":"";});
           seqHdr.arrow.classList.toggle("open",!nowCollapsed);
         }
@@ -2276,15 +2324,15 @@ window.saveProject=async function(){
   if(!editProjId&&r.data&&r.data[0]){
     var newProj = r.data[0];
 
-    await sb.from("project_members").upsert({
-      project_id: newProj.id,
-      user_id: currentUser.id,
-      role: "Owner",
-      invited_by: currentUser.id,
-      accepted_at: new Date().toISOString()
-    }, {
-      onConflict: "project_id,user_id"
-    });
+    try {
+      await sb.from("project_members").upsert({
+        project_id: newProj.id,
+        user_id: currentUser.id,
+        role: "Owner",
+        invited_by: currentUser.id,
+        accepted_at: new Date().toISOString()
+      }, { onConflict: "project_id,user_id" });
+    } catch(e) { console.warn("Member upsert handled by trigger."); }
 
     projects.push(newProj);
     projectMembers.push({
@@ -2295,7 +2343,7 @@ window.saveProject=async function(){
       accepted_at: new Date().toISOString()
     });
 
-    projExpanded[newProj.id]=true;
+    uiState.projExpanded[newProj.id]=true; saveUIState();
     activeProject=newProj;
     localStorage.setItem("celio-proj-"+currentUser.id,newProj.id);
     setHeaderProject(newProj);
@@ -2330,7 +2378,7 @@ window.deleteProject=async function(id){
       tasks=tasks.filter(function(x){return x.project_id!==id;});
       if(activeProject&&activeProject.id===id){
         activeProject=projects.length?projects[0]:null;
-        if(activeProject){projExpanded[activeProject.id]=true;setHeaderProject(activeProject);showTab("schedule");loadTasks();}
+        if(activeProject){uiState.projExpanded[activeProject.id]=true;saveUIState();setHeaderProject(activeProject);showTab("schedule");loadTasks();}
         else showNoProject();
       }
       renderSidebar();showToast("Project deleted.");
@@ -2360,18 +2408,9 @@ window.exportProject = async function(id) {
   var rShotTasks = results[1];
   var rMembers = results[2];
 
-  if (rTasks.error) {
-    showToast("Export failed: " + rTasks.error.message, "error");
-    return;
-  }
-  if (rShotTasks.error) {
-    showToast("Export failed: " + rShotTasks.error.message, "error");
-    return;
-  }
-  if (rMembers.error) {
-    showToast("Export failed: " + rMembers.error.message, "error");
-    return;
-  }
+  if (rTasks.error) { showToast("Export failed: " + rTasks.error.message, "error"); return; }
+  if (rShotTasks.error) { showToast("Export failed: " + rShotTasks.error.message, "error"); return; }
+  if (rMembers.error) { showToast("Export failed: " + rMembers.error.message, "error"); return; }
 
   var pkg = {
     schemaVersion: 2,
@@ -2391,18 +2430,11 @@ window.exportProject = async function(id) {
 
   var a = document.createElement("a");
   a.href = url;
-  a.download =
-    "celio-archive-" +
-    p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() +
-    "-" +
-    new Date().toISOString().slice(0, 10) +
-    ".json";
-
+  a.download = "celio-archive-" + p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() + "-" + new Date().toISOString().slice(0, 10) + ".json";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-
   showToast("Archive downloaded!");
 };
 
@@ -2424,18 +2456,9 @@ window.exportCSV = async function(id) {
     sb.from("project_members").select("*").eq("project_id", id)
   ]);
 
-  if (results[0].error) {
-    showToast("CSV export failed: " + results[0].error.message, "error");
-    return;
-  }
-  if (results[1].error) {
-    showToast("CSV export failed: " + results[1].error.message, "error");
-    return;
-  }
-  if (results[2].error) {
-    showToast("CSV export failed: " + results[2].error.message, "error");
-    return;
-  }
+  if (results[0].error) { showToast("CSV export failed: " + results[0].error.message, "error"); return; }
+  if (results[1].error) { showToast("CSV export failed: " + results[1].error.message, "error"); return; }
+  if (results[2].error) { showToast("CSV export failed: " + results[2].error.message, "error"); return; }
 
   var projTasks = results[0].data || [];
   var projShotTasks = results[1].data || [];
@@ -2449,61 +2472,12 @@ window.exportCSV = async function(id) {
   }
 
   var headers = [
-    "row_type",
-    "project_id",
-    "project_name",
-    "project_description",
-    "project_color",
-
-    "sequence_id",
-    "sequence_code",
-    "sequence_name",
-
-    "shot_id",
-    "shot_sequence_id",
-    "shot_code",
-    "shot_description",
-    "shot_status",
-    "shot_start_date",
-    "shot_due_date",
-    "shot_frame_count",
-    "shot_camera",
-    "shot_storyboard_notes",
-    "shot_linked_assets",
-
-    "task_id",
-    "task_category",
-    "task_name",
-    "task_lead",
-    "task_start_date",
-    "task_due_date",
-    "task_due_time",
-    "task_priority",
-    "task_status",
-    "task_revision_count",
-    "task_handoff_to",
-    "task_asset",
-    "task_asset_url",
-    "task_asset_type",
-    "task_asset_name",
-    "task_pipeline_stage",
-
-    "shot_task_id",
-    "shot_task_shot_id",
-    "shot_task_type",
-    "shot_task_department",
-    "shot_task_assignee",
-    "shot_task_start_date",
-    "shot_task_due_date",
-    "shot_task_status",
-    "shot_task_notes",
-    "shot_task_version",
-    "shot_task_order_index",
-
-    "member_user_id",
-    "member_role",
-    "member_invited_by",
-    "member_accepted_at"
+    "row_type", "project_id", "project_name", "project_description", "project_color",
+    "sequence_id", "sequence_code", "sequence_name",
+    "shot_id", "shot_sequence_id", "shot_code", "shot_description", "shot_status", "shot_start_date", "shot_due_date", "shot_frame_count", "shot_camera", "shot_storyboard_notes", "shot_linked_assets",
+    "task_id", "task_category", "task_name", "task_lead", "task_start_date", "task_due_date", "task_due_time", "task_priority", "task_status", "task_revision_count", "task_handoff_to", "task_asset", "task_asset_url", "task_asset_type", "task_asset_name", "task_pipeline_stage",
+    "shot_task_id", "shot_task_shot_id", "shot_task_type", "shot_task_department", "shot_task_assignee", "shot_task_start_date", "shot_task_due_date", "shot_task_status", "shot_task_notes", "shot_task_version", "shot_task_order_index",
+    "member_user_id", "member_role", "member_invited_by", "member_accepted_at"
   ];
 
   var rows = [headers];
@@ -2603,19 +2577,129 @@ window.exportCSV = async function(id) {
 
   var a = document.createElement("a");
   a.href = url;
-  a.download =
-    "celio-full-export-" +
-    p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() +
-    "-" +
-    new Date().toISOString().slice(0, 10) +
-    ".csv";
-
+  a.download = "celio-full-export-" + p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() + "-" + new Date().toISOString().slice(0, 10) + ".csv";
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
-
   showToast("CSV downloaded!");
+};
+
+window.promptProjectImport = function() {
+  console.log("Import button clicked");
+  var input = document.getElementById("import-project-file");
+  if (!input) {
+      showToast("Error: File input not found in DOM", "error");
+      return;
+  }
+  input.click();
+};
+
+window.handleProjectImport = async function(event) {
+  var file = event.target.files && event.target.files[0];
+  if (!file) return;
+
+  try {
+    showToast("Reading archive...");
+    var text = await file.text();
+    var archive = JSON.parse(text);
+
+    if (!archive || !archive.project || !Array.isArray(archive.sequences) || !Array.isArray(archive.shots) || !Array.isArray(archive.tasks) || !Array.isArray(archive.shotTasks)) {
+      showToast("Invalid archive format.", "error");
+      return;
+    }
+
+    var importedProjectName = (archive.project.name || "Imported Project") + " (Imported)";
+
+    var projRes = await sb.from("projects").insert({
+      name: importedProjectName,
+      description: archive.project.description || "",
+      color: archive.project.color || "#7c3aed",
+      user_id: currentUser.id
+    }).select().single();
+
+    if (projRes.error) throw new Error("Project Insert: " + projRes.error.message);
+    var newProject = projRes.data;
+
+    try {
+      await sb.from("project_members").upsert({
+        project_id: newProject.id, user_id: currentUser.id, role: "Owner", invited_by: currentUser.id, accepted_at: new Date().toISOString()
+      }, { onConflict: "project_id,user_id" });
+    } catch(e) { console.warn("Member upsert handled by trigger."); }
+
+    var seqIdMap = {};
+    var shotIdMap = {};
+
+    if (archive.sequences.length) {
+      var seqPayload = archive.sequences.map(function(seq) {
+        return { code: seq.code || "", name: seq.name || "", project_id: newProject.id, user_id: currentUser.id };
+      });
+      var seqRes = await sb.from("sequences").insert(seqPayload).select();
+      if (seqRes.error) throw new Error("Sequences Insert: " + seqRes.error.message);
+      seqRes.data.forEach(function(newSeq, i) { seqIdMap[archive.sequences[i].id] = newSeq.id; });
+    }
+
+    if (archive.shots.length) {
+      var shotPayload = archive.shots.map(function(sh) {
+        return {
+          code: sh.code || "", description: sh.description || "", sequence_id: sh.sequence_id ? (seqIdMap[sh.sequence_id] || null) : null,
+          project_id: newProject.id, user_id: currentUser.id, status: sh.status || "pending", start_date: sh.start_date || null,
+          due_date: sh.due_date || null, frame_count: sh.frame_count || null, camera: sh.camera || null,
+          storyboard_notes: sh.storyboard_notes || null, linked_assets: sh.linked_assets || null
+        };
+      });
+      var shotRes = await sb.from("shots").insert(shotPayload).select();
+      if (shotRes.error) throw new Error("Shots Insert: " + shotRes.error.message);
+      shotRes.data.forEach(function(newShot, i) { shotIdMap[archive.shots[i].id] = newShot.id; });
+    }
+
+    if (archive.tasks.length) {
+      var taskPayload = archive.tasks.map(function(t) {
+        return {
+          name: t.name || "", lead: t.lead || null, start_date: t.start_date || null, due_date: t.due_date || null, due_time: t.due_time || null,
+          priority: t.priority || "med", status: t.status || "todo", category: t.category || "general", user_id: currentUser.id,
+          project_id: newProject.id, handoff_to: t.handoff_to || null, asset: t.asset || null, asset_url: t.asset_url || null,
+          asset_type: t.asset_type || null, asset_name: t.asset_name || null, pipeline_stage: t.pipeline_stage || null, revision_count: t.revision_count || 0
+        };
+      });
+      var taskRes = await sb.from("tasks").insert(taskPayload);
+      if (taskRes.error) throw new Error("Tasks Insert: " + taskRes.error.message);
+    }
+
+    if (archive.shotTasks.length) {
+      var shotTaskPayload = archive.shotTasks
+        .filter(function(st) { return !!shotIdMap[st.shot_id]; })
+        .map(function(st) {
+          return {
+            shot_id: shotIdMap[st.shot_id], project_id: newProject.id, user_id: currentUser.id, task_type: st.task_type || "",
+            department: st.department || null, assignee: st.assignee || null, start_date: st.start_date || null, due_date: st.due_date || null,
+            status: st.status || "ready", notes: st.notes || null, version: st.version || 1, order_index: st.order_index || 0
+          };
+        });
+
+      if (shotTaskPayload.length) {
+        var shotTaskRes = await sb.from("shot_tasks").insert(shotTaskPayload);
+        if (shotTaskRes.error) throw new Error("Shot Tasks Insert: " + shotTaskRes.error.message);
+      }
+    }
+
+    showToast("Project imported!");
+    await loadAll();
+
+    activeProject = newProject;
+    uiState.projExpanded[newProject.id] = true;
+    saveUIState();
+    localStorage.setItem("celio-proj-" + currentUser.id, newProject.id);
+    setHeaderProject(newProject);
+    renderSidebar();
+    showTab("schedule");
+    await loadTasks();
+  } catch (err) {
+    console.error(err);
+    showToast("Import failed: " + (err.message || err), "error");
+  } finally {
+    event.target.value = "";
+  }
 };
 
 // ============================================================
@@ -2831,97 +2915,3 @@ window.addEventListener("DOMContentLoaded", function () {
         <div style="font-size:2rem;text-align:center;margin-bottom:10px;">&#9888;&#65039;</div>
         <h3 id="confirm-title" style="font-size:1rem;font-weight:800;margin:0 0 8px;text-align:center;"></h3>
         <p id="confirm-msg" style="font-size:.82rem;color:var(--text3);text-align:center;margin:0 0 22px;line-height:1.5;"></p>
-        <div style="display:flex;gap:10px;justify-content:center;">
-          <button class="btn btn-ghost" onclick="closeConfirm()" style="min-width:100px;">Cancel</button>
-          <button id="confirm-ok-btn" class="btn btn-del" onclick="confirmOk()" style="min-width:120px;padding:8px 16px;font-size:.82rem;font-weight:700;">Delete</button>
-        </div>
-      </div>
-    </div>
-    <div class="modal-bg" id="admin-modal">
-      <div class="modal" style="width:92%;max-width:460px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <h3 id="admin-modal-title" style="margin:0">New Entry</h3>
-          <button onclick="closeAdminModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">&#215;</button>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:12px">
-          <div><label class="flbl" id="lbl-af-title">Title</label><input id="af-title" class="inp"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div><label class="flbl" id="lbl-af-assignee">Assignee</label><input id="af-assignee" class="inp"></div>
-            <div id="wrap-af-date"><label class="flbl">Date</label><input id="af-date" class="inp" type="date"></div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="wrap-af-status">
-            <div><label class="flbl">Priority</label>
-              <select id="af-priority" class="inp"><option value="low">Low</option><option value="med" selected>Medium</option><option value="high">High</option></select>
-            </div>
-            <div><label class="flbl">Status</label>
-              <select id="af-status" class="inp"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Done</option></select>
-            </div>
-          </div>
-          <div><label class="flbl">Notes</label><textarea id="af-notes" class="inp" rows="2" style="resize:vertical"></textarea></div>
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
-          <button class="btn btn-ghost" onclick="closeAdminModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="saveAdminEntry()">Save</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-bg" id="invite-code-modal">
-      <div class="modal" style="width:92%;max-width:420px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <h3 style="margin:0">Enter Invite Code</h3>
-          <button onclick="closeInviteCodeModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">×</button>
-        </div>
-        <div style="margin-bottom:16px">
-          <input id="invite-code-input" class="inp" placeholder="e.g. abc123xyz" style="text-align:center;font-size:1.1rem;letter-spacing:2px">
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:10px">
-          <button class="btn btn-ghost" onclick="closeInviteCodeModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="submitInviteCode()">Join Project</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-bg" id="invite-modal">
-      <div class="modal" style="width:92%;max-width:540px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <h3 style="margin:0">Invite Team Members</h3>
-          <button onclick="closeInviteModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">×</button>
-        </div>
-        
-        <div style="margin-bottom:20px">
-          <label class="flbl">Pre-select Role (Optional)</label>
-          <select id="invite-role" class="inp">
-            <option value="">Let them choose their role</option>
-          </select>
-          <div style="font-size:.72rem;color:var(--text4);margin-top:4px">If you select a role, it will be pre-filled when they join</div>
-        </div>
-        
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px">
-          <div style="font-size:.75rem;color:var(--text4);margin-bottom:6px;font-weight:700">SHARE THIS LINK:</div>
-          <div style="display:flex;gap:8px">
-            <input id="invite-link" class="inp" readonly style="flex:1;font-size:.78rem;font-family:monospace">
-            <button class="btn btn-primary btn-sm" onclick="copyInviteLink()">📋 Copy</button>
-          </div>
-        </div>
-        
-        <div id="invite-members-section">
-          <h4 style="font-size:.88rem;margin-bottom:10px;font-weight:700">Current Members</h4>
-          <div id="members-list-container"></div>
-        </div>
-        
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
-          <button class="btn btn-ghost" onclick="closeInviteModal()">Close</button>
-        </div>
-      </div>
-    </div>
-
-    <input
-      type="file"
-      id="import-project-file"
-      accept=".json,application/json"
-      style="display:none"
-      onchange="handleProjectImport(event)"
-    >
-</body>
-</html>
