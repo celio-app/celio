@@ -2618,401 +2618,167 @@ window.exportCSV = async function(id) {
   showToast("CSV downloaded!");
 };
 
-window.promptProjectImport = function() {
-  var input = document.getElementById("import-project-file");
-  if (!input) return;
-  input.value = "";
-  input.click();
-};
+// ============================================================
+// ADMIN / MILESTONES FUNCTIONS
+// ============================================================
 
-window.handleProjectImport = async function(event) {
-  var file = event.target.files && event.target.files[0];
-  if (!file) return;
+window.renderMilestones=function(){
+  var projList=document.getElementById("admin-list-projects");
+  if(projList){
+    projList.innerHTML="";
+    projects.forEach(function(p){
+      var seqCnt=sequences.filter(function(s){return s.project_id===p.id;}).length;
+      var shotCnt=shots.filter(function(s){return s.project_id===p.id;}).length;
+      var entry=document.createElement("div");entry.className="admin-entry";
+      var dot=document.createElement("span");dot.style.cssText="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:"+p.color;
+      var main=document.createElement("div");main.className="admin-entry-main";
+      var nm=document.createElement("div");nm.className="admin-entry-title";nm.textContent=p.name;
+      var mt=document.createElement("div");mt.className="admin-entry-meta";mt.textContent=seqCnt+" sequences · "+shotCnt+" shots";
+      main.appendChild(nm);main.appendChild(mt);
+      var editBtn=document.createElement("button");editBtn.className="btn btn-ghost btn-sm";editBtn.style.fontSize=".68rem";editBtn.textContent="Edit";
+      editBtn.onclick=(function(pid){return function(){openProjectModal(pid);};})(p.id);
+      
+      var expBtn=document.createElement("button");expBtn.className="btn btn-ghost btn-sm";expBtn.style.fontSize=".68rem";expBtn.innerHTML="⬇ Export Archive (JSON)";
+      expBtn.onclick=(function(pid){return function(){exportProject(pid);};})(p.id);
 
-  try {
-    showToast("Reading archive...");
-    var text = await file.text();
-    var archive = JSON.parse(text);
-
-    if (
-      !archive ||
-      !archive.project ||
-      !Array.isArray(archive.sequences) ||
-      !Array.isArray(archive.shots) ||
-      !Array.isArray(archive.tasks) ||
-      !Array.isArray(archive.shotTasks)
-    ) {
-      showToast("Invalid archive format.", "error");
-      return;
-    }
-
-    var importedProjectName = (archive.project.name || "Imported Project") + " (Imported)";
-
-    var projRes = await sb.from("projects").insert({
-      name: importedProjectName,
-      description: archive.project.description || "",
-      color: archive.project.color || "#7c3aed",
-      user_id: currentUser.id
-    }).select().single();
-
-    if (projRes.error) throw projRes.error;
-
-    var newProject = projRes.data;
-
-    await sb.from("project_members").upsert({
-      project_id: newProject.id,
-      user_id: currentUser.id,
-      role: "Owner",
-      invited_by: currentUser.id,
-      accepted_at: new Date().toISOString()
-    }, {
-      onConflict: "project_id,user_id"
+      var csvBtn=document.createElement("button");csvBtn.className="btn btn-ghost btn-sm";csvBtn.style.fontSize=".68rem";csvBtn.innerHTML="⬇ Export Report (CSV)";
+      csvBtn.onclick=(function(pid){return function(){exportCSV(pid);};})(p.id);
+      
+      var inviteBtn=document.createElement("button");inviteBtn.className="btn btn-ghost btn-sm";inviteBtn.style.fontSize=".68rem";inviteBtn.innerHTML="👥 Invite";
+      inviteBtn.onclick=(function(pid){return function(){openInviteModal(pid);};})(p.id);
+      
+      var delBtn=document.createElement("button");delBtn.className="btn btn-sm btn-del";delBtn.style.fontSize=".68rem";delBtn.textContent="Delete";
+      delBtn.onclick=(function(pid){return function(){deleteProject(pid);};})(p.id);
+      entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(csvBtn);entry.appendChild(inviteBtn);entry.appendChild(delBtn);
+      projList.appendChild(entry);
     });
-
-    var seqIdMap = {};
-    var shotIdMap = {};
-
-    if (archive.sequences.length) {
-      var seqPayload = archive.sequences.map(function(seq) {
-        return {
-          code: seq.code || "",
-          name: seq.name || "",
-          project_id: newProject.id,
-          user_id: currentUser.id
-        };
-      });
-
-      var seqRes = await sb.from("sequences").insert(seqPayload).select();
-      if (seqRes.error) throw seqRes.error;
-
-      seqRes.data.forEach(function(newSeq, i) {
-        seqIdMap[archive.sequences[i].id] = newSeq.id;
-      });
-    }
-
-    if (archive.shots.length) {
-      var shotPayload = archive.shots.map(function(sh) {
-        return {
-          code: sh.code || "",
-          description: sh.description || "",
-          sequence_id: sh.sequence_id ? (seqIdMap[sh.sequence_id] || null) : null,
-          project_id: newProject.id,
-          user_id: currentUser.id,
-          status: sh.status || "pending",
-          start_date: sh.start_date || null,
-          due_date: sh.due_date || null,
-          frame_count: sh.frame_count || null,
-          camera: sh.camera || null,
-          storyboard_notes: sh.storyboard_notes || null,
-          linked_assets: sh.linked_assets || null
-        };
-      });
-
-      var shotRes = await sb.from("shots").insert(shotPayload).select();
-      if (shotRes.error) throw shotRes.error;
-
-      shotRes.data.forEach(function(newShot, i) {
-        shotIdMap[archive.shots[i].id] = newShot.id;
-      });
-    }
-
-    if (archive.tasks.length) {
-      var taskPayload = archive.tasks.map(function(t) {
-        return {
-          name: t.name || "",
-          lead: t.lead || null,
-          start_date: t.start_date || null,
-          due_date: t.due_date || null,
-          due_time: t.due_time || null,
-          priority: t.priority || "med",
-          status: t.status || "todo",
-          category: t.category || "general",
-          user_id: currentUser.id,
-          project_id: newProject.id,
-          handoff_to: t.handoff_to || null,
-          asset: t.asset || null,
-          asset_url: t.asset_url || null,
-          asset_type: t.asset_type || null,
-          asset_name: t.asset_name || null,
-          pipeline_stage: t.pipeline_stage || null,
-          revision_count: t.revision_count || 0
-        };
-      });
-
-      var taskRes = await sb.from("tasks").insert(taskPayload);
-      if (taskRes.error) throw taskRes.error;
-    }
-
-    if (archive.shotTasks.length) {
-      var shotTaskPayload = archive.shotTasks
-        .filter(function(st) {
-          return !!shotIdMap[st.shot_id];
-        })
-        .map(function(st) {
-          return {
-            shot_id: shotIdMap[st.shot_id],
-            project_id: newProject.id,
-            user_id: currentUser.id,
-            task_type: st.task_type || "",
-            department: st.department || null,
-            assignee: st.assignee || null,
-            start_date: st.start_date || null,
-            due_date: st.due_date || null,
-            status: st.status || "ready",
-            notes: st.notes || null,
-            version: st.version || 1,
-            order_index: st.order_index || 0
-          };
-        });
-
-      if (shotTaskPayload.length) {
-        var shotTaskRes = await sb.from("shot_tasks").insert(shotTaskPayload);
-        if (shotTaskRes.error) throw shotTaskRes.error;
+  }
+  if(!activeProject)return;
+  ["client","marketing","meetings","team"].forEach(function(cat){
+    var items=tasks.filter(function(t){return t.category===cat&&t.project_id===activeProject.id;});
+    items.sort(function(a,b){var p={high:0,med:1,low:2};if(a.status==="done"&&b.status!=="done")return 1;if(b.status==="done"&&a.status!=="done")return -1;return(p[a.priority]||1)-(p[b.priority]||1);});
+    var cont=document.getElementById("admin-list-"+cat);if(!cont)return;
+    cont.innerHTML="";
+    if(!items.length){var empty=document.createElement("div");empty.className="admin-empty";empty.textContent="No entries yet.";cont.appendChild(empty);return;}
+    items.forEach(function(t){
+      var entry=document.createElement("div");entry.className="admin-entry";
+      var main=document.createElement("div");main.className="admin-entry-main";
+      var title=document.createElement("div");title.className="admin-entry-title";title.textContent=t.name;
+      var meta=document.createElement("div");meta.className="admin-entry-meta";
+      if (cat === "team") {
+        meta.innerHTML = t.lead ? "🎭 Role: " + t.lead : "Team Member";
+      } else {
+        if(t.lead){var a=document.createElement("span");a.textContent="👤 "+t.lead;meta.appendChild(a);}
+        if(t.due_date){var d=daysUntil(t.due_date);var dm=document.createElement("span");dm.style.color=t.status==="done"?"var(--text4)":d<0?"#ef4444":d<=3?"#f59e0b":"var(--text4)";dm.textContent=" 📅 "+(d<0&&t.status!=="done"?Math.abs(d)+"d overdue":fmtDate(t.due_date));meta.appendChild(dm);}
       }
-    }
-
-    showToast("Project imported!");
-    await loadAll();
-
-    activeProject = newProject;
-    projExpanded[newProject.id] = true;
-    localStorage.setItem("celio-proj-" + currentUser.id, newProject.id);
-    setHeaderProject(newProject);
-    renderSidebar();
-    showTab("schedule");
-    await loadTasks();
-  } catch (err) {
-    console.error(err);
-    showToast("Import failed: " + (err.message || err), "error");
-  } finally {
-    event.target.value = "";
-  }
-};
-
-window.submitInviteCode = async function(codeOverride) {
-  var inputEl = document.getElementById("invite-code-input");
-  var code = (codeOverride || (inputEl ? inputEl.value : "") || "").trim();
-
-  if (!code) {
-    showToast("Please enter an invite code", "error");
-    return;
-  }
-
-  if (!currentUser) {
-    localStorage.setItem("celio-pending-invite", code);
-    setMsg("Please sign in or create an account first", "error");
-    return;
-  }
-
-  localStorage.setItem("celio-pending-invite", code);
-
-  var inviteRes = await sb
-    .from("project_invites")
-    .select("*")
-    .eq("invite_code", code)
-    .gt("expires_at", new Date().toISOString())
-    .maybeSingle();
-
-  if (inviteRes.error || !inviteRes.data) {
-    showToast("Invalid or expired invite code", "error");
-    return;
-  }
-
-  var invite = inviteRes.data;
-
-  var existingRes = await sb
-    .from("project_members")
-    .select("*")
-    .eq("project_id", invite.project_id)
-    .eq("user_id", currentUser.id)
-    .maybeSingle();
-
-  if (existingRes.error && existingRes.error.code !== "PGRST116") {
-    showToast("Could not verify membership: " + existingRes.error.message, "error");
-    return;
-  }
-
-  if (!existingRes.data) {
-    var role = invite.role;
-    if (!role) {
-      role = prompt("What's your role on this project? (e.g. Animator, Modeller, Compositor)");
-      if (!role) return;
-    }
-
-    var insertRes = await sb
-      .from("project_members")
-      .insert({
-        project_id: invite.project_id,
-        user_id: currentUser.id,
-        role: role,
-        invited_by: invite.created_by,
-        accepted_at: new Date().toISOString()
-      })
-      .select()
-      .single();
-
-    if (insertRes.error) {
-      showToast("Could not join project: " + insertRes.error.message, "error");
-      return;
-    }
-
-    var usesRes = await sb
-      .from("project_invites")
-      .update({ uses: (invite.uses || 0) + 1 })
-      .eq("id", invite.id);
-
-    if (usesRes.error) {
-      console.warn("Invite use count update failed:", usesRes.error.message);
-    }
-  }
-
-  clearPendingInviteCode();
-  closeInviteCodeModal();
-
-  await loadAll();
-
-  var invitedProject = projects.find(function(p) {
-    return p.id === invite.project_id;
-  });
-
-  if (!invitedProject) {
-    showToast("Joined, but the project is not visible. Check Supabase RLS policies.", "error");
-    return;
-  }
-
-  activeProject = invitedProject;
-  projExpanded[invitedProject.id] = true;
-  localStorage.setItem("celio-proj-" + currentUser.id, invitedProject.id);
-
-  setHeaderProject(invitedProject);
-  renderSidebar();
-  showShotPage(false);
-  showTab("schedule");
-  await loadTasks();
-
-  showToast("Joined project!");
-};
-
-window.openInviteModal = async function(projectId) {
-  var project = projects.find(function(p){ return p.id === projectId; });
-  if(!project) return;
-
-  var teamRoles = tasks.filter(function(t){
-    return t.category === "team" && t.project_id === projectId;
-  });
-
-  var roleSet = {};
-  teamRoles.forEach(function(t){
-    if(t.lead) roleSet[t.lead] = true;
-  });
-
-  var roleSelect = document.getElementById("invite-role");
-  roleSelect.innerHTML = '<option value="">Let them choose their role</option>';
-  Object.keys(roleSet).sort().forEach(function(role){
-    roleSelect.innerHTML += '<option value="' + role + '">' + role + '</option>';
-  });
-
-  var r = await sb.from("project_invites")
-    .select("*")
-    .eq("project_id", projectId)
-    .eq("created_by", currentUser.id)
-    .gt("expires_at", new Date().toISOString())
-    .maybeSingle();
-
-  var inviteCode;
-  var selectedRole = roleSelect.value || null;
-
-  if(r.data) {
-    inviteCode = r.data.invite_code;
-  } else {
-    inviteCode = Math.random().toString(36).substring(2, 10);
-    var expires = new Date();
-    expires.setDate(expires.getDate() + 90);
-
-    var insertRes = await sb.from("project_invites").insert({
-      project_id: projectId,
-      invite_code: inviteCode,
-      role: selectedRole,
-      created_by: currentUser.id,
-      expires_at: expires.toISOString(),
-      max_uses: 999,
-      uses: 0
+      main.appendChild(title);main.appendChild(meta);
+      var priCls={high:"admin-pri-high",med:"admin-pri-med",low:"admin-pri-low"};
+      var pri=document.createElement("span");pri.className="admin-pri "+(priCls[t.priority]||"admin-pri-low");pri.textContent={high:"High",med:"Med",low:"Low"}[t.priority]||"";
+      if (cat === "team") pri.style.display = "none";
+      var eb=document.createElement("button");eb.className="btn btn-ghost btn-sm";eb.style.fontSize=".68rem";eb.textContent="Edit";
+      eb.onclick=(function(tid,c2){return function(){openAdminModal(c2,tid);};})(t.id,cat);
+      var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="✕";
+      db.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
+      entry.appendChild(main);entry.appendChild(pri);entry.appendChild(eb);entry.appendChild(db);
+      cont.appendChild(entry);
     });
-
-    if (insertRes.error) {
-      showToast("Could not create invite: " + insertRes.error.message, "error");
-      return;
-    }
-  }
-
-  var inviteUrl = window.location.origin + window.location.pathname + "?invite=" + inviteCode;
-  document.getElementById("invite-link").value = inviteUrl;
-
-  roleSelect.onchange = async function() {
-    var newRole = this.value || null;
-    await sb.from("project_invites")
-      .update({ role: newRole })
-      .eq("project_id", projectId)
-      .eq("invite_code", inviteCode);
-  };
-
-  renderProjectMembers(projectId);
-  document.getElementById("invite-modal").classList.add("open");
-};
-
-window.closeInviteModal = function() {
-  document.getElementById("invite-modal").classList.remove("open");
-};
-
-window.copyInviteLink = function() {
-  var input = document.getElementById("invite-link");
-  input.select();
-  input.setSelectionRange(0, 99999);
-  document.execCommand("copy");
-  showToast("Invite link copied to clipboard!");
-};
-
-window.renderProjectMembers = async function(projectId) {
-  var r = await sb.from("project_members").select("*").eq("project_id", projectId);
-  var members = r.data || [];
-  var container = document.getElementById("members-list-container");
-  
-  if(!members.length) {
-    container.innerHTML = '<div style="padding:14px;color:var(--text4);font-size:.82rem;text-align:center">No members yet — share the invite link to add team members</div>';
-    return;
-  }
-  
-  container.innerHTML = "";
-  members.forEach(function(m){
-    var div = document.createElement("div");
-    div.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border2);gap:10px";
-    
-    var info = document.createElement("div");
-    info.style.flex = "1";
-    
-    var displayEmail = m.user_id === currentUser.id ? currentUser.email : 'Team Member';
-    
-    info.innerHTML = '<div style="font-size:.84rem;font-weight:600">' + displayEmail + 
-      '</div><div style="font-size:.72rem;color:var(--text4);margin-top:2px">🎭 ' + m.role + '</div>';
-    
-    div.appendChild(info);
-    
-    if(m.role !== 'Owner') {
-      var removeBtn = document.createElement("button");
-      removeBtn.className = "btn btn-sm btn-del";
-      removeBtn.style.fontSize = ".68rem";
-      removeBtn.textContent = "Remove";
-      removeBtn.onclick = (function(mid, projectId){ return async function(){
-        if(!confirm("Remove this team member from the project?")) return;
-        await sb.from("project_members").delete().eq("id", mid);
-        renderProjectMembers(projectId);
-        showToast("Member removed");
-      }; })(m.id, projectId);
-      div.appendChild(removeBtn);
-    }
-    
-    container.appendChild(div);
   });
+};
+
+var adminCat=null,adminEditId=null;
+window.openAdminModal=function(cat,editId){
+  adminCat=cat||null;adminEditId=editId||null;
+  var labels={client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Team Member"};
+
+  var isTeam = cat === "team";
+  document.getElementById("lbl-af-title").textContent = isTeam ? "Name" : "Title";
+  document.getElementById("lbl-af-assignee").textContent = isTeam ? "Role (e.g. Animator, Lighter)" : "Assignee";
+  document.getElementById("wrap-af-date").style.display = isTeam ? "none" : "block";
+  document.getElementById("wrap-af-status").style.display = isTeam ? "none" : "grid";
+
+  if(editId){
+    var t=tasks.find(function(x){return x.id===editId;});
+    if(t){adminCat=t.category;
+      document.getElementById("admin-modal-title").textContent="Edit — "+(labels[t.category]||t.category);
+      document.getElementById("af-title").value=t.name;document.getElementById("af-assignee").value=t.lead||"";
+      document.getElementById("af-date").value=t.due_date||"";document.getElementById("af-priority").value=t.priority||"med";
+      document.getElementById("af-status").value=t.status||"todo";document.getElementById("af-notes").value=t.asset||"";
+    }
+  } else {
+    document.getElementById("admin-modal-title").textContent="New — "+(labels[cat]||cat);
+    document.getElementById("af-title").value="";document.getElementById("af-assignee").value="";
+    document.getElementById("af-date").value="";document.getElementById("af-priority").value="med";
+    document.getElementById("af-status").value="todo";document.getElementById("af-notes").value="";
+  }
+  document.getElementById("admin-modal").classList.add("open");
+};
+
+window.closeAdminModal=function(){document.getElementById("admin-modal").classList.remove("open");};
+
+window.saveAdminEntry = async function() {
+  var title = document.getElementById("af-title").value.trim();
+  if (!title) { showToast("Please enter a title.", "error"); return; }
+  
+  var dueDate = document.getElementById("af-date").value || null;
+  if (adminCat === "team" && !dueDate) {
+    dueDate = "2099-12-31"; 
+  }
+  
+  var payload = {
+    name: title, lead: document.getElementById("af-assignee").value.trim() || null,
+    due_date: dueDate, priority: document.getElementById("af-priority").value,
+    status: document.getElementById("af-status").value, category: adminCat,
+    asset: document.getElementById("af-notes").value.trim() || null, user_id: currentUser.id, project_id: activeProject.id
+  };
+  var r;
+  if (adminEditId) r = await sb.from("tasks").update(payload).eq("id", adminEditId).select();
+  else r = await sb.from("tasks").insert(payload).select();
+  if (r.error) { showToast("Database Error: " + r.error.message, "error"); return; }
+  if (adminEditId) {
+    var idx = tasks.findIndex(function(t) { return t.id === adminEditId; });
+    if (idx >= 0 && r.data && r.data[0]) tasks[idx] = r.data[0];
+  } else {
+    if (r.data && r.data[0]) tasks.push(r.data[0]);
+  }
+  closeAdminModal();
+  showToast("Saved!");
+  populateTeamDropdowns();
+  renderMilestones();
+};
+
+window.addEventListener('keydown', function(e) {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    if(currentUser) openCmd();
+  }
+});
+window.openCmd = function() {
+  document.getElementById('cmd-palette').classList.add('open');
+  document.getElementById('cmd-input').value = '';
+  filterCmd('');
+  setTimeout(function(){ document.getElementById('cmd-input').focus(); }, 50);
+};
+window.closeCmd = function() {
+  document.getElementById('cmd-palette').classList.remove('open');
+};
+window.filterCmd = function(q) {
+  q = q.toLowerCase().trim();
+  var list = document.getElementById('cmd-list');
+  var html = '';
+  if (!activeProject) { list.innerHTML = '<div style="padding:14px;color:var(--text4)">Select a project first.</div>'; return; }
+  
+  var projShots = shots.filter(function(s){ return s.project_id === activeProject.id && (!q || s.code.toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q)); });
+  projShots.forEach(function(s){
+    html += '<div class="cmd-item" onclick="closeCmd(); openShot(\''+s.id+'\')"><span class="cmd-icon">&#127916;</span><div><div style="font-weight:700">'+s.code+'</div><div style="font-size:.7rem;color:var(--text4)">'+(s.description||'Shot')+'</div></div></div>';
+  });
+  
+  var projTasks = tasks.filter(function(t){ return t.project_id === activeProject.id && (!q || t.name.toLowerCase().includes(q) || (t.asset_name||'').toLowerCase().includes(q)); });
+  projTasks.forEach(function(t){
+    html += '<div class="cmd-item" onclick="closeCmd(); editTask(\''+t.id+'\')"><span class="cmd-icon">&#127912;</span><div><div style="font-weight:700">'+t.name+'</div><div style="font-size:.7rem;color:var(--text4)">'+(t.asset_name||t.category)+'</div></div></div>';
+  });
+
+  if(!html) html = '<div style="padding:14px;color:var(--text4)">No results found.</div>';
+  list.innerHTML = html;
 };
 
 window.addEventListener("DOMContentLoaded", function () {
