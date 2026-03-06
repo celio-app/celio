@@ -32,8 +32,8 @@ body{font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(
 .auth-tab.active{background:#7c3aed;color:#fff;}
 .form-row{margin-bottom:14px;}
 .form-row label{display:block;font-size:.73rem;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
-.form-row input{width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.87rem;outline:none;}
-.form-row input:focus{border-color:#7c3aed;}
+.form-row input, .form-row select, .form-row textarea{width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.87rem;outline:none;}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus{border-color:#7c3aed;}
 .btn-auth{width:100%;padding:11px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:6px;}
 .auth-msg{text-align:center;font-size:.78rem;margin-top:12px;min-height:18px;}
 .auth-msg.error{color:#ef4444;}.auth-msg.success{color:#10b981;}
@@ -981,6 +981,8 @@ var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4
 var projExpanded={},seqOpen={},schedView="all",assetGroupCollapsed={},typeGroupCollapsed={},shotSectionCollapsed={},seqShotCollapsed={};
 var assetLinkSelection=[];
 
+var projectMembers=[],userRole=null;
+
 // Pipeline stages by asset type
 var PIPELINE_STAGES={
   character:["Design","Modelling","Surfacing","Rigging"],
@@ -1065,14 +1067,12 @@ sb.auth.onAuthStateChange(function(event,session){
     calYear=today.getFullYear();calMonth=today.getMonth();
     ganttStart=new Date(today.getFullYear(),today.getMonth(),1);
     
-    // Check for invite code in query parameter
     var urlParams = new URLSearchParams(window.location.search);
     var inviteCode = urlParams.get('invite');
     if(inviteCode) {
-      // Auto-accept invite after loading
       loadAll().then(function(){
-        submitInviteCode();
         document.getElementById("invite-code-input").value = inviteCode;
+        submitInviteCode();
       });
     } else {
       loadAll();
@@ -1085,12 +1085,10 @@ sb.auth.onAuthStateChange(function(event,session){
 });
 
 async function loadAll(){
-  // Load projects where user is owner OR invited member
   var r=await sb.from("projects").select("*").order("created_at",{ascending:true});
   if(r.error){console.error(r.error);return;}
   projects=r.data||[];
   
-  // Load project members for all projects
   if(projects.length){
     var pids=projects.map(function(p){return p.id;});
     var rMembers=await sb.from("project_members").select("*").in("project_id",pids);
@@ -1158,7 +1156,6 @@ window.selectProject=function(id){
   if(activeShot)backToProject();
   activeProject=p;projExpanded[id]=true;
   
-  // Determine current user's role in this project
   var membership=projectMembers.find(function(m){return m.project_id===p.id&&m.user_id===currentUser.id;});
   userRole=membership?membership.role:null;
   
@@ -1445,7 +1442,7 @@ window.saveAssetLinks=async function(){
 
 async function loadTasks(){
   if(!activeProject)return;
-  var r=await sb.from("tasks").select("*").eq("user_id",currentUser.id).eq("project_id",activeProject.id).order("due_date",{ascending:true,nullsFirst:false});
+  var r=await sb.from("tasks").select("*").eq("project_id",activeProject.id).order("due_date",{ascending:true,nullsFirst:false});
   if(r.error){console.error(r.error);return;}
   tasks=r.data||[];
   var pids=projects.map(function(p){return p.id;});
@@ -1745,7 +1742,7 @@ function renderAssetDeliverables(){var a=tasks.filter(function(t){return t.asset
 
 function mkStatusCell(t){var cls={todo:"b-todo",inprogress:"b-inprogress",review:"b-review",done:"b-done"};var lbl={todo:"To Do",inprogress:"In Progress",review:"In Review",done:"Done"};var opts=[{v:"todo",l:"To Do",d:"dot-todo"},{v:"inprogress",l:"In Progress",d:"dot-inprogress"},{v:"review",l:"In Review",d:"dot-review"},{v:"done",l:"Done",d:"dot-done"}];var oh=opts.map(function(o){return'<div class="status-option" onclick="setStatus(\''+t.id+'\',\''+o.v+'\',event)"><span class="dot '+o.d+'"></span>'+o.l+"</div>";}).join("");return'<td><div class="status-cell"><button class="status-badge-btn" onclick="toggleStatusDrop(\''+t.id+'\',event)"><span class="badge '+(cls[t.status]||"b-todo")+'">'+(lbl[t.status]||t.status)+'</span><span class="arr">&#9660;</span></button><div class="status-dropdown" id="sdrop-'+t.id+'">'+oh+"</div></div></td>";}
 window.toggleStatusDrop=function(id,e){e.stopPropagation();var d=document.getElementById("sdrop-"+id);document.querySelectorAll(".status-dropdown.open").forEach(function(x){if(x!==d)x.classList.remove("open");});d.classList.toggle("open");};
-window.setStatus=async function(id,status,e){e.stopPropagation();document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});await sb.from("tasks").update({status:status}).eq("id",id).eq("user_id",currentUser.id);showToast("Status updated!");loadTasks();};
+window.setStatus=async function(id,status,e){e.stopPropagation();document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});await sb.from("tasks").update({status:status}).eq("id",id);showToast("Status updated!");loadTasks();};
 document.addEventListener("click",function(){document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});});
 
 window.toggleAdv = function() {
@@ -1854,7 +1851,6 @@ window.saveTask = async function(){
   else{payload.handoff_to=document.getElementById("f-handoff").value.trim() || null; payload.asset=document.getElementById("f-deliverable").value.trim() || null; payload.asset_url=document.getElementById("f-deliverable-url").value.trim() || null; payload.asset_type=null; payload.asset_name=null; payload.pipeline_stage=null;}
   
   var result;
-  // 1. We add .select() so Supabase hands us back the freshly saved row
   if (editTaskId) {
     result = await sb.from("tasks").update(payload).eq("id", editTaskId).select();
   } else {
@@ -1866,11 +1862,10 @@ window.saveTask = async function(){
     return;
   }
 
-  // 2. We patch the browser's local memory instantly to avoid race conditions
   if (editTaskId) {
     var idx = tasks.findIndex(function(t) { return t.id === editTaskId; });
     if (idx >= 0 && result.data && result.data[0]) {
-      tasks[idx] = result.data[0]; // Overwrite the old memory with the fresh data
+      tasks[idx] = result.data[0]; 
     }
   } else {
     if (result.data && result.data[0]) tasks.push(result.data[0]);
@@ -1879,7 +1874,6 @@ window.saveTask = async function(){
   closeModal();
   showToast("Task saved!");
   
-  // 3. Instantly redraw the current tab without triggering a full database reload
   var active = document.querySelector(".tab-content.active");
   var tabName = active ? active.id.replace("tab-","") : "schedule";
   if(tabName === "schedule") renderSchedule();
@@ -2110,7 +2104,7 @@ function renderGantt(){
   inner.innerHTML="";inner.appendChild(labelsDiv);inner.appendChild(chartDiv);
 }
 
-function mkDraggable(el,row,task,origStart,origEnd,numDays,startOfMonth,mode){el.addEventListener("mousedown",function(e){if(mode==="move"&&(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left")))return;e.preventDefault();var bar=row.querySelector(".gantt-bar");bar.classList.add("dragging");var startX=e.clientX,cs=origStart,ce=origEnd;function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W),ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));bar.style.left=(ns*COL_W)+"px";bar.style.width=((ne-ns+1)*COL_W-4)+"px";}async function onUp(ev){document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);bar.classList.remove("dragging");var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;var ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));var nsd=new Date(startOfMonth.getTime()+ns*86400000),ned=new Date(startOfMonth.getTime()+ne*86400000);var payload={due_date:fmtYMD(ned)};if(task.start_date||mode!=="right")payload.start_date=fmtYMD(nsd);await sb.from("tasks").update(payload).eq("id",task.id).eq("user_id",currentUser.id);showToast("Dates updated!");loadTasks();}document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);});}
+function mkDraggable(el,row,task,origStart,origEnd,numDays,startOfMonth,mode){el.addEventListener("mousedown",function(e){if(mode==="move"&&(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left")))return;e.preventDefault();var bar=row.querySelector(".gantt-bar");bar.classList.add("dragging");var startX=e.clientX,cs=origStart,ce=origEnd;function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W),ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));bar.style.left=(ns*COL_W)+"px";bar.style.width=((ne-ns+1)*COL_W-4)+"px";}async function onUp(ev){document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);bar.classList.remove("dragging");var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;var ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));var nsd=new Date(startOfMonth.getTime()+ns*86400000),ned=new Date(startOfMonth.getTime()+ne*86400000);var payload={due_date:fmtYMD(ned)};if(task.start_date||mode!=="right")payload.start_date=fmtYMD(nsd);await sb.from("tasks").update(payload).eq("id",task.id);showToast("Dates updated!");loadTasks();}document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);});}
 window.ganttPrev=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()-1,1);renderGantt();};
 window.ganttNext=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,1);renderGantt();};
 window.ganttToday=function(){ganttStart=new Date(today.getFullYear(),today.getMonth(),1);renderGantt();};
@@ -2127,10 +2121,8 @@ window.canEditProject = function() {
 
 window.populateTeamDropdowns = function() {
   if (!activeProject) return;
-  // Find all tasks categorized as "team"
   var team = tasks.filter(function(t) { return t.category === "team" && t.project_id === activeProject.id; });
   
-  // Group them by their Role (stored in the lead field)
   var byRole = {};
   team.forEach(function(m) {
     var role = m.lead || "Other";
@@ -2138,7 +2130,6 @@ window.populateTeamDropdowns = function() {
     byRole[role].push(m.name);
   });
 
-  // Build the HTML with <optgroup> for filtering
   var html = '<option value="">-- Unassigned --</option>';
   Object.keys(byRole).sort().forEach(function(role) {
     html += '<optgroup label="' + role + '">';
@@ -2148,7 +2139,6 @@ window.populateTeamDropdowns = function() {
     html += '</optgroup>';
   });
 
-  // Safely inject options without destroying legacy string data
   function updateSelect(id) {
      var el = document.getElementById(id);
      if (!el) return;
@@ -2178,7 +2168,7 @@ window.openProjectModal=function(id){editProjId=id||null;document.getElementById
 window.closeProjModal=function(){document.getElementById("proj-modal").classList.remove("open");};
 window.saveProject=async function(){var name=document.getElementById("pf-name").value.trim();if(!name){showToast("Please enter a project name.", "error");return;}var payload={name:name,description:document.getElementById("pf-desc").value.trim(),color:selectedColor,user_id:currentUser.id};var r;if(editProjId)r=await sb.from("projects").update(payload).eq("id",editProjId);else r=await sb.from("projects").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}closeProjModal();if(!editProjId&&r.data&&r.data[0]){projects.push(r.data[0]);projExpanded[r.data[0].id]=true;activeProject=r.data[0];localStorage.setItem("celio-proj-"+currentUser.id,r.data[0].id);setHeaderProject(r.data[0]);showTab("schedule");loadTasks();}else{var idx=projects.findIndex(function(p){return p.id===editProjId;});if(idx>=0)projects[idx]=Object.assign(projects[idx],payload);}renderSidebar();showToast("Project saved!");};
 
-["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal"].forEach(function(id){var el=document.getElementById(id);el.addEventListener("click",function(e){if(e.target===el){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal}[id];if(closeFn)closeFn();}});});
+["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal", "invite-modal"].forEach(function(id){var el=document.getElementById(id);el.addEventListener("click",function(e){if(e.target===el){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal,"invite-modal":closeInviteModal}[id];if(closeFn)closeFn();}});});
 
 window.deleteProject=async function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
@@ -2293,14 +2283,12 @@ window.submitInviteCode = async function() {
   var code = document.getElementById("invite-code-input").value.trim();
   if(!code) { showToast("Please enter an invite code", "error"); return; }
   
-  // Check if user is logged in
   if(!currentUser) {
     setMsg("Please sign in or create an account first", "error");
     closeInviteCodeModal();
     return;
   }
   
-  // Lookup the invite
   var r = await sb.from("project_invites")
     .select("*")
     .eq("invite_code", code)
@@ -2313,7 +2301,6 @@ window.submitInviteCode = async function() {
   
   var invite = r.data;
   
-  // Check if already a member
   var existing = await sb.from("project_members")
     .select("*")
     .eq("project_id", invite.project_id)
@@ -2327,14 +2314,12 @@ window.submitInviteCode = async function() {
     return;
   }
   
-  // Determine role
   var role = invite.role;
   if(!role) {
     role = prompt("What's your role on this project? (e.g. Animator, Modeller, Compositor)");
     if(!role) return;
   }
   
-  // Add user as member
   await sb.from("project_members").insert({
     project_id: invite.project_id,
     user_id: currentUser.id,
@@ -2343,7 +2328,6 @@ window.submitInviteCode = async function() {
     accepted_at: new Date().toISOString()
   });
   
-  // Increment invite uses
   await sb.from("project_invites")
     .update({ uses: invite.uses + 1 })
     .eq("id", invite.id);
@@ -2357,7 +2341,6 @@ window.openInviteModal = async function(projectId) {
   var project = projects.find(function(p){ return p.id === projectId; });
   if(!project) return;
   
-  // Populate role dropdown from team roster
   var teamRoles = tasks.filter(function(t){
     return t.category === "team" && t.project_id === projectId;
   });
@@ -2370,7 +2353,6 @@ window.openInviteModal = async function(projectId) {
     roleSelect.innerHTML += '<option value="' + role + '">' + role + '</option>';
   });
   
-  // Generate or fetch existing invite code
   var r = await sb.from("project_invites")
     .select("*")
     .eq("project_id", projectId)
@@ -2382,10 +2364,9 @@ window.openInviteModal = async function(projectId) {
   if(r.data) {
     inviteCode = r.data.invite_code;
   } else {
-    // Create new invite
     inviteCode = Math.random().toString(36).substring(2, 10);
     var expires = new Date();
-    expires.setDate(expires.getDate() + 90); // 90 day expiry
+    expires.setDate(expires.getDate() + 90); 
     
     await sb.from("project_invites").insert({
       project_id: projectId,
@@ -2400,9 +2381,7 @@ window.openInviteModal = async function(projectId) {
   var inviteUrl = window.location.origin + window.location.pathname + "?invite=" + inviteCode;
   document.getElementById("invite-link").value = inviteUrl;
   
-  // Load and display current members
   renderProjectMembers(projectId);
-  
   document.getElementById("invite-modal").classList.add("open");
 };
 
@@ -2436,7 +2415,6 @@ window.renderProjectMembers = async function(projectId) {
     var info = document.createElement("div");
     info.style.flex = "1";
     
-    // Show current user's email, or just show role for others
     var displayEmail = m.user_id === currentUser.id ? currentUser.email : 'Team Member';
     
     info.innerHTML = '<div style="font-size:.84rem;font-weight:600">' + displayEmail + 
@@ -2448,19 +2426,6 @@ window.renderProjectMembers = async function(projectId) {
       var removeBtn = document.createElement("button");
       removeBtn.className = "btn btn-sm btn-del";
       removeBtn.style.fontSize = ".68rem";
-      removeBtn.textContent = "Remove";
-      removeBtn.onclick = (function(mid, projectId){ return async function(){
-        if(!confirm("Remove this team member from the project?")) return;
-        await sb.from("project_members").delete().eq("id", mid);
-        renderProjectMembers(projectId);
-        showToast("Member removed");
-      }; })(m.id, projectId);
-      div.appendChild(removeBtn);
-    }
-    
-    container.appendChild(div);
-  });
-};
       removeBtn.textContent = "Remove";
       removeBtn.onclick = (function(mid, projectId){ return async function(){
         if(!confirm("Remove this team member from the project?")) return;
@@ -2539,12 +2504,10 @@ window.renderMilestones=function(){
 };
 
 var adminCat=null,adminEditId=null;
-var projectMembers=[],userRole=null;
 window.openAdminModal=function(cat,editId){
   adminCat=cat||null;adminEditId=editId||null;
   var labels={client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Team Member"};
 
-  // Dynamically change labels for Team members
   var isTeam = cat === "team";
   document.getElementById("lbl-af-title").textContent = isTeam ? "Name" : "Title";
   document.getElementById("lbl-af-assignee").textContent = isTeam ? "Role (e.g. Animator, Lighter)" : "Assignee";
@@ -2572,10 +2535,9 @@ window.saveAdminEntry = async function() {
   var title = document.getElementById("af-title").value.trim();
   if (!title) { showToast("Please enter a title.", "error"); return; }
   
-  // Team members don't need real due dates - use a default value to satisfy NOT NULL constraint
   var dueDate = document.getElementById("af-date").value || null;
   if (adminCat === "team" && !dueDate) {
-    dueDate = "2099-12-31"; // Default far-future date for team roster entries
+    dueDate = "2099-12-31"; 
   }
   
   var payload = {
