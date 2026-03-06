@@ -32,8 +32,8 @@ body{font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(
 .auth-tab.active{background:#7c3aed;color:#fff;}
 .form-row{margin-bottom:14px;}
 .form-row label{display:block;font-size:.73rem;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
-.form-row input{width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.87rem;outline:none;}
-.form-row input:focus{border-color:#7c3aed;}
+.form-row input, .form-row select, .form-row textarea{width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.87rem;outline:none;}
+.form-row input:focus, .form-row select:focus, .form-row textarea:focus{border-color:#7c3aed;}
 .btn-auth{width:100%;padding:11px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:6px;}
 .auth-msg{text-align:center;font-size:.78rem;margin-top:12px;min-height:18px;}
 .auth-msg.error{color:#ef4444;}.auth-msg.success{color:#10b981;}
@@ -961,6 +961,35 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   </div>
 </div>
 
+<div class="modal-bg" id="invite-modal">
+  <div class="modal" style="width:92%;max-width:520px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <h3 style="margin:0">Invite Team Members</h3>
+      <button onclick="closeInviteModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">×</button>
+    </div>
+    <div style="margin-bottom:20px">
+      <label class="flbl">Select Role (Optional)</label>
+      <select id="invite-role" class="inp">
+        <option value="">Let them choose</option>
+      </select>
+    </div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px">
+      <div style="font-size:.75rem;color:var(--text4);margin-bottom:6px">SHARE THIS LINK:</div>
+      <div style="display:flex;gap:8px">
+        <input id="invite-link" class="inp" readonly style="flex:1;font-size:.8rem;font-family:monospace">
+        <button class="btn btn-primary btn-sm" onclick="copyInviteLink()">Copy</button>
+      </div>
+    </div>
+    <div id="invite-members-list" style="margin-top:20px">
+      <h4 style="font-size:.85rem;margin-bottom:10px">Current Members</h4>
+      <div id="members-list-container"></div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+      <button class="btn btn-ghost" onclick="closeInviteModal()">Close</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast">Saved!</div>
 
 <script>
@@ -978,7 +1007,9 @@ var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4
 var projExpanded={},seqOpen={},schedView="all",assetGroupCollapsed={},typeGroupCollapsed={},shotSectionCollapsed={},seqShotCollapsed={};
 var assetLinkSelection=[];
 
-// Pipeline stages by asset type
+var projectMembers = [];
+var userRole = null; 
+
 var PIPELINE_STAGES={
   character:["Design","Modelling","Surfacing","Rigging"],
   prop:["Design","Modelling","Surfacing"],
@@ -1009,6 +1040,10 @@ function showToast(m, type) {
   el.classList.add("show");
   setTimeout(function() { el.classList.remove("show"); }, 2500); 
 }
+
+window.canEditProject = function() {
+  return userRole === 'Owner' || userRole === null;
+};
 
 window.toggleSidebar = function() {
   var sb = document.getElementById("sidebar");
@@ -1044,7 +1079,7 @@ window.doSignIn=async function(){var e=document.getElementById("li-email").value
 window.doSignUp=async function(){var e=document.getElementById("su-email").value.trim(),p=document.getElementById("su-pass").value;if(!e||!p){setMsg("Fill in all fields.","error");return;}if(p.length<6){setMsg("Password min 6 characters.","error");return;}setMsg("Creating account...","");var r=await sb.auth.signUp({email:e,password:p});if(r.error)setMsg(r.error.message,"error");else setMsg("Check your email to confirm.","success");};
 window.doSignOut=async function(){await sb.auth.signOut();};
 
-sb.auth.onAuthStateChange(function(event,session){
+sb.auth.onAuthStateChange(async function(event,session){
   if(session){
     currentUser=session.user;
     document.getElementById("auth-screen").style.display="none";
@@ -1061,7 +1096,14 @@ sb.auth.onAuthStateChange(function(event,session){
     }
     calYear=today.getFullYear();calMonth=today.getMonth();
     ganttStart=new Date(today.getFullYear(),today.getMonth(),1);
-    loadAll();
+    
+    var params = new URLSearchParams(window.location.search);
+    var inviteCode = params.get("invite");
+    if(inviteCode) {
+      await acceptInvite(inviteCode);
+    } else {
+      loadAll();
+    }
   } else {
     currentUser=null;
     document.getElementById("auth-screen").style.display="flex";
@@ -1069,12 +1111,57 @@ sb.auth.onAuthStateChange(function(event,session){
   }
 });
 
+window.acceptInvite = async function(code) {
+  var r = await sb.from("project_invites").select("*").eq("invite_code", code).single();
+  if(r.error || !r.data) {
+    showToast("Invalid or expired invite", "error");
+    window.history.replaceState({}, document.title, window.location.pathname);
+    loadAll();
+    return;
+  }
+  
+  var invite = r.data;
+  var existing = await sb.from("project_members").select("*").eq("project_id", invite.project_id).eq("user_id", currentUser.id).single();
+  
+  if(existing.data) {
+    showToast("You're already a member of this project");
+    window.history.replaceState({}, document.title, window.location.pathname);
+    loadAll();
+    return;
+  }
+  
+  var role = invite.role || prompt("Enter your role (e.g. Animator, Modeller):");
+  if(!role) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    loadAll();
+    return;
+  }
+  
+  await sb.from("project_members").insert({
+    project_id: invite.project_id,
+    user_id: currentUser.id,
+    role: role,
+    invited_by: invite.created_by,
+    accepted_at: new Date().toISOString()
+  });
+  
+  await sb.from("project_invites").update({ uses: invite.uses + 1 }).eq("id", invite.id);
+  
+  showToast("Welcome to the project!");
+  window.history.replaceState({}, document.title, window.location.pathname);
+  loadAll();
+};
+
 async function loadAll(){
   var r=await sb.from("projects").select("*").eq("user_id",currentUser.id).order("created_at",{ascending:true});
   if(r.error){console.error(r.error);return;}
   projects=r.data||[];
   if(projects.length){
     var pids=projects.map(function(p){return p.id;});
+    
+    var rMembers = await sb.from("project_members").select("*").in("project_id", pids);
+    projectMembers = rMembers.data || [];
+    
     var rs=await sb.from("sequences").select("*").in("project_id",pids).order("code",{ascending:true});
     sequences=rs.data||[];
     var rsh=await sb.from("shots").select("*").in("project_id",pids).order("code",{ascending:true});
@@ -1084,6 +1171,12 @@ async function loadAll(){
   var found=projects.find(function(p){return p.id===lastId;});
   if(found){activeProject=found;projExpanded[found.id]=true;}
   else if(projects.length>0){activeProject=projects[0];projExpanded[projects[0].id]=true;}
+  
+  if(activeProject) {
+    var membership = projectMembers.find(function(m){ return m.project_id === activeProject.id && m.user_id === currentUser.id; });
+    userRole = membership ? membership.role : null;
+  }
+  
   renderSidebar();
   if(activeProject){setHeaderProject(activeProject);showTab("schedule");loadTasks();}
   else showNoProject();
@@ -1110,19 +1203,25 @@ function renderSidebar(){
         html+='<span class="seq-arrow'+(isSeqOpen?" open":"")+'">&#9658;</span>';
         html+='<span class="seq-code">'+seq.code+'</span>';
         if(seq.name)html+='<span class="seq-name-lbl">'+seq.name+'</span>';
-        html+='<span class="seq-btns"><button class="tree-btn" onclick="openSeqModal(\''+seq.id+'\',\''+p.id+'\');event.stopPropagation()">&#9998;</button><button class="tree-btn" onclick="deleteSeq(\''+seq.id+'\');event.stopPropagation()">&#215;</button></span></div>';
+        html+='<span class="seq-btns">';
+        if(canEditProject()) html+='<button class="tree-btn" onclick="openSeqModal(\''+seq.id+'\',\''+p.id+'\');event.stopPropagation()">&#9998;</button><button class="tree-btn" onclick="deleteSeq(\''+seq.id+'\');event.stopPropagation()">&#215;</button>';
+        html+='</span></div>';
         if(isSeqOpen){
           seqShots.forEach(function(sh){
             var isActiveShot=activeShot&&activeShot.id===sh.id;
-            html+='<div class="shot-row'+(isActiveShot?" active":"")+'" onclick="openShot(\''+sh.id+'\')"><span class="shot-sdot" style="background:'+shotStatusColor(sh.status)+'"></span><span class="shot-code-lbl">'+sh.code+'</span>'+(sh.description?'<span class="shot-desc-lbl">'+sh.description+'</span>':'')+'<button class="shot-del-btn" onclick="deleteShot(\''+sh.id+'\');event.stopPropagation()">&#215;</button></div>';
+            html+='<div class="shot-row'+(isActiveShot?" active":"")+'" onclick="openShot(\''+sh.id+'\')"><span class="shot-sdot" style="background:'+shotStatusColor(sh.status)+'"></span><span class="shot-code-lbl">'+sh.code+'</span>'+(sh.description?'<span class="shot-desc-lbl">'+sh.description+'</span>':'');
+            if(canEditProject()) html+='<button class="shot-del-btn" onclick="deleteShot(\''+sh.id+'\');event.stopPropagation()">&#215;</button>';
+            html+='</div>';
           });
-          html+='<button class="add-shot-row" onclick="openShotModal(\''+seq.id+'\');event.stopPropagation()">+ Add Shot</button>';
+          if(canEditProject()) html+='<button class="add-shot-row" onclick="openShotModal(\''+seq.id+'\');event.stopPropagation()">+ Add Shot</button>';
         }
       });
-      html+='<button class="add-seq-row" onclick="openSeqModal(null,\''+p.id+'\');event.stopPropagation()">+ Add Sequence</button></div>';
+      if(canEditProject()) html+='<button class="add-seq-row" onclick="openSeqModal(null,\''+p.id+'\');event.stopPropagation()">+ Add Sequence</button>';
+      html+='</div>';
     }
   });
   list.innerHTML=html;
+  document.querySelectorAll(".sb-new-proj, .sb-new-proj-c").forEach(el => el.style.display = canEditProject() ? "" : "none");
 }
 
 window.toggleProjExpand=function(pid,e){e.stopPropagation();projExpanded[pid]=!projExpanded[pid];renderSidebar();};
@@ -1131,14 +1230,19 @@ window.selectProject=function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
   if(activeProject&&activeProject.id===id){ projExpanded[id]=!projExpanded[id];renderSidebar();return; }
   if(activeShot)backToProject();
-  activeProject=p;projExpanded[id]=true;
+  activeProject=p;
+  
+  var membership = projectMembers.find(function(m){ return m.project_id === p.id && m.user_id === currentUser.id; });
+  userRole = membership ? membership.role : null;
+  
+  projExpanded[id]=true;
   localStorage.setItem("celio-proj-"+currentUser.id,id);
   setHeaderProject(p);renderSidebar();showShotPage(false);showTab("schedule");loadTasks();
   if(isMobile())closeMobileSidebar();
 };
 function setHeaderProject(p){
   document.getElementById("hdr-bc").innerHTML='<div class="proj-badge"><span class="dot" style="background:'+p.color+'"></span><span>'+p.name+'</span></div>';
-  document.getElementById("hdr-actions").innerHTML='<button class="btn btn-primary" onclick="openModal(null)">+ Add Task</button>';
+  document.getElementById("hdr-actions").innerHTML= canEditProject() ? '<button class="btn btn-primary" onclick="openModal(null)">+ Add Task</button>' : '';
   document.getElementById("no-proj").style.display="none";
   document.getElementById("nav-tabs").style.display="";
 }
@@ -1181,7 +1285,13 @@ window.openShot=async function(id){
   if(isMobile())closeMobileSidebar();
   var seq=sequences.find(function(x){return x.id===sh.sequence_id;});
   var proj=projects.find(function(x){return x.id===sh.project_id;})||activeProject;
-  if(!activeProject||activeProject.id!==sh.project_id){activeProject=proj;projExpanded[proj.id]=true;localStorage.setItem("celio-proj-"+currentUser.id,proj.id);}
+  if(!activeProject||activeProject.id!==sh.project_id){
+    activeProject=proj;
+    var membership = projectMembers.find(function(m){ return m.project_id === proj.id && m.user_id === currentUser.id; });
+    userRole = membership ? membership.role : null;
+    projExpanded[proj.id]=true;
+    localStorage.setItem("celio-proj-"+currentUser.id,proj.id);
+  }
   document.getElementById("hdr-bc").innerHTML='<div class="breadcrumb"><span class="bc-proj" onclick="backToProject()">'+proj.name+'</span><span class="bc-sep">/</span><span class="bc-seq">'+(seq?seq.code:"")+'</span><span class="bc-sep">/</span><span class="bc-shot">'+sh.code+'</span></div>';
   document.getElementById("hdr-actions").innerHTML='<button class="btn btn-ghost btn-sm" onclick="backToProject()">&#8592; Back</button>';
   document.getElementById("sp-code").textContent=sh.code;
@@ -1213,6 +1323,7 @@ function showShotPage(show){
 
 window.saveShotField=async function(field,value){
   if(!activeShot)return;
+  if(!canEditProject()) { showToast("You do not have permission to edit this shot.", "error"); return; }
   var payload={};payload[field]=value||null;
   if(field==="frame_count")payload[field]=value?parseInt(value):null;
   await sb.from("shots").update(payload).eq("id",activeShot.id);
@@ -1234,7 +1345,11 @@ async function loadShotTasks(){
 
 function renderShotTasks(){
   var el=document.getElementById("shot-tasks-list");
-  if(!activeShotTasks.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text4);font-size:.8rem">No tasks yet — click + Add Task to assign pipeline work to this shot.</div><button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';return;}
+  if(!activeShotTasks.length){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text4);font-size:.8rem">No tasks yet.</div>' + 
+      (canEditProject() ? '<button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>' : '');
+    return;
+  }
   var html="";
   activeShotTasks.forEach(function(st){
     var vNum = st.version || 1;
@@ -1245,7 +1360,7 @@ function renderShotTasks(){
     if(st.assignee)html+='<span class="chip" style="font-size:.7rem; margin-right:8px">'+st.assignee+'</span>';
     if(st.due_date)html+='<span style="font-size:.72rem;color:var(--text3); margin-right:8px">'+fmtDate(st.due_date)+'</span>';
     
-    var selHtml = '<select class="shot-status-sel" style="padding:2px 6px; font-size:.7rem; margin-right:8px; border-radius:4px" onchange="updateShotTaskStatus(\''+st.id+'\', this.value)">';
+    var selHtml = '<select class="shot-status-sel" style="padding:2px 6px; font-size:.7rem; margin-right:8px; border-radius:4px" onchange="updateShotTaskStatus(\''+st.id+'\', this.value, \''+st.status+'\', \''+st.assignee+'\')">';
     var opts = [
         {v:"ready", l:"Ready"},{v:"inprogress", l:"In Progress"},
         {v:"review", l:"In Review"},{v:"approved", l:"Approved"},{v:"final", l:"Final"}
@@ -1256,16 +1371,22 @@ function renderShotTasks(){
     selHtml += '</select>';
     
     html+= selHtml;
-    html+='<button class="st-del" onclick="deleteShotTask(\''+st.id+'\')">&#215;</button></div>';
+    if(canEditProject()) html+='<button class="st-del" onclick="deleteShotTask(\''+st.id+'\')">&#215;</button>';
+    html+='</div>';
   });
-  html+='<button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';
+  if(canEditProject()) html+='<button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';
   el.innerHTML=html;
 }
 
-window.updateShotTaskStatus = async function(id, newStatus) {
+window.updateShotTaskStatus = async function(id, newStatus, oldStatus, assignee) {
+  if (!canEditProject() && assignee !== currentUser.email && assignee !== userRole) {
+    showToast("You can only update status on your assigned tasks", "error");
+    renderShotTasks(); 
+    return;
+  }
   var st = activeShotTasks.find(function(x) { return x.id === id; });
   if(!st) return;
-  var oldStatus = st.status;
+  
   var isRevision = (oldStatus === "review" || oldStatus === "approved" || oldStatus === "final") && (newStatus === "inprogress" || newStatus === "ready");
   var newVer = st.version || 1;
   if (isRevision) newVer++;
@@ -1377,8 +1498,9 @@ function renderShotAssets(assetTasks){
     }
   }
 
-  if(!hasLinked){html='<div style="padding:14px 16px;font-size:.8rem;color:var(--text4)">No assets linked yet. Click + Link Asset to add.</div>';}
-  el.innerHTML=html+'<button class="add-asset-link-btn" onclick="openAssetLinkModal()">+ Link Asset</button>';
+  if(!hasLinked){html='<div style="padding:14px 16px;font-size:.8rem;color:var(--text4)">No assets linked yet.</div>';}
+  if(canEditProject()) html+='<button class="add-asset-link-btn" onclick="openAssetLinkModal()">+ Link Asset</button>';
+  el.innerHTML=html;
 }
 
 window.openAssetLinkModal=function(){
@@ -1415,9 +1537,17 @@ window.saveAssetLinks=async function(){
 
 async function loadTasks(){
   if(!activeProject)return;
-  var r=await sb.from("tasks").select("*").eq("user_id",currentUser.id).eq("project_id",activeProject.id).order("due_date",{ascending:true,nullsFirst:false});
+  var r=await sb.from("tasks").select("*").eq("project_id",activeProject.id).order("due_date",{ascending:true,nullsFirst:false});
   if(r.error){console.error(r.error);return;}
   tasks=r.data||[];
+  
+  if(!canEditProject() && currentUser) {
+    var userEmail = currentUser.email;
+    tasks = tasks.filter(function(t){
+      return t.lead === userEmail || t.handoff_to === userEmail || t.category !== 'asset'; 
+    });
+  }
+  
   var pids=projects.map(function(p){return p.id;});
   var rshots=await sb.from("shots").select("*").in("project_id",pids).order("code",{ascending:true});
   if(!rshots.error){shots=rshots.data||[];}
@@ -1463,9 +1593,16 @@ function renderAssetSections(assetTasks){
   var secWrap=document.createElement("div");secWrap.className="asset-section";
   var secHdr=document.createElement("div");secHdr.className="asset-section-hdr";
   var h2=document.createElement("h2");h2.innerHTML="&#127912; Asset Pipeline";
-  var addBtn=document.createElement("button");addBtn.className="btn btn-primary btn-sm";
-  addBtn.textContent="+ New Asset";addBtn.onclick=function(){openModal(null,"asset");};
-  secHdr.appendChild(h2);secHdr.appendChild(addBtn);secWrap.appendChild(secHdr);
+  
+  if (canEditProject()) {
+    var addBtn=document.createElement("button");addBtn.className="btn btn-primary btn-sm";
+    addBtn.textContent="+ New Asset";addBtn.onclick=function(){openModal(null,"asset");};
+    secHdr.appendChild(h2);secHdr.appendChild(addBtn);
+  } else {
+    secHdr.appendChild(h2);
+  }
+  
+  secWrap.appendChild(secHdr);
   if(!assetTasks.length){
     var empty=document.createElement("div");empty.style.cssText="padding:24px;text-align:center;color:var(--text4);font-size:.82rem";
     empty.textContent="No asset tasks yet.";secWrap.appendChild(empty);container.appendChild(secWrap);return;
@@ -1488,9 +1625,13 @@ function renderAssetSections(assetTasks){
     var typeIcon=document.createElement("span");typeIcon.innerHTML=assetTypeIcon(at);typeIcon.style.fontSize=".9rem";
     var typeLbl=document.createElement("span");typeLbl.style.cssText="font-size:.78rem;font-weight:800;flex:1;";typeLbl.textContent=typeLabels[at];
     var typeCnt=document.createElement("span");typeCnt.style.cssText="font-size:.68rem;color:var(--text4);";typeCnt.textContent=names.length+" asset"+(names.length!==1?"s":"");
+    
     var addTBtn=document.createElement("button");addTBtn.className="btn btn-ghost btn-sm";addTBtn.style.fontSize=".68rem";addTBtn.textContent="+ Add";
     addTBtn.onclick=function(e){e.stopPropagation();openModal(null,"asset",at);};
-    typeRow.appendChild(typeArrow);typeRow.appendChild(typeIcon);typeRow.appendChild(typeLbl);typeRow.appendChild(typeCnt);typeRow.appendChild(addTBtn);
+    
+    typeRow.appendChild(typeArrow);typeRow.appendChild(typeIcon);typeRow.appendChild(typeLbl);typeRow.appendChild(typeCnt);
+    if(canEditProject()) typeRow.appendChild(addTBtn);
+    
     var typeBody=document.createElement("div");typeBody.style.display=isTypeCollapsed?"none":"";
     (function(atype,arr,bdy){typeRow.onclick=function(e){
       if(addTBtn.contains(e.target))return;
@@ -1517,7 +1658,9 @@ function renderAssetSections(assetTasks){
       var delBtn=document.createElement("button");delBtn.className="btn btn-sm btn-del";
       delBtn.style.cssText="font-size:.65rem;padding:2px 7px;flex-shrink:0;";delBtn.textContent="Delete";
       delBtn.onclick=(function(n2,at2){return function(e){e.stopPropagation();deleteAsset(n2,at2);};})(name,at);
-      hdr.appendChild(arrow);hdr.appendChild(nameSpan);hdr.appendChild(badge);hdr.appendChild(pbar);hdr.appendChild(ppct);hdr.appendChild(delBtn);
+      hdr.appendChild(arrow);hdr.appendChild(nameSpan);hdr.appendChild(badge);hdr.appendChild(pbar);hdr.appendChild(ppct);
+      if(canEditProject()) hdr.appendChild(delBtn);
+      
       var cardBody=document.createElement("div");cardBody.style.display=isCollapsed?"none":"";
       (function(k){hdr.onclick=function(e){if(delBtn.contains(e.target))return;
         var show=cardBody.style.display==="none";cardBody.style.display=show?"":"none";
@@ -1542,7 +1685,12 @@ function renderAssetSections(assetTasks){
         [["todo","To Do"],["inprogress","In Progress"],["review","In Review"],["done","Done"]].forEach(function(pair){
           var o=document.createElement("option");o.value=pair[0];o.textContent=pair[1];if(t.status===pair[0])o.selected=true;sel.appendChild(o);
         });
-        sel.onchange=(function(tid,bss,sc,oldStat){return async function(){
+        sel.onchange=(function(tid,bss,sc,oldStat,lead){return async function(){
+          if(!canEditProject() && lead !== currentUser.email && lead !== userRole) {
+            showToast("You can only update status on your assigned tasks", "error");
+            this.value = oldStat;
+            return;
+          }
           var nv=this.value;this.style.cssText=bss+(sc[nv]||sc.todo);
           var tk=tasks.find(function(x){return x.id===tid;});
           var revCount = tk ? (tk.revision_count || 0) : 0;
@@ -1552,12 +1700,15 @@ function renderAssetSections(assetTasks){
           showToast("Updated!");
           updateStats();
           renderAssetSections(tasks.filter(function(t){return t.category==="asset";}));
-        };})(t.id,baseSelStyle,stColors,t.status);
+        };})(t.id,baseSelStyle,stColors,t.status,t.lead);
         c5.appendChild(sel);
+        
         var c6=document.createElement("td");c6.style.whiteSpace="nowrap";
         var eb=document.createElement("button");eb.className="btn btn-ghost btn-sm";eb.style.fontSize=".68rem";eb.textContent="Edit";eb.onclick=(function(tid){return function(){editTask(tid);};})(t.id);
         var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="Remove";db.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
-        c6.appendChild(eb);c6.appendChild(db);
+        
+        if(canEditProject()) { c6.appendChild(eb); c6.appendChild(db); }
+        
         tr.appendChild(c1);tr.appendChild(c2);tr.appendChild(c3);tr.appendChild(c4);tr.appendChild(c5);tr.appendChild(c6);tbody.appendChild(tr);
       });
       tbl.appendChild(tbody);cardBody.appendChild(tbl);
@@ -1585,9 +1736,16 @@ function renderShotSection(){
   var wrap=document.createElement("div");wrap.className="asset-section";
   var sh2=document.createElement("div");sh2.className="asset-section-hdr";
   var shTitle=document.createElement("h2");shTitle.innerHTML="&#127916; Shot Progression";
-  var addSeqBtn=document.createElement("button");addSeqBtn.className="btn btn-ghost btn-sm";addSeqBtn.textContent="+ Add Sequence";
-  addSeqBtn.onclick=function(){openSeqModal(null,activeProject?activeProject.id:null);};
-  sh2.appendChild(shTitle);sh2.appendChild(addSeqBtn);wrap.appendChild(sh2);
+  
+  if (canEditProject()) {
+    var addSeqBtn=document.createElement("button");addSeqBtn.className="btn btn-ghost btn-sm";addSeqBtn.textContent="+ Add Sequence";
+    addSeqBtn.onclick=function(){openSeqModal(null,activeProject?activeProject.id:null);};
+    sh2.appendChild(shTitle);sh2.appendChild(addSeqBtn);
+  } else {
+    sh2.appendChild(shTitle);
+  }
+  
+  wrap.appendChild(sh2);
   if(!projShots.length){
     var emp=document.createElement("div");emp.style.cssText="padding:20px;text-align:center;color:var(--text4);font-size:.82rem";
     emp.textContent="No shots yet. Add a sequence first, then add shots.";wrap.appendChild(emp);container.appendChild(wrap);return;
@@ -1601,9 +1759,13 @@ function renderShotSection(){
     seqLbl.textContent=seq.code+(seq.name?" — "+seq.name:"");
     var seqCnt=document.createElement("span");seqCnt.className="seq-shot-cnt";
     seqCnt.textContent=seqShots.length?seqShots.length+" shot"+(seqShots.length!==1?"s":""):"No shots yet";
+    
     var addShotBtn=document.createElement("button");addShotBtn.className="btn btn-ghost btn-sm";addShotBtn.style.fontSize=".68rem";addShotBtn.textContent="+ Add Shot";
     (function(sqid){addShotBtn.onclick=function(e){e.stopPropagation();openShotModal(sqid);};})(seq.id);
-    seqRow.appendChild(seqArrow);seqRow.appendChild(seqLbl);seqRow.appendChild(seqCnt);seqRow.appendChild(addShotBtn);
+    
+    seqRow.appendChild(seqArrow);seqRow.appendChild(seqLbl);seqRow.appendChild(seqCnt);
+    if(canEditProject()) seqRow.appendChild(addShotBtn);
+    
     var seqBody=document.createElement("div");seqBody.style.display=isSeqCollapsed?"none":"";
     (function(sid,arr,bdy){seqRow.onclick=function(){
       var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
@@ -1715,7 +1877,7 @@ function renderAssetDeliverables(){var a=tasks.filter(function(t){return t.asset
 
 function mkStatusCell(t){var cls={todo:"b-todo",inprogress:"b-inprogress",review:"b-review",done:"b-done"};var lbl={todo:"To Do",inprogress:"In Progress",review:"In Review",done:"Done"};var opts=[{v:"todo",l:"To Do",d:"dot-todo"},{v:"inprogress",l:"In Progress",d:"dot-inprogress"},{v:"review",l:"In Review",d:"dot-review"},{v:"done",l:"Done",d:"dot-done"}];var oh=opts.map(function(o){return'<div class="status-option" onclick="setStatus(\''+t.id+'\',\''+o.v+'\',event)"><span class="dot '+o.d+'"></span>'+o.l+"</div>";}).join("");return'<td><div class="status-cell"><button class="status-badge-btn" onclick="toggleStatusDrop(\''+t.id+'\',event)"><span class="badge '+(cls[t.status]||"b-todo")+'">'+(lbl[t.status]||t.status)+'</span><span class="arr">&#9660;</span></button><div class="status-dropdown" id="sdrop-'+t.id+'">'+oh+"</div></div></td>";}
 window.toggleStatusDrop=function(id,e){e.stopPropagation();var d=document.getElementById("sdrop-"+id);document.querySelectorAll(".status-dropdown.open").forEach(function(x){if(x!==d)x.classList.remove("open");});d.classList.toggle("open");};
-window.setStatus=async function(id,status,e){e.stopPropagation();document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});await sb.from("tasks").update({status:status}).eq("id",id).eq("user_id",currentUser.id);showToast("Status updated!");loadTasks();};
+window.setStatus=async function(id,status,e){e.stopPropagation();document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});await sb.from("tasks").update({status:status}).eq("id",id);showToast("Status updated!");loadTasks();};
 document.addEventListener("click",function(){document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});});
 
 window.toggleAdv = function() {
@@ -1824,7 +1986,6 @@ window.saveTask = async function(){
   else{payload.handoff_to=document.getElementById("f-handoff").value.trim() || null; payload.asset=document.getElementById("f-deliverable").value.trim() || null; payload.asset_url=document.getElementById("f-deliverable-url").value.trim() || null; payload.asset_type=null; payload.asset_name=null; payload.pipeline_stage=null;}
   
   var result;
-  // 1. We add .select() so Supabase hands us back the freshly saved row
   if (editTaskId) {
     result = await sb.from("tasks").update(payload).eq("id", editTaskId).select();
   } else {
@@ -1836,11 +1997,10 @@ window.saveTask = async function(){
     return;
   }
 
-  // 2. We patch the browser's local memory instantly to avoid race conditions
   if (editTaskId) {
     var idx = tasks.findIndex(function(t) { return t.id === editTaskId; });
     if (idx >= 0 && result.data && result.data[0]) {
-      tasks[idx] = result.data[0]; // Overwrite the old memory with the fresh data
+      tasks[idx] = result.data[0]; 
     }
   } else {
     if (result.data && result.data[0]) tasks.push(result.data[0]);
@@ -1849,7 +2009,6 @@ window.saveTask = async function(){
   closeModal();
   showToast("Task saved!");
   
-  // 3. Instantly redraw the current tab without triggering a full database reload
   var active = document.querySelector(".tab-content.active");
   var tabName = active ? active.id.replace("tab-","") : "schedule";
   if(tabName === "schedule") renderSchedule();
@@ -1982,11 +2141,13 @@ function renderGantt(){
           var bar=document.createElement("div");bar.className="gantt-bar "+ganttBarCls(t);
           bar.style.left=(vs*COL_W)+"px";bar.style.width=((ve-vs+1)*COL_W-4)+"px";
           bar.textContent=lbl;bar.title=lbl+" | Due: "+fmtDate(t.due_date);
-          var lh2=document.createElement("div");lh2.className="gantt-resize-handle-left";bar.appendChild(lh2);
-          var rh=document.createElement("div");rh.className="gantt-resize-handle";bar.appendChild(rh);
-          mkDraggable(bar,row,t,si,ei,numDays,som,"move");
-          mkDraggable(lh2,row,t,si,ei,numDays,som,"left");
-          mkDraggable(rh,row,t,si,ei,numDays,som,"right");
+          if (canEditProject() || t.lead === currentUser.email) {
+            var lh2=document.createElement("div");lh2.className="gantt-resize-handle-left";bar.appendChild(lh2);
+            var rh=document.createElement("div");rh.className="gantt-resize-handle";bar.appendChild(rh);
+            mkDraggable(bar,row,t,si,ei,numDays,som,"move");
+            mkDraggable(lh2,row,t,si,ei,numDays,som,"left");
+            mkDraggable(rh,row,t,si,ei,numDays,som,"right");
+          }
           row.appendChild(bar);
         }
       },!tasksCollapsed);
@@ -2049,24 +2210,27 @@ function renderGantt(){
             bar.style.left=(vs*COL_W)+"px";bar.style.width=((ve-vs+1)*COL_W-4)+"px";
             var lbl=sh.code+(sh.description?" \u2014 "+sh.description:"");
             bar.textContent=lbl;bar.title=lbl+" | Due: "+fmtDate(sh.due_date);
-            bar.style.cursor="grab";
-            bar.addEventListener("mousedown",function(e){
-              if(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left"))return;
-              e.preventDefault();bar.style.cursor="grabbing";
-              var startX=e.clientX,cs=si,ce=ei,sp=ce-cs;
-              function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W);var ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));var ne=ns+sp;bar.style.left=(ns*COL_W)+"px";}
-              async function onUp(ev){
-                document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);
-                bar.style.cursor="grab";
-                var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;
-                var ns=Math.max(0,Math.min(numDays-1-sp,cs+dd)),ne=ns+sp;
-                var nsd=new Date(som.getTime()+ns*86400000),ned=new Date(som.getTime()+ne*86400000);
-                await sb.from("shots").update({start_date:fmtYMD(nsd),due_date:fmtYMD(ned)}).eq("id",sh.id);
-                sh.start_date=fmtYMD(nsd);sh.due_date=fmtYMD(ned);
-                showToast("Shot dates updated!");renderGantt();
-              }
-              document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);
-            });
+            
+            if (canEditProject()) {
+              bar.style.cursor="grab";
+              bar.addEventListener("mousedown",function(e){
+                if(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left"))return;
+                e.preventDefault();bar.style.cursor="grabbing";
+                var startX=e.clientX,cs=si,ce=ei,sp=ce-cs;
+                function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W);var ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));var ne=ns+sp;bar.style.left=(ns*COL_W)+"px";}
+                async function onUp(ev){
+                  document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);
+                  bar.style.cursor="grab";
+                  var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;
+                  var ns=Math.max(0,Math.min(numDays-1-sp,cs+dd)),ne=ns+sp;
+                  var nsd=new Date(som.getTime()+ns*86400000),ned=new Date(som.getTime()+ne*86400000);
+                  await sb.from("shots").update({start_date:fmtYMD(nsd),due_date:fmtYMD(ned)}).eq("id",sh.id);
+                  sh.start_date=fmtYMD(nsd);sh.due_date=fmtYMD(ned);
+                  showToast("Shot dates updated!");renderGantt();
+                }
+                document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);
+              });
+            }
             row.appendChild(bar);
           }
         },!seqCollapsed);
@@ -2080,25 +2244,20 @@ function renderGantt(){
   inner.innerHTML="";inner.appendChild(labelsDiv);inner.appendChild(chartDiv);
 }
 
-function mkDraggable(el,row,task,origStart,origEnd,numDays,startOfMonth,mode){el.addEventListener("mousedown",function(e){if(mode==="move"&&(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left")))return;e.preventDefault();var bar=row.querySelector(".gantt-bar");bar.classList.add("dragging");var startX=e.clientX,cs=origStart,ce=origEnd;function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W),ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));bar.style.left=(ns*COL_W)+"px";bar.style.width=((ne-ns+1)*COL_W-4)+"px";}async function onUp(ev){document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);bar.classList.remove("dragging");var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;var ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));var nsd=new Date(startOfMonth.getTime()+ns*86400000),ned=new Date(startOfMonth.getTime()+ne*86400000);var payload={due_date:fmtYMD(ned)};if(task.start_date||mode!=="right")payload.start_date=fmtYMD(nsd);await sb.from("tasks").update(payload).eq("id",task.id).eq("user_id",currentUser.id);showToast("Dates updated!");loadTasks();}document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);});}
+function mkDraggable(el,row,task,origStart,origEnd,numDays,startOfMonth,mode){el.addEventListener("mousedown",function(e){if(mode==="move"&&(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left")))return;e.preventDefault();var bar=row.querySelector(".gantt-bar");bar.classList.add("dragging");var startX=e.clientX,cs=origStart,ce=origEnd;function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W),ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));bar.style.left=(ns*COL_W)+"px";bar.style.width=((ne-ns+1)*COL_W-4)+"px";}async function onUp(ev){document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);bar.classList.remove("dragging");var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;var ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));var nsd=new Date(startOfMonth.getTime()+ns*86400000),ned=new Date(startOfMonth.getTime()+ne*86400000);var payload={due_date:fmtYMD(ned)};if(task.start_date||mode!=="right")payload.start_date=fmtYMD(nsd);await sb.from("tasks").update(payload).eq("id",task.id);showToast("Dates updated!");loadTasks();}document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);});}
 window.ganttPrev=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()-1,1);renderGantt();};
 window.ganttNext=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,1);renderGantt();};
 window.ganttToday=function(){ganttStart=new Date(today.getFullYear(),today.getMonth(),1);renderGantt();};
 
 window.populateTeamDropdowns = function() {
   if (!activeProject) return;
-  // Find all tasks categorized as "team"
   var team = tasks.filter(function(t) { return t.category === "team" && t.project_id === activeProject.id; });
-  
-  // Group them by their Role (stored in the lead field)
   var byRole = {};
   team.forEach(function(m) {
     var role = m.lead || "Other";
     if (!byRole[role]) byRole[role] = [];
     byRole[role].push(m.name);
   });
-
-  // Build the HTML with <optgroup> for filtering
   var html = '<option value="">-- Unassigned --</option>';
   Object.keys(byRole).sort().forEach(function(role) {
     html += '<optgroup label="' + role + '">';
@@ -2107,8 +2266,6 @@ window.populateTeamDropdowns = function() {
     });
     html += '</optgroup>';
   });
-
-  // Safely inject options without destroying legacy string data
   function updateSelect(id) {
      var el = document.getElementById(id);
      if (!el) return;
@@ -2119,7 +2276,6 @@ window.populateTeamDropdowns = function() {
      }
      el.value = currentVal;
   }
-
   updateSelect("f-lead");
   updateSelect("f-handoff");
   updateSelect("stf-assignee");
@@ -2138,7 +2294,7 @@ window.openProjectModal=function(id){editProjId=id||null;document.getElementById
 window.closeProjModal=function(){document.getElementById("proj-modal").classList.remove("open");};
 window.saveProject=async function(){var name=document.getElementById("pf-name").value.trim();if(!name){showToast("Please enter a project name.", "error");return;}var payload={name:name,description:document.getElementById("pf-desc").value.trim(),color:selectedColor,user_id:currentUser.id};var r;if(editProjId)r=await sb.from("projects").update(payload).eq("id",editProjId);else r=await sb.from("projects").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}closeProjModal();if(!editProjId&&r.data&&r.data[0]){projects.push(r.data[0]);projExpanded[r.data[0].id]=true;activeProject=r.data[0];localStorage.setItem("celio-proj-"+currentUser.id,r.data[0].id);setHeaderProject(r.data[0]);showTab("schedule");loadTasks();}else{var idx=projects.findIndex(function(p){return p.id===editProjId;});if(idx>=0)projects[idx]=Object.assign(projects[idx],payload);}renderSidebar();showToast("Project saved!");};
 
-["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal"].forEach(function(id){var el=document.getElementById(id);el.addEventListener("click",function(e){if(e.target===el){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal}[id];if(closeFn)closeFn();}});});
+["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal", "invite-modal"].forEach(function(id){var el=document.getElementById(id);el.addEventListener("click",function(e){if(e.target===el){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal,"invite-modal":closeInviteModal}[id];if(closeFn)closeFn();}});});
 
 window.deleteProject=async function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
@@ -2235,6 +2391,67 @@ window.exportCSV = async function(id) {
   showToast("CSV Downloaded!");
 };
 
+window.openInviteModal = async function(projectId) {
+  var project = projects.find(function(p){ return p.id === projectId; });
+  if(!project) return;
+  
+  var teamRoles = tasks.filter(function(t){ return t.category === "team" && t.project_id === projectId; });
+  var roleSet = {};
+  teamRoles.forEach(function(t){ if(t.lead) roleSet[t.lead] = true; });
+  
+  var roleSelect = document.getElementById("invite-role");
+  roleSelect.innerHTML = '<option value="">Let them choose</option>';
+  Object.keys(roleSet).sort().forEach(function(role){ roleSelect.innerHTML += '<option value="' + role + '">' + role + '</option>'; });
+  
+  var r = await sb.from("project_invites").select("*").eq("project_id", projectId).eq("created_by", currentUser.id).gt("expires_at", new Date().toISOString()).single();
+  
+  var inviteCode;
+  if(r.data) {
+    inviteCode = r.data.invite_code;
+  } else {
+    inviteCode = Math.random().toString(36).substring(2, 10);
+    var expires = new Date();
+    expires.setDate(expires.getDate() + 30); 
+    await sb.from("project_invites").insert({ project_id: projectId, invite_code: inviteCode, created_by: currentUser.id, expires_at: expires.toISOString(), max_uses: 999 });
+  }
+  
+  // Safe routing implementation that handles static hosts correctly
+  var inviteUrl = window.location.origin + window.location.pathname + "?invite=" + inviteCode;
+  document.getElementById("invite-link").value = inviteUrl;
+  
+  renderProjectMembers(projectId);
+  document.getElementById("invite-modal").classList.add("open");
+};
+
+window.closeInviteModal = function() { document.getElementById("invite-modal").classList.remove("open"); };
+window.copyInviteLink = function() { var input = document.getElementById("invite-link"); input.select(); document.execCommand("copy"); showToast("Invite link copied!"); };
+
+window.renderProjectMembers = async function(projectId) {
+  var r = await sb.from("project_members").select("*, user:user_id(email)").eq("project_id", projectId);
+  var members = r.data || [];
+  var container = document.getElementById("members-list-container");
+  if(!members.length) { container.innerHTML = '<div style="padding:10px;color:var(--text4);font-size:.8rem">No members yet</div>'; return; }
+  
+  container.innerHTML = "";
+  members.forEach(function(m){
+    var div = document.createElement("div");
+    div.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:8px;border-bottom:1px solid var(--border2)";
+    var info = document.createElement("div");
+    info.innerHTML = '<div style="font-size:.82rem;font-weight:600">' + (m.user && m.user.email ? m.user.email : 'Unknown') + '</div><div style="font-size:.7rem;color:var(--text4)">Role: ' + m.role + '</div>';
+    div.appendChild(info);
+    
+    if(m.role !== 'Owner') {
+      var removeBtn = document.createElement("button");
+      removeBtn.className = "btn btn-sm btn-del";
+      removeBtn.style.fontSize = ".68rem";
+      removeBtn.textContent = "Remove";
+      removeBtn.onclick = (function(mid){ return async function(){ await sb.from("project_members").delete().eq("id", mid); renderProjectMembers(projectId); showToast("Member removed"); }; })(m.id);
+      div.appendChild(removeBtn);
+    }
+    container.appendChild(div);
+  });
+};
+
 window.renderMilestones=function(){
   var projList=document.getElementById("admin-list-projects");
   if(projList){
@@ -2257,9 +2474,19 @@ window.renderMilestones=function(){
       var csvBtn=document.createElement("button");csvBtn.className="btn btn-ghost btn-sm";csvBtn.style.fontSize=".68rem";csvBtn.innerHTML="⬇ CSV";
       csvBtn.onclick=(function(pid){return function(){exportCSV(pid);};})(p.id);
       
+      var inviteBtn = document.createElement("button");inviteBtn.className = "btn btn-ghost btn-sm";inviteBtn.style.fontSize = ".68rem";inviteBtn.innerHTML = "👥 Invite";
+      inviteBtn.onclick = (function(pid){ return function(){ openInviteModal(pid); }; })(p.id);
+
       var delBtn=document.createElement("button");delBtn.className="btn btn-sm btn-del";delBtn.style.fontSize=".68rem";delBtn.textContent="Delete";
       delBtn.onclick=(function(pid){return function(){deleteProject(pid);};})(p.id);
-      entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(csvBtn);entry.appendChild(delBtn);
+      
+      entry.appendChild(dot);entry.appendChild(main);
+      
+      if(canEditProject()) entry.appendChild(editBtn);
+      entry.appendChild(expBtn);
+      entry.appendChild(csvBtn);
+      if(canEditProject()) { entry.appendChild(inviteBtn); entry.appendChild(delBtn); }
+      
       projList.appendChild(entry);
     });
   }
@@ -2289,7 +2516,10 @@ window.renderMilestones=function(){
       eb.onclick=(function(tid,c2){return function(){openAdminModal(c2,tid);};})(t.id,cat);
       var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="✕";
       db.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
-      entry.appendChild(main);entry.appendChild(pri);entry.appendChild(eb);entry.appendChild(db);
+      entry.appendChild(main);entry.appendChild(pri);
+      
+      if(canEditProject()) { entry.appendChild(eb); entry.appendChild(db); }
+      
       cont.appendChild(entry);
     });
   });
@@ -2300,7 +2530,6 @@ window.openAdminModal=function(cat,editId){
   adminCat=cat||null;adminEditId=editId||null;
   var labels={client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Team Member"};
 
-  // Dynamically change labels for Team members
   var isTeam = cat === "team";
   document.getElementById("lbl-af-title").textContent = isTeam ? "Name" : "Title";
   document.getElementById("lbl-af-assignee").textContent = isTeam ? "Role (e.g. Animator, Lighter)" : "Assignee";
@@ -2328,11 +2557,8 @@ window.saveAdminEntry = async function() {
   var title = document.getElementById("af-title").value.trim();
   if (!title) { showToast("Please enter a title.", "error"); return; }
   
-  // Team members don't need real due dates - use a default value to satisfy NOT NULL constraint
   var dueDate = document.getElementById("af-date").value || null;
-  if (adminCat === "team" && !dueDate) {
-    dueDate = "2099-12-31"; // Default far-future date for team roster entries
-  }
+  if (adminCat === "team" && !dueDate) dueDate = "2099-12-31"; 
   
   var payload = {
     name: title, lead: document.getElementById("af-assignee").value.trim() || null,
