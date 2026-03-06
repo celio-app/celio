@@ -987,6 +987,24 @@ var assetLinkSelection=[];
 
 var projectMembers=[],userRole=null;
 
+function getPendingInviteCode() {
+  var url = new URL(window.location.href);
+  var code = url.searchParams.get("invite");
+  if (code) {
+    localStorage.setItem("celio-pending-invite", code);
+    return code;
+  }
+  return localStorage.getItem("celio-pending-invite");
+}
+
+function clearPendingInviteCode() {
+  localStorage.removeItem("celio-pending-invite");
+  var url = new URL(window.location.href);
+  url.searchParams.delete("invite");
+  var qs = url.searchParams.toString();
+  history.replaceState({}, "", url.pathname + (qs ? "?" + qs : "") + url.hash);
+}
+
 // Pipeline stages by asset type
 var PIPELINE_STAGES={
   character:["Design","Modelling","Surfacing","Rigging"],
@@ -1049,8 +1067,43 @@ window.toggleTheme=function(){var html=document.documentElement,isDark=html.getA
 
 function setMsg(m,type){var el=document.getElementById("auth-msg");el.textContent=m;el.className="auth-msg"+(type?" "+type:"");}
 window.switchTab=function(n){document.getElementById("login-form").style.display=n===0?"block":"none";document.getElementById("signup-form").style.display=n===1?"block":"none";document.getElementById("atab0").classList.toggle("active",n===0);document.getElementById("atab1").classList.toggle("active",n===1);setMsg("","");};
-window.doSignIn=async function(){var e=document.getElementById("li-email").value.trim(),p=document.getElementById("li-pass").value;if(!e||!p){setMsg("Please enter email and password.","error");return;}setMsg("Signing in...","");var r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error)setMsg(r.error.message,"error");};
-window.doSignUp=async function(){var e=document.getElementById("su-email").value.trim(),p=document.getElementById("su-pass").value;if(!e||!p){setMsg("Fill in all fields.","error");return;}if(p.length<6){setMsg("Password min 6 characters.","error");return;}setMsg("Creating account...","");var r=await sb.auth.signUp({email:e,password:p});if(r.error)setMsg(r.error.message,"error");else setMsg("Check your email to confirm.","success");};
+
+window.doSignIn=async function(){
+  var e=document.getElementById("li-email").value.trim(),p=document.getElementById("li-pass").value;
+  if(!e||!p){setMsg("Please enter email and password.","error");return;}
+  setMsg("Signing in...","");
+  var r=await sb.auth.signInWithPassword({email:e,password:p});
+  if(r.error)setMsg(r.error.message,"error");
+};
+
+window.doSignUp = async function() {
+  var e = document.getElementById("su-email").value.trim();
+  var p = document.getElementById("su-pass").value;
+
+  if (!e || !p) {
+    setMsg("Fill in all fields.", "error");
+    return;
+  }
+  if (p.length < 6) {
+    setMsg("Password min 6 characters.", "error");
+    return;
+  }
+
+  var pendingInvite = getPendingInviteCode();
+  if (pendingInvite) {
+    localStorage.setItem("celio-pending-invite", pendingInvite);
+  }
+
+  setMsg("Creating account...", "");
+  var r = await sb.auth.signUp({ email: e, password: p });
+
+  if (r.error) {
+    setMsg(r.error.message, "error");
+  } else {
+    setMsg("Account created. Check your email if confirmation is required.", "success");
+  }
+};
+
 window.doSignOut=async function(){await sb.auth.signOut();};
 
 sb.auth.onAuthStateChange(function(event,session){
@@ -1071,12 +1124,10 @@ sb.auth.onAuthStateChange(function(event,session){
     calYear=today.getFullYear();calMonth=today.getMonth();
     ganttStart=new Date(today.getFullYear(),today.getMonth(),1);
     
-    var urlParams = new URLSearchParams(window.location.search);
-    var inviteCode = urlParams.get('invite');
-    if(inviteCode) {
-      loadAll().then(function(){
-        document.getElementById("invite-code-input").value = inviteCode;
-        submitInviteCode();
+    var inviteCode = getPendingInviteCode();
+    if (inviteCode) {
+      loadAll().then(function () {
+        submitInviteCode(inviteCode);
       });
     } else {
       loadAll();
@@ -2738,76 +2789,108 @@ window.handleProjectImport = async function(event) {
   }
 };
 
-// ============================================================
-// INVITE SYSTEM FUNCTIONS
-// ============================================================
+window.submitInviteCode = async function(codeOverride) {
+  var inputEl = document.getElementById("invite-code-input");
+  var code = (codeOverride || (inputEl ? inputEl.value : "") || "").trim();
 
-window.showInviteCodeInput = function() {
-  document.getElementById("invite-code-modal").classList.add("open");
-  setTimeout(function(){ document.getElementById("invite-code-input").focus(); }, 100);
-};
-
-window.closeInviteCodeModal = function() {
-  document.getElementById("invite-code-modal").classList.remove("open");
-  document.getElementById("invite-code-input").value = "";
-};
-
-window.submitInviteCode = async function() {
-  var code = document.getElementById("invite-code-input").value.trim();
-  if(!code) { showToast("Please enter an invite code", "error"); return; }
-  
-  if(!currentUser) {
-    setMsg("Please sign in or create an account first", "error");
-    closeInviteCodeModal();
+  if (!code) {
+    showToast("Please enter an invite code", "error");
     return;
   }
-  
-  var r = await sb.from("project_invites")
+
+  if (!currentUser) {
+    localStorage.setItem("celio-pending-invite", code);
+    setMsg("Please sign in or create an account first", "error");
+    return;
+  }
+
+  localStorage.setItem("celio-pending-invite", code);
+
+  var inviteRes = await sb
+    .from("project_invites")
     .select("*")
     .eq("invite_code", code)
-    .single();
-  
-  if(r.error || !r.data) {
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+
+  if (inviteRes.error || !inviteRes.data) {
     showToast("Invalid or expired invite code", "error");
     return;
   }
-  
-  var invite = r.data;
-  
-  var existing = await sb.from("project_members")
+
+  var invite = inviteRes.data;
+
+  var existingRes = await sb
+    .from("project_members")
     .select("*")
     .eq("project_id", invite.project_id)
     .eq("user_id", currentUser.id)
-    .single();
-  
-  if(existing.data) {
-    showToast("You're already a member of this project!");
-    closeInviteCodeModal();
-    location.reload();
+    .maybeSingle();
+
+  if (existingRes.error && existingRes.error.code !== "PGRST116") {
+    showToast("Could not verify membership: " + existingRes.error.message, "error");
     return;
   }
-  
-  var role = invite.role;
-  if(!role) {
-    role = prompt("What's your role on this project? (e.g. Animator, Modeller, Compositor)");
-    if(!role) return;
+
+  if (!existingRes.data) {
+    var role = invite.role;
+    if (!role) {
+      role = prompt("What's your role on this project? (e.g. Animator, Modeller, Compositor)");
+      if (!role) return;
+    }
+
+    var insertRes = await sb
+      .from("project_members")
+      .insert({
+        project_id: invite.project_id,
+        user_id: currentUser.id,
+        role: role,
+        invited_by: invite.created_by,
+        accepted_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (insertRes.error) {
+      showToast("Could not join project: " + insertRes.error.message, "error");
+      return;
+    }
+
+    var usesRes = await sb
+      .from("project_invites")
+      .update({ uses: (invite.uses || 0) + 1 })
+      .eq("id", invite.id);
+
+    if (usesRes.error) {
+      console.warn("Invite use count update failed:", usesRes.error.message);
+    }
   }
-  
-  await sb.from("project_members").insert({
-    project_id: invite.project_id,
-    user_id: currentUser.id,
-    role: role,
-    invited_by: invite.created_by,
-    accepted_at: new Date().toISOString()
-  });
-  
-  await sb.from("project_invites")
-    .update({ uses: invite.uses + 1 })
-    .eq("id", invite.id);
-  
-  showToast("Welcome to the project!");
+
+  clearPendingInviteCode();
   closeInviteCodeModal();
-  location.reload();
+
+  await loadAll();
+
+  var invitedProject = projects.find(function(p) {
+    return p.id === invite.project_id;
+  });
+
+  if (!invitedProject) {
+    showToast("Joined, but the project is not visible. Check Supabase RLS policies.", "error");
+    return;
+  }
+
+  activeProject = invitedProject;
+  projExpanded[invitedProject.id] = true;
+  localStorage.setItem("celio-proj-" + currentUser.id, invitedProject.id);
+
+  setHeaderProject(invitedProject);
+  renderSidebar();
+  showShotPage(false);
+  showTab("schedule");
+  await loadTasks();
+
+  showToast("Joined project!");
 };
 
 window.openInviteModal = async function(projectId) {
@@ -2890,7 +2973,6 @@ window.copyInviteLink = function() {
 };
 
 window.renderProjectMembers = async function(projectId) {
-  // Always fetches fresh from the DB, so it catches the Owner added by the SQL Trigger
   var r = await sb.from("project_members").select("*").eq("project_id", projectId);
   var members = r.data || [];
   var container = document.getElementById("members-list-container");
@@ -2931,163 +3013,6 @@ window.renderProjectMembers = async function(projectId) {
     
     container.appendChild(div);
   });
-};
-
-window.renderMilestones=function(){
-  var projList=document.getElementById("admin-list-projects");
-  if(projList){
-    projList.innerHTML="";
-    projects.forEach(function(p){
-      var seqCnt=sequences.filter(function(s){return s.project_id===p.id;}).length;
-      var shotCnt=shots.filter(function(s){return s.project_id===p.id;}).length;
-      var entry=document.createElement("div");entry.className="admin-entry";
-      var dot=document.createElement("span");dot.style.cssText="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:"+p.color;
-      var main=document.createElement("div");main.className="admin-entry-main";
-      var nm=document.createElement("div");nm.className="admin-entry-title";nm.textContent=p.name;
-      var mt=document.createElement("div");mt.className="admin-entry-meta";mt.textContent=seqCnt+" sequences · "+shotCnt+" shots";
-      main.appendChild(nm);main.appendChild(mt);
-      var editBtn=document.createElement("button");editBtn.className="btn btn-ghost btn-sm";editBtn.style.fontSize=".68rem";editBtn.textContent="Edit";
-      editBtn.onclick=(function(pid){return function(){openProjectModal(pid);};})(p.id);
-      
-      var expBtn=document.createElement("button");expBtn.className="btn btn-ghost btn-sm";expBtn.style.fontSize=".68rem";expBtn.innerHTML="⬇ Export Archive (JSON)";
-      expBtn.onclick=(function(pid){return function(){exportProject(pid);};})(p.id);
-
-      var csvBtn=document.createElement("button");csvBtn.className="btn btn-ghost btn-sm";csvBtn.style.fontSize=".68rem";csvBtn.innerHTML="⬇ Export Report (CSV)";
-      csvBtn.onclick=(function(pid){return function(){exportCSV(pid);};})(p.id);
-      
-      var inviteBtn=document.createElement("button");inviteBtn.className="btn btn-ghost btn-sm";inviteBtn.style.fontSize=".68rem";inviteBtn.innerHTML="👥 Invite";
-      inviteBtn.onclick=(function(pid){return function(){openInviteModal(pid);};})(p.id);
-      
-      var delBtn=document.createElement("button");delBtn.className="btn btn-sm btn-del";delBtn.style.fontSize=".68rem";delBtn.textContent="Delete";
-      delBtn.onclick=(function(pid){return function(){deleteProject(pid);};})(p.id);
-      entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(csvBtn);entry.appendChild(inviteBtn);entry.appendChild(delBtn);
-      projList.appendChild(entry);
-    });
-  }
-  if(!activeProject)return;
-  ["client","marketing","meetings","team"].forEach(function(cat){
-    var items=tasks.filter(function(t){return t.category===cat&&t.project_id===activeProject.id;});
-    items.sort(function(a,b){var p={high:0,med:1,low:2};if(a.status==="done"&&b.status!=="done")return 1;if(b.status==="done"&&a.status!=="done")return -1;return(p[a.priority]||1)-(p[b.priority]||1);});
-    var cont=document.getElementById("admin-list-"+cat);if(!cont)return;
-    cont.innerHTML="";
-    if(!items.length){var empty=document.createElement("div");empty.className="admin-empty";empty.textContent="No entries yet.";cont.appendChild(empty);return;}
-    items.forEach(function(t){
-      var entry=document.createElement("div");entry.className="admin-entry";
-      var main=document.createElement("div");main.className="admin-entry-main";
-      var title=document.createElement("div");title.className="admin-entry-title";title.textContent=t.name;
-      var meta=document.createElement("div");meta.className="admin-entry-meta";
-      if (cat === "team") {
-        meta.innerHTML = t.lead ? "🎭 Role: " + t.lead : "Team Member";
-      } else {
-        if(t.lead){var a=document.createElement("span");a.textContent="👤 "+t.lead;meta.appendChild(a);}
-        if(t.due_date){var d=daysUntil(t.due_date);var dm=document.createElement("span");dm.style.color=t.status==="done"?"var(--text4)":d<0?"#ef4444":d<=3?"#f59e0b":"var(--text4)";dm.textContent=" 📅 "+(d<0&&t.status!=="done"?Math.abs(d)+"d overdue":fmtDate(t.due_date));meta.appendChild(dm);}
-      }
-      main.appendChild(title);main.appendChild(meta);
-      var priCls={high:"admin-pri-high",med:"admin-pri-med",low:"admin-pri-low"};
-      var pri=document.createElement("span");pri.className="admin-pri "+(priCls[t.priority]||"admin-pri-low");pri.textContent={high:"High",med:"Med",low:"Low"}[t.priority]||"";
-      if (cat === "team") pri.style.display = "none";
-      var eb=document.createElement("button");eb.className="btn btn-ghost btn-sm";eb.style.fontSize=".68rem";eb.textContent="Edit";
-      eb.onclick=(function(tid,c2){return function(){openAdminModal(c2,tid);};})(t.id,cat);
-      var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="✕";
-      db.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
-      entry.appendChild(main);entry.appendChild(pri);entry.appendChild(eb);entry.appendChild(db);
-      cont.appendChild(entry);
-    });
-  });
-};
-
-var adminCat=null,adminEditId=null;
-window.openAdminModal=function(cat,editId){
-  adminCat=cat||null;adminEditId=editId||null;
-  var labels={client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Team Member"};
-
-  var isTeam = cat === "team";
-  document.getElementById("lbl-af-title").textContent = isTeam ? "Name" : "Title";
-  document.getElementById("lbl-af-assignee").textContent = isTeam ? "Role (e.g. Animator, Lighter)" : "Assignee";
-  document.getElementById("wrap-af-date").style.display = isTeam ? "none" : "block";
-  document.getElementById("wrap-af-status").style.display = isTeam ? "none" : "grid";
-
-  if(editId){
-    var t=tasks.find(function(x){return x.id===editId;});
-    if(t){adminCat=t.category;
-      document.getElementById("admin-modal-title").textContent="Edit — "+(labels[t.category]||t.category);
-      document.getElementById("af-title").value=t.name;document.getElementById("af-assignee").value=t.lead||"";
-      document.getElementById("af-date").value=t.due_date||"";document.getElementById("af-priority").value=t.priority||"med";
-      document.getElementById("af-status").value=t.status||"todo";document.getElementById("af-notes").value=t.asset||"";
-    }
-  } else {
-    document.getElementById("admin-modal-title").textContent="New — "+(labels[cat]||cat);
-    document.getElementById("af-title").value="";document.getElementById("af-assignee").value="";
-    document.getElementById("af-date").value="";document.getElementById("af-priority").value="med";
-    document.getElementById("af-status").value="todo";document.getElementById("af-notes").value="";
-  }
-  document.getElementById("admin-modal").classList.add("open");
-};
-window.closeAdminModal=function(){document.getElementById("admin-modal").classList.remove("open");};
-window.saveAdminEntry = async function() {
-  var title = document.getElementById("af-title").value.trim();
-  if (!title) { showToast("Please enter a title.", "error"); return; }
-  
-  var dueDate = document.getElementById("af-date").value || null;
-  if (adminCat === "team" && !dueDate) {
-    dueDate = "2099-12-31"; 
-  }
-  
-  var payload = {
-    name: title, lead: document.getElementById("af-assignee").value.trim() || null,
-    due_date: dueDate, priority: document.getElementById("af-priority").value,
-    status: document.getElementById("af-status").value, category: adminCat,
-    asset: document.getElementById("af-notes").value.trim() || null, user_id: currentUser.id, project_id: activeProject.id
-  };
-  var r;
-  if (adminEditId) r = await sb.from("tasks").update(payload).eq("id", adminEditId).select();
-  else r = await sb.from("tasks").insert(payload).select();
-  if (r.error) { showToast("Database Error: " + r.error.message, "error"); return; }
-  if (adminEditId) {
-    var idx = tasks.findIndex(function(t) { return t.id === adminEditId; });
-    if (idx >= 0 && r.data && r.data[0]) tasks[idx] = r.data[0];
-  } else {
-    if (r.data && r.data[0]) tasks.push(r.data[0]);
-  }
-  closeAdminModal();
-  showToast("Saved!");
-  populateTeamDropdowns();
-  renderMilestones();
-};
-
-window.addEventListener('keydown', function(e) {
-  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
-    e.preventDefault();
-    if(currentUser) openCmd();
-  }
-});
-window.openCmd = function() {
-  document.getElementById('cmd-palette').classList.add('open');
-  document.getElementById('cmd-input').value = '';
-  filterCmd('');
-  setTimeout(function(){ document.getElementById('cmd-input').focus(); }, 50);
-};
-window.closeCmd = function() {
-  document.getElementById('cmd-palette').classList.remove('open');
-};
-window.filterCmd = function(q) {
-  q = q.toLowerCase().trim();
-  var list = document.getElementById('cmd-list');
-  var html = '';
-  if (!activeProject) { list.innerHTML = '<div style="padding:14px;color:var(--text4)">Select a project first.</div>'; return; }
-  
-  var projShots = shots.filter(function(s){ return s.project_id === activeProject.id && (!q || s.code.toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q)); });
-  projShots.forEach(function(s){
-    html += '<div class="cmd-item" onclick="closeCmd(); openShot(\''+s.id+'\')"><span class="cmd-icon">&#127916;</span><div><div style="font-weight:700">'+s.code+'</div><div style="font-size:.7rem;color:var(--text4)">'+(s.description||'Shot')+'</div></div></div>';
-  });
-  
-  var projTasks = tasks.filter(function(t){ return t.project_id === activeProject.id && (!q || t.name.toLowerCase().includes(q) || (t.asset_name||'').toLowerCase().includes(q)); });
-  projTasks.forEach(function(t){
-    html += '<div class="cmd-item" onclick="closeCmd(); editTask(\''+t.id+'\')"><span class="cmd-icon">&#127912;</span><div><div style="font-weight:700">'+t.name+'</div><div style="font-size:.7rem;color:var(--text4)">'+(t.asset_name||t.category)+'</div></div></div>';
-  });
-
-  if(!html) html = '<div style="padding:14px;color:var(--text4)">No results found.</div>';
-  list.innerHTML = html;
 };
 
 window.addEventListener("DOMContentLoaded", function () {
@@ -3131,6 +3056,7 @@ window.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+
 })();
 </script>
 
