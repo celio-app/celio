@@ -2062,42 +2062,58 @@ window.deleteProject=async function(id){
   );
 };
 
-window.exportProject=async function(id){
-  var p=projects.find(function(x){return x.id===id;});if(!p)return;
+window.exportProject = async function(id) {
+  var p = projects.find(function(x) { return x.id === id; });
+  if (!p) return;
   showToast("Preparing export…");
-  var projSeqs=sequences.filter(function(s){return s.project_id===id;});
-  var projShots=shots.filter(function(s){return s.project_id===id;});
-  var projTasks=tasks.filter(function(t){return t.project_id===id;});
-  var shotIds=projShots.map(function(s){return s.id;});
-  var projShotTasks=[];
-  if(shotIds.length){var r=await sb.from("shot_tasks").select("*").in("shot_id",shotIds);projShotTasks=r.data||[];}
-  var pkg={exportedAt:new Date().toISOString(),exportedBy:currentUser.email,project:p,sequences:projSeqs,shots:projShots,tasks:projTasks,shotTasks:projShotTasks};
-  var blob=new Blob([JSON.stringify(pkg,null,2)],{type:"application/json"});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement("a");a.href=url;
-  a.download="celio-"+p.name.replace(/[^a-z0-9]/gi,"-").toLowerCase()+"-"+new Date().toISOString().slice(0,10)+".json";
-  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(url);
+  
+  // 1. Fetch fresh data directly from Supabase for this specific project
+  var rTasks = await sb.from("tasks").select("*").eq("project_id", id);
+  var projTasks = rTasks.data || [];
+  
+  var projSeqs = sequences.filter(function(s) { return s.project_id === id; });
+  var projShots = shots.filter(function(s) { return s.project_id === id; });
+  var shotIds = projShots.map(function(s) { return s.id; });
+  
+  var projShotTasks = [];
+  if (shotIds.length) {
+    var rShotTasks = await sb.from("shot_tasks").select("*").in("shot_id", shotIds);
+    projShotTasks = rShotTasks.data || [];
+  }
+  
+  // 2. Build and download the JSON
+  var pkg = { exportedAt: new Date().toISOString(), exportedBy: currentUser.email, project: p, sequences: projSeqs, shots: projShots, tasks: projTasks, shotTasks: projShotTasks };
+  var blob = new Blob([JSON.stringify(pkg, null, 2)], { type: "application/json" });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a"); a.href = url;
+  a.download = "celio-" + p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() + "-" + new Date().toISOString().slice(0, 10) + ".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   showToast("Downloaded!");
 };
 
-window.exportCSV = function(id) {
+window.exportCSV = async function(id) {
   var p = projects.find(function(x) { return x.id === id; });
   if (!p) return;
-  
   showToast("Preparing CSV...");
   
-  // Gather all relevant project data
-  var projTasks = tasks.filter(function(t) { return t.project_id === id; });
+  // 1. Fetch fresh data directly from Supabase for this specific project
+  var rTasks = await sb.from("tasks").select("*").eq("project_id", id);
+  var projTasks = rTasks.data || [];
+  
   var projShots = shots.filter(function(s) { return s.project_id === id; });
   var shotIds = projShots.map(function(s) { return s.id; });
-  var projShotTasks = shotTasks.filter(function(t) { return shotIds.indexOf(t.shot_id) >= 0; });
   
-  // 1. Set up the Headers
+  var projShotTasks = [];
+  if (shotIds.length) {
+    var rShotTasks = await sb.from("shot_tasks").select("*").in("shot_id", shotIds);
+    projShotTasks = rShotTasks.data || [];
+  }
+  
+  // 2. Set up the Headers
   var csvRows = [
     ["Category", "Sequence", "Shot/Asset", "Task Name", "Assignee", "Start Date", "Due Date", "Status", "Notes"]
   ];
   
-  // Helper function to safely escape commas and quotes inside text fields
   function esc(str) {
     if (!str) return "";
     var s = String(str).replace(/"/g, '""');
@@ -2105,61 +2121,31 @@ window.exportCSV = function(id) {
     return s;
   }
 
-  // 2. Loop through General & Asset Tasks
+  // 3. Loop through General & Asset Tasks
   projTasks.forEach(function(t) {
     var assetRef = t.category === "asset" ? (t.asset_type + ": " + t.asset_name) : (t.category || "general");
-    csvRows.push([
-      esc(t.category),
-      "", // No sequence for general tasks
-      esc(assetRef),
-      esc(t.name || t.pipeline_stage),
-      esc(t.lead),
-      esc(t.start_date),
-      esc(t.due_date),
-      esc(t.status),
-      esc(t.asset_url || t.asset || "")
-    ]);
+    csvRows.push([ esc(t.category), "", esc(assetRef), esc(t.name || t.pipeline_stage), esc(t.lead), esc(t.start_date), esc(t.due_date), esc(t.status), esc(t.asset_url || t.asset || "") ]);
   });
   
-  // 3. Loop through Shot Pipeline Tasks
+  // 4. Loop through Shot Pipeline Tasks
   projShotTasks.forEach(function(t) {
     var sh = projShots.find(function(x) { return x.id === t.shot_id; });
     var seqCode = "";
     var shotCode = sh ? sh.code : "Unknown";
-    
-    // Cross-reference the sequence code
     if (sh && sh.sequence_id) {
       var sq = sequences.find(function(x) { return x.id === sh.sequence_id; });
       if (sq) seqCode = sq.code;
     }
-    
-    csvRows.push([
-      "shot_task",
-      esc(seqCode),
-      esc(shotCode),
-      esc(t.task_type),
-      esc(t.assignee),
-      esc(t.start_date),
-      esc(t.due_date),
-      esc(t.status),
-      esc(t.notes || "")
-    ]);
+    csvRows.push([ "shot_task", esc(seqCode), esc(shotCode), esc(t.task_type), esc(t.assignee), esc(t.start_date), esc(t.due_date), esc(t.status), esc(t.notes || "") ]);
   });
   
-  // 4. Convert to a formatted CSV string
+  // 5. Convert to a formatted CSV string and download
   var csvString = csvRows.map(function(row) { return row.join(","); }).join("\n");
-  
-  // 5. Trigger the browser download
   var blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
   var url = URL.createObjectURL(blob);
-  var a = document.createElement("a");
-  a.href = url;
+  var a = document.createElement("a"); a.href = url;
   a.download = "celio-" + p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() + "-tasks.csv";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
   showToast("CSV Downloaded!");
 };
 
