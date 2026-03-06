@@ -1036,7 +1036,7 @@ window.toggleTheme=function(){var html=document.documentElement,isDark=html.getA
 // AUTH
 function setMsg(m,type){var el=document.getElementById("auth-msg");el.textContent=m;el.className="auth-msg"+(type?" "+type:"");}
 window.switchTab=function(n){document.getElementById("login-form").style.display=n===0?"block":"none";document.getElementById("signup-form").style.display=n===1?"block":"none";document.getElementById("atab0").classList.toggle("active",n===0);document.getElementById("atab1").classList.toggle("active",n===1);setMsg("","");};
-window.doSignIn=async function(){var e=document.getElementById("li-email").value.trim(),p=document.getElementById("li-pass").value;if(!e||p){setMsg("Please enter email and password.","error");return;}setMsg("Signing in...","");var r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error)setMsg(r.error.message,"error");};
+window.doSignIn=async function(){var e=document.getElementById("li-email").value.trim(),p=document.getElementById("li-pass").value;if(!e||!p){setMsg("Please enter email and password.","error");return;}setMsg("Signing in...","");var r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error)setMsg(r.error.message,"error");};
 window.doSignUp=async function(){var e=document.getElementById("su-email").value.trim(),p=document.getElementById("su-pass").value;if(!e||!p){setMsg("Fill in all fields.","error");return;}if(p.length<6){setMsg("Password min 6 characters.","error");return;}setMsg("Creating account...","");var r=await sb.auth.signUp({email:e,password:p});if(r.error)setMsg(r.error.message,"error");else setMsg("Check your email to confirm.","success");};
 window.doSignOut=async function(){await sb.auth.signOut();};
 
@@ -1100,7 +1100,7 @@ function renderSidebar(){
     var isActive=activeProject&&activeProject.id===p.id;
     var isExpanded=!!projExpanded[p.id];
     var projSeqs=sequences.filter(function(s){return s.project_id===p.id;});
-    html+='<div class="proj-row'+(isActive?" active":'">')+'>';
+    html += '<div class="proj-row' + (isActive ? ' active' : '') + '">';
     html+='<div class="proj-row-main" onclick="selectProject(\''+p.id+'\')"><span class="proj-dot" style="background:'+p.color+'"></span><span class="proj-row-name">'+p.name+'</span></div>';
     html+='<span class="proj-chevron'+(isExpanded?" open":"")+'" onclick="toggleProjExpand(\''+p.id+'\',event)">&#9658;</span></div>';
     if(isExpanded){
@@ -1254,17 +1254,17 @@ async function loadShotTasks(){
   if(!activeShot)return;
   var r=await sb.from("shot_tasks").select("*").eq("shot_id",activeShot.id).order("order_index",{ascending:true});
   // Merge: remove old entries for this shot, add fresh ones
-  var sid=activeShot.id;
-  shotTasks=shotTasks.filter(function(t){return t.shot_id!==sid;}).concat(r.data||[]);
+  shotTasks = r.data || [];
   renderShotTasks();
 }
 function renderShotTasks(){
   var el=document.getElementById("shot-tasks-list");
-  if(!shotTasks.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text4);font-size:.8rem">No tasks yet — click + Add Task to assign pipeline work to this shot.</div><button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';return;}
+  var currentShotTasks = shotTasks.filter(function(t) { return t.shot_id === activeShot.id; });
+  if(!currentShotTasks.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text4);font-size:.8rem">No tasks yet — click + Add Task to assign pipeline work to this shot.</div><button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';return;}
   var stsCls={ready:"sts-ready",inprogress:"sts-inprogress",review:"sts-review",approved:"sts-approved",final:"sts-final"};
   var stsLbl={ready:"Ready",inprogress:"In Progress",review:"In Review",approved:"Approved",final:"Final"};
   var html="";
-  shotTasks.forEach(function(st){
+ currentShotTasks.forEach(function(st){
     html+='<div class="shot-task-row">';
     html+='<div style="flex:1;min-width:0"><div class="st-type">'+st.task_type+'</div>';
     if(st.department)html+='<div class="st-dept">'+st.department+'</div></div>';
@@ -1305,7 +1305,7 @@ window.saveShotTask=async function(){
   var type=selectedShotTaskType;
   if(!type){showToast("Please select a task type.", "error");return;}
   if(type==="Custom..."){type=document.getElementById("stf-custom").value.trim();if(!type){showToast("Please enter a custom task name.", "error");return;}}
-  var payload={shot_id:activeShot.id,project_id:activeShot.project_id,user_id:currentUser.id,task_type:type,department:DEPT_MAP[type]||null,assignee:document.getElementById("stf-assignee").value.trim()||null,start_date:document.getElementById("stf-start").value||null,due_date:document.getElementById("stf-due").value||null,status:document.getElementById("stf-status").value,notes:document.getElementById("stf-notes").value.trim()||null,order_index:shotTasks.length};
+  var payload={shot_id:activeShot.id,project_id:activeShot.project_id,user_id:currentUser.id,task_type:type,department:DEPT_MAP[type]||null,assignee:document.getElementById("stf-assignee").value.trim()||null,start_date:document.getElementById("stf-start").value||null,due_date:document.getElementById("stf-due").value||null,status:document.getElementById("stf-status").value,notes:document.getElementById("stf-notes").value.trim()||null,order_index:shotTasks.filter(function(t){return t.shot_id===activeShot.id;}).length};
   var r=await sb.from("shot_tasks").insert(payload).select();
   if(r.error){showToast("Error: "+r.error.message, "error");return;}
   shotTasks=shotTasks.concat(r.data);
@@ -1690,7 +1690,7 @@ window.selectCat=function(cat,el){
   document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.remove("active");});
   el.classList.add("active");
   document.getElementById("asset-fields").style.display=cat==="asset"?"block":"none";
-  document.getElementById("general-extra-fields").style.display="block";
+  document.getElementById("general-extra-fields").style.display=cat==="asset"?"none":"block";
   if(cat==="asset")updatePipelineStages();
 };
 
@@ -1723,7 +1723,7 @@ window.openModal=function(id,forceCat,forceAssetType){
       selectedCat=cat;
       document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.toggle("active",p.dataset.cat===cat);});
       document.getElementById("asset-fields").style.display=cat==="asset"?"block":"none";
-      document.getElementById("general-extra-fields").style.display="block";
+      document.getElementById("general-extra-fields").style.display=cat==="asset"?"none":"block";
       document.getElementById("f-name").value=t.name;document.getElementById("f-lead").value=t.lead;
       document.getElementById("f-start").value=t.start_date||"";document.getElementById("f-due").value=t.due_date||"";
       document.getElementById("f-time").value=t.due_time||"";document.getElementById("f-priority").value=t.priority;
@@ -2046,7 +2046,7 @@ window.deleteProject=async function(id){
       if(shotIds.length)await sb.from("shot_tasks").delete().in("shot_id",shotIds);
       await sb.from("tasks").delete().eq("project_id",id);
       var seqIds=sequences.filter(function(s){return s.project_id===id;}).map(function(s){return s.id;});
-      if(seqIds.length){await sb.from("shots").delete().in("sequence_id",seqIds);await sb.from("sequences").delete().eq("project_id",id);}
+      if(seqIds.length){await sb.from("shots").delete().eq("project_id",id);await sb.from("sequences").delete().eq("project_id",id);}
       await sb.from("projects").delete().eq("id",id);
       projects=projects.filter(function(x){return x.id!==id;});
       sequences=sequences.filter(function(x){return x.project_id!==id;});
@@ -2274,7 +2274,10 @@ window.saveAdminEntry = async function() {
   loadTasks();
 };
 
-document.getElementById('confirm-overlay').addEventListener('click',function(e){if(e.target===this)closeConfirm();});
+window.addEventListener('DOMContentLoaded', function() {
+  var overlay = document.getElementById('confirm-overlay');
+  if (overlay) overlay.addEventListener('click', function(e) { if(e.target===this) closeConfirm(); });
+});
 })();
 </script>
 
@@ -2296,20 +2299,20 @@ document.getElementById('confirm-overlay').addEventListener('click',function(e){
           <button onclick="closeAdminModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">&#215;</button>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px">
-          <div><label class="form-label">Title</label><input id="af-title" class="form-input"></div>
+          <div><label class="flbl">Title</label><input id="af-title" class="inp"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div><label class="form-label">Assignee</label><input id="af-assignee" class="form-input"></div>
-            <div><label class="form-label">Date</label><input id="af-date" class="form-input" type="date"></div>
+            <div><label class="flbl">Assignee</label><input id="af-assignee" class="inp"></div>
+            <div><label class="flbl">Date</label><input id="af-date" class="inp" type="date"></div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <div><label class="form-label">Priority</label>
-              <select id="af-priority" class="form-input"><option value="low">Low</option><option value="med" selected>Medium</option><option value="high">High</option></select>
+            <div><label class="flbl">Priority</label>
+              <select id="af-priority" class="inp"><option value="low">Low</option><option value="med" selected>Medium</option><option value="high">High</option></select>
             </div>
-            <div><label class="form-label">Status</label>
-              <select id="af-status" class="form-input"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Done</option></select>
+            <div><label class="flbl">Status</label>
+              <select id="af-status" class="inp"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Done</option></select>
             </div>
           </div>
-          <div><label class="form-label">Notes</label><textarea id="af-notes" class="form-input" rows="2" style="resize:vertical"></textarea></div>
+          <div><label class="flbl">Notes</label><textarea id="af-notes" class="inp" rows="2" style="resize:vertical"></textarea></div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
           <button class="btn btn-ghost" onclick="closeAdminModal()">Cancel</button>
