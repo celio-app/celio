@@ -1822,8 +1822,9 @@ window.saveTask = async function(){
   else{payload.handoff_to=document.getElementById("f-handoff").value.trim() || null; payload.asset=document.getElementById("f-deliverable").value.trim() || null; payload.asset_url=document.getElementById("f-deliverable-url").value.trim() || null; payload.asset_type=null; payload.asset_name=null; payload.pipeline_stage=null;}
   
   var result;
+  // 1. We add .select() so Supabase hands us back the freshly saved row
   if (editTaskId) {
-    result = await sb.from("tasks").update(payload).eq("id", editTaskId);
+    result = await sb.from("tasks").update(payload).eq("id", editTaskId).select();
   } else {
     result = await sb.from("tasks").insert(payload).select();
   }
@@ -1833,9 +1834,26 @@ window.saveTask = async function(){
     return;
   }
 
+  // 2. We patch the browser's local memory instantly to avoid race conditions
+  if (editTaskId) {
+    var idx = tasks.findIndex(function(t) { return t.id === editTaskId; });
+    if (idx >= 0 && result.data && result.data[0]) {
+      tasks[idx] = result.data[0]; // Overwrite the old memory with the fresh data
+    }
+  } else {
+    if (result.data && result.data[0]) tasks.push(result.data[0]);
+  }
+
   closeModal();
   showToast("Task saved!");
-  loadTasks(); 
+  
+  // 3. Instantly redraw the current tab without triggering a full database reload
+  var active = document.querySelector(".tab-content.active");
+  var tabName = active ? active.id.replace("tab-","") : "schedule";
+  if(tabName === "schedule") renderSchedule();
+  else if(tabName === "calendar") renderCalendar();
+  else if(tabName === "gantt") renderGantt();
+  else if(tabName === "milestones") renderMilestones();
 };
 
 window.deleteTask=async function(id){if(!confirm("Remove this task?"))return;await sb.from("tasks").delete().eq("id",id);showToast("Removed.");loadTasks();};
