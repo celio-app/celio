@@ -957,7 +957,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   </div>
 </div>
 
-<div class="modal-bg" id="cmd-palette" onclick="if(event.target===this)closeCmd()">
+<div class="modal-bg" id="cmd-palette">
   <div class="modal">
     <input class="cmd-input" id="cmd-input" placeholder="Search shots, tasks... (e.g. SH010)" oninput="filterCmd(this.value)" autocomplete="off">
     <div class="cmd-list" id="cmd-list"></div>
@@ -2203,7 +2203,48 @@ window.showTab=function(name){
 
 window.openProjectModal=function(id){editProjId=id||null;document.getElementById("proj-modal-title").textContent=id?"Edit Project":"New Project";selectedColor=id?(projects.find(function(p){return p.id===id;})||{color:"#7c3aed"}).color:"#7c3aed";var row=document.getElementById("color-row");row.innerHTML="";COLORS.forEach(function(c){var sw=document.createElement("div");sw.className="color-swatch"+(c===selectedColor?" selected":"");sw.style.background=c;sw.dataset.color=c;sw.onclick=function(){selectedColor=c;document.querySelectorAll(".color-swatch").forEach(function(s){s.classList.toggle("selected",s.dataset.color===c);});};row.appendChild(sw);});if(id){var p=projects.find(function(x){return x.id===id;});if(p){document.getElementById("pf-name").value=p.name;document.getElementById("pf-desc").value=p.description||"";}}else{document.getElementById("pf-name").value="";document.getElementById("pf-desc").value="";}document.getElementById("proj-modal").classList.add("open");};
 window.closeProjModal=function(){document.getElementById("proj-modal").classList.remove("open");};
-window.saveProject=async function(){var name=document.getElementById("pf-name").value.trim();if(!name){showToast("Please enter a project name.", "error");return;}var payload={name:name,description:document.getElementById("pf-desc").value.trim(),color:selectedColor,user_id:currentUser.id};var r;if(editProjId)r=await sb.from("projects").update(payload).eq("id",editProjId);else r=await sb.from("projects").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}closeProjModal();if(!editProjId&&r.data&&r.data[0]){projects.push(r.data[0]);projExpanded[r.data[0].id]=true;activeProject=r.data[0];localStorage.setItem("celio-proj-"+currentUser.id,r.data[0].id);setHeaderProject(r.data[0]);showTab("schedule");loadTasks();}else{var idx=projects.findIndex(function(p){return p.id===editProjId;});if(idx>=0)projects[idx]=Object.assign(projects[idx],payload);}renderSidebar();showToast("Project saved!");};
+
+window.saveProject=async function(){
+  var name=document.getElementById("pf-name").value.trim();
+  if(!name){showToast("Please enter a project name.", "error");return;}
+  var payload={name:name,description:document.getElementById("pf-desc").value.trim(),color:selectedColor,user_id:currentUser.id};
+  var r;
+  if(editProjId){
+    r=await sb.from("projects").update(payload).eq("id",editProjId).select();
+  } else {
+    r=await sb.from("projects").insert(payload).select();
+  }
+  
+  if(r.error){showToast("Error: "+r.error.message, "error");return;}
+  closeProjModal();
+  
+  if(!editProjId&&r.data&&r.data[0]){
+    // It's a new project. 
+    // Add to project list
+    projects.push(r.data[0]);
+    projExpanded[r.data[0].id]=true;
+    activeProject=r.data[0];
+    
+    // Instantly add Owner to local projectMembers array so they show up in UI
+    // (The SQL Trigger already did this in the DB, this just updates the browser memory)
+    projectMembers.push({
+      project_id: r.data[0].id,
+      user_id: currentUser.id,
+      role: 'Owner'
+    });
+    userRole = 'Owner';
+    
+    localStorage.setItem("celio-proj-"+currentUser.id,r.data[0].id);
+    setHeaderProject(r.data[0]);
+    showTab("schedule");
+    loadTasks();
+  } else {
+    var idx=projects.findIndex(function(p){return p.id===editProjId;});
+    if(idx>=0)projects[idx]=Object.assign(projects[idx],payload);
+  }
+  renderSidebar();
+  showToast("Project saved!");
+};
 
 window.deleteProject=async function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
@@ -2376,6 +2417,7 @@ window.openInviteModal = async function(projectId) {
   var project = projects.find(function(p){ return p.id === projectId; });
   if(!project) return;
   
+  // Populate dropdown with roles from Team Roster
   var teamRoles = tasks.filter(function(t){
     return t.category === "team" && t.project_id === projectId;
   });
@@ -2388,6 +2430,7 @@ window.openInviteModal = async function(projectId) {
     roleSelect.innerHTML += '<option value="' + role + '">' + role + '</option>';
   });
   
+  // Fetch existing active invite
   var r = await sb.from("project_invites")
     .select("*")
     .eq("project_id", projectId)
@@ -2396,22 +2439,46 @@ window.openInviteModal = async function(projectId) {
     .maybeSingle();
   
   var inviteCode;
+  var currentInviteId;
+
   if(r.data) {
+    // Reuse existing invite
     inviteCode = r.data.invite_code;
+    currentInviteId = r.data.id;
+    // Visually update the dropdown to match the database role!
+    if(r.data.role) {
+       roleSelect.value = r.data.role;
+    } else {
+       roleSelect.value = "";
+    }
   } else {
+    // Create new invite
     inviteCode = Math.random().toString(36).substring(2, 10);
     var expires = new Date();
     expires.setDate(expires.getDate() + 90); 
     
-    await sb.from("project_invites").insert({
+    var insertRes = await sb.from("project_invites").insert({
       project_id: projectId,
       invite_code: inviteCode,
-      role: document.getElementById("invite-role").value || null,
+      role: null,
       created_by: currentUser.id,
       expires_at: expires.toISOString(),
       max_uses: 999
-    });
+    }).select();
+
+    if(insertRes.data && insertRes.data[0]) {
+      currentInviteId = insertRes.data[0].id;
+    }
   }
+
+  // Live Sync: Instantly update the database when they change the dropdown!
+  roleSelect.onchange = async function() {
+    if(currentInviteId) {
+      var newRole = this.value || null;
+      await sb.from("project_invites").update({ role: newRole }).eq("id", currentInviteId);
+      showToast("Link updated for role!");
+    }
+  };
   
   var inviteUrl = window.location.origin + window.location.pathname + "?invite=" + inviteCode;
   document.getElementById("invite-link").value = inviteUrl;
@@ -2433,6 +2500,7 @@ window.copyInviteLink = function() {
 };
 
 window.renderProjectMembers = async function(projectId) {
+  // Always fetches fresh from the DB, so it catches the Owner added by the SQL Trigger
   var r = await sb.from("project_members").select("*").eq("project_id", projectId);
   var members = r.data || [];
   var container = document.getElementById("members-list-container");
