@@ -1864,7 +1864,7 @@ window.closeModal=function(){document.getElementById("modal").classList.remove("
 
 window.saveTask = async function(){
   var name = document.getElementById("f-name").value.trim();
-  var lead = document.getElementById("f-lead").value.trim() || null; // Allow null if unassigned
+  var lead = document.getElementById("f-lead").value.trim() || null; 
   
   if(!name){showToast("Please fill in Task Name.", "error");return;}
   if(selectedCat === "asset" && !selectedPipelineStage){showToast("Please select a pipeline stage.", "error");return;}
@@ -2205,8 +2205,6 @@ window.openProjectModal=function(id){editProjId=id||null;document.getElementById
 window.closeProjModal=function(){document.getElementById("proj-modal").classList.remove("open");};
 window.saveProject=async function(){var name=document.getElementById("pf-name").value.trim();if(!name){showToast("Please enter a project name.", "error");return;}var payload={name:name,description:document.getElementById("pf-desc").value.trim(),color:selectedColor,user_id:currentUser.id};var r;if(editProjId)r=await sb.from("projects").update(payload).eq("id",editProjId);else r=await sb.from("projects").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}closeProjModal();if(!editProjId&&r.data&&r.data[0]){projects.push(r.data[0]);projExpanded[r.data[0].id]=true;activeProject=r.data[0];localStorage.setItem("celio-proj-"+currentUser.id,r.data[0].id);setHeaderProject(r.data[0]);showTab("schedule");loadTasks();}else{var idx=projects.findIndex(function(p){return p.id===editProjId;});if(idx>=0)projects[idx]=Object.assign(projects[idx],payload);}renderSidebar();showToast("Project saved!");};
 
-["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal", "invite-modal"].forEach(function(id){var el=document.getElementById(id);el.addEventListener("click",function(e){if(e.target===el){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal,"invite-modal":closeInviteModal}[id];if(closeFn)closeFn();}});});
-
 window.deleteProject=async function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
   showConfirm(
@@ -2408,7 +2406,7 @@ window.openInviteModal = async function(projectId) {
     await sb.from("project_invites").insert({
       project_id: projectId,
       invite_code: inviteCode,
-      role: null,
+      role: document.getElementById("invite-role").value || null,
       created_by: currentUser.id,
       expires_at: expires.toISOString(),
       max_uses: 999
@@ -2634,9 +2632,46 @@ window.filterCmd = function(q) {
   list.innerHTML = html;
 };
 
-window.addEventListener('DOMContentLoaded', function() {
-  var overlay = document.getElementById('confirm-overlay');
-  if (overlay) overlay.addEventListener('click', function(e) { if(e.target===this) closeConfirm(); });
+window.addEventListener("DOMContentLoaded", function () {
+  [
+    "modal",
+    "proj-modal",
+    "seq-modal",
+    "shot-modal",
+    "shot-task-modal",
+    "asset-link-modal",
+    "admin-modal",
+    "invite-code-modal",
+    "invite-modal"
+  ].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+
+    var closeFnMap = {
+      "modal": closeModal,
+      "proj-modal": closeProjModal,
+      "seq-modal": closeSeqModal,
+      "shot-modal": closeShotModal,
+      "shot-task-modal": closeShotTaskModal,
+      "asset-link-modal": closeAssetLinkModal,
+      "admin-modal": closeAdminModal,
+      "invite-code-modal": closeInviteCodeModal,
+      "invite-modal": closeInviteModal
+    };
+
+    el.addEventListener("click", function (e) {
+      if (e.target !== el) return;
+      var closeFn = closeFnMap[id];
+      if (closeFn) closeFn();
+    });
+  });
+
+  var overlay = document.getElementById("confirm-overlay");
+  if (overlay) {
+    overlay.addEventListener("click", function (e) {
+      if (e.target === this) closeConfirm();
+    });
+  }
 });
 })();
 </script>
