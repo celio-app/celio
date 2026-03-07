@@ -2502,16 +2502,11 @@ window.closeAdminModal=function(){document.getElementById("admin-modal").classLi
 window.submitInviteCode = async function(codeOverride) {
   var inputEl = document.getElementById("invite-code-input");
   var code = "";
-
-  if (typeof codeOverride === "string") {
-    code = codeOverride;
-  } else if (inputEl && inputEl.value) {
-    code = inputEl.value;
-  }
-
+  if (typeof codeOverride === "string") { code = codeOverride; } 
+  else if (inputEl && inputEl.value) { code = inputEl.value; }
   code = code.trim();
 
-  if (!code) {
+  if (!code) { 
     var msgEl = document.getElementById("invite-code-msg");
     if (msgEl) {
       msgEl.textContent = "Please enter an invite code.";
@@ -2519,25 +2514,23 @@ window.submitInviteCode = async function(codeOverride) {
     } else {
       showToast("Please enter an invite code", "error");
     }
-    return;
+    return; 
   }
 
   localStorage.setItem("celio-pending-invite", code);
 
-  if (!currentUser) {
+  if (!currentUser) { 
     var msgEl2 = document.getElementById("invite-code-msg");
     if (msgEl2) {
       msgEl2.textContent = "Code saved! Please close this, sign in or create an account, and your invite will process.";
       msgEl2.className = "auth-msg success";
     }
-    return;
+    return; 
   }
 
   try {
     showToast("Verifying invite...");
-
-    var inviteRes = await sb
-      .from("project_invites")
+    var inviteRes = await sb.from("project_invites")
       .select("*")
       .eq("invite_code", code)
       .gt("expires_at", new Date().toISOString())
@@ -2551,8 +2544,7 @@ window.submitInviteCode = async function(codeOverride) {
 
     var invite = inviteRes.data;
 
-    var existingRes = await sb
-      .from("project_members")
+    var existingRes = await sb.from("project_members")
       .select("*")
       .eq("project_id", invite.project_id)
       .eq("user_id", currentUser.id)
@@ -2573,8 +2565,7 @@ window.submitInviteCode = async function(codeOverride) {
         }
       }
 
-      var insertRes = await sb
-        .from("project_members")
+      var insertRes = await sb.from("project_members")
         .insert({
           project_id: invite.project_id,
           user_id: currentUser.id,
@@ -2589,8 +2580,7 @@ window.submitInviteCode = async function(codeOverride) {
         throw new Error("Could not join: " + insertRes.error.message);
       }
 
-      await sb
-        .from("project_invites")
+      await sb.from("project_invites")
         .update({ uses: (invite.uses || 0) + 1 })
         .eq("id", invite.id);
     }
@@ -2964,5 +2954,6 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
+
 
 
