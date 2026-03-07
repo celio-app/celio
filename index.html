@@ -2801,12 +2801,19 @@ window.confirmOk = function(){
 };
 window.showInviteCodeInput = function() {
   var msgEl = document.getElementById("invite-code-msg");
-  if (msgEl) { msgEl.textContent = ""; msgEl.className = "auth-msg"; }
+  if (msgEl) { 
+    msgEl.textContent = ""; 
+    msgEl.className = "auth-msg"; 
+  }
   document.getElementById("invite-code-modal").classList.add("open");
 };
+
 window.closeInviteCodeModal = function() {
   var msgEl = document.getElementById("invite-code-msg");
-  if (msgEl) { msgEl.textContent = ""; msgEl.className = "auth-msg"; }
+  if (msgEl) { 
+    msgEl.textContent = ""; 
+    msgEl.className = "auth-msg"; 
+  }
   document.getElementById("invite-code-modal").classList.remove("open");
 };
 // -----------------------------------
@@ -2957,4 +2964,5 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
+
 
