@@ -37,7 +37,7 @@ body{font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(
 .btn-auth{width:100%;padding:11px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:6px;}
 .auth-msg{text-align:center;font-size:.78rem;margin-top:12px;min-height:18px;}
 .auth-msg.error{color:#ef4444;}.auth-msg.success{color:#10b981;}
-
+h
 /* APP */
 #app-screen{display:none;height:100vh;overflow:hidden;}
 .app-layout{display:flex;height:100vh;}
@@ -2517,15 +2517,30 @@ window.saveAdminEntry = async function() {
   renderMilestones();
 };
 
-window.submitInviteCode = async function(codeOverride) {
-  var inputEl = document.getElementById("invite-code-input");
+var inputEl = document.getElementById("invite-code-input");
   var code = "";
   if (typeof codeOverride === "string") { code = codeOverride; } 
   else if (inputEl && inputEl.value) { code = inputEl.value; }
   code = code.trim();
-  if (!code) { showToast("Please enter an invite code", "error"); return; }
+  
+  if (!code) { 
+    var msgEl = document.getElementById("invite-code-msg");
+    if (msgEl) { msgEl.textContent = "Please enter an invite code."; msgEl.className = "auth-msg error"; }
+    else { showToast("Please enter an invite code", "error"); }
+    return; 
+  }
+  
   localStorage.setItem("celio-pending-invite", code);
-  if (!currentUser) { setMsg("Please sign in or create an account to join.", "error"); return; }
+  
+  if (!currentUser) { 
+    var msgEl = document.getElementById("invite-code-msg");
+    if (msgEl) {
+      msgEl.textContent = "Code saved! Please close this, sign in or create an account, and your invite will process.";
+      msgEl.className = "auth-msg success";
+    }
+    return; 
+  }
+  
   try {
     showToast("Verifying invite...");
     var inviteRes = await sb.from("project_invites").select("*").eq("invite_code", code).gt("expires_at", new Date().toISOString()).maybeSingle();
@@ -2748,13 +2763,17 @@ window.confirmOk = function(){
   window._confirmCb=null;
 };
 window.showInviteCodeInput = function() {
+  var msgEl = document.getElementById("invite-code-msg");
+  if (msgEl) { msgEl.textContent = ""; msgEl.className = "auth-msg"; }
   document.getElementById("invite-code-modal").classList.add("open");
 };
 window.closeInviteCodeModal = function() {
+  var msgEl = document.getElementById("invite-code-msg");
+  if (msgEl) { msgEl.textContent = ""; msgEl.className = "auth-msg"; }
   document.getElementById("invite-code-modal").classList.remove("open");
 };
 // -----------------------------------
-  
+
 window.addEventListener("DOMContentLoaded", function () {
   [
     "modal",
@@ -2850,6 +2869,7 @@ window.addEventListener("DOMContentLoaded", function () {
         <div style="margin-bottom:16px">
           <input id="invite-code-input" class="inp" placeholder="e.g. abc123xyz" style="text-align:center;font-size:1.1rem;letter-spacing:2px">
         </div>
+        <div id="invite-code-msg" class="auth-msg" style="margin-bottom:16px;"></div>
         <div style="display:flex;justify-content:flex-end;gap:10px">
           <button class="btn btn-ghost" onclick="closeInviteCodeModal()">Cancel</button>
           <button class="btn btn-primary" onclick="submitInviteCode()">Join Project</button>
@@ -2900,9 +2920,5 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
-
-        
-
-
 
 
