@@ -2235,6 +2235,8 @@ window.deleteProject=async function(id){
     'Yes, Delete Project',
     async function(){
       showToast("Deleting project...");
+      
+      // 1. Delete all associated data in the database
       var shotIds=shots.filter(function(s){return s.project_id===id;}).map(function(s){return s.id;});
       if(shotIds.length)await sb.from("shot_tasks").delete().in("shot_id",shotIds);
       await sb.from("tasks").delete().eq("project_id",id);
@@ -2242,18 +2244,34 @@ window.deleteProject=async function(id){
       await sb.from("sequences").delete().eq("project_id",id);
       await sb.from("project_invites").delete().eq("project_id",id);
       await sb.from("project_members").delete().eq("project_id",id);
+      
       var res = await sb.from("projects").delete().eq("id",id);
       if (res.error) { showToast("Delete failed: " + res.error.message, "error"); return; }
+      
+      // 2. Remove the project from the local Javascript memory
       projects=projects.filter(function(x){return x.id!==id;});
       sequences=sequences.filter(function(x){return x.project_id!==id;});
       shots=shots.filter(function(x){return x.project_id!==id;});
       tasks=tasks.filter(function(x){return x.project_id!==id;});
+      
+      // 3. If we were looking at the deleted project, switch to another one
       if(activeProject&&activeProject.id===id){
         activeProject=projects.length?projects[0]:null;
-        if(activeProject){uiState.projExpanded[activeProject.id]=true;saveUIState();setHeaderProject(activeProject);showTab("schedule");loadTasks();}
-        else showNoProject();
+        if(activeProject){
+          uiState.projExpanded[activeProject.id]=true;
+          saveUIState();
+          setHeaderProject(activeProject);
+          showTab("schedule");
+          loadTasks();
+        } else {
+          showNoProject();
+        }
       }
-      renderSidebar();showToast("Project deleted.");
+      
+      // 4. Instantly redraw the Sidebar and the Admin page
+      renderSidebar();
+      renderMilestones();
+      showToast("Project deleted.");
     }
   );
 };
@@ -2883,5 +2901,6 @@ window.addEventListener("DOMContentLoaded", function () {
 </html>
 
         
+
 
 
