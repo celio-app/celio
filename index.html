@@ -2223,10 +2223,16 @@ window.saveProject=async function(){
 
 window.deleteProject=async function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
+  
+  if (p.user_id !== currentUser.id) {
+    showToast("Only the project owner can delete this.", "error");
+    return;
+  }
+
   showConfirm(
     'Delete "'+p.name+'"?',
-    'This will permanently remove all sequences, shots, tasks and pipeline stages. This cannot be undone.',
-    'Delete Project',
+    'Are you absolutely sure? This will permanently remove all sequences, shots, and tasks. Have you downloaded an Archive (JSON) backup first?',
+    'Yes, Delete Project',
     async function(){
       showToast("Deleting project...");
       var shotIds=shots.filter(function(s){return s.project_id===id;}).map(function(s){return s.id;});
@@ -2852,3 +2858,4 @@ window.addEventListener("DOMContentLoaded", function () {
 </html>
 
         
+
