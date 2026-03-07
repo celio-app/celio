@@ -573,9 +573,6 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
       <button class="btn-auth" onclick="doSignUp()">Create Account</button>
     </div>
     <div class="auth-msg" id="auth-msg"></div>
-    <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-      <button class="btn-ghost" style="width:100%;padding:10px;font-size:.85rem;color:var(--text3)" onclick="showInviteCodeInput()">Have an invite code? Click here</button>
-    </div>
   </div>
 </div>
 
@@ -1064,19 +1061,7 @@ sb.auth.onAuthStateChange(function(event,session){
     }
     calYear=today.getFullYear();calMonth=today.getMonth();
     ganttStart=new Date(today.getFullYear(),today.getMonth(),1);
-    
-    // Check for invite code in query parameter
-    var urlParams = new URLSearchParams(window.location.search);
-    var inviteCode = urlParams.get('invite');
-    if(inviteCode) {
-      // Auto-accept invite after loading
-      loadAll().then(function(){
-        submitInviteCode();
-        document.getElementById("invite-code-input").value = inviteCode;
-      });
-    } else {
-      loadAll();
-    }
+    loadAll();
   } else {
     currentUser=null;
     document.getElementById("auth-screen").style.display="flex";
@@ -1085,17 +1070,11 @@ sb.auth.onAuthStateChange(function(event,session){
 });
 
 async function loadAll(){
-  // Load projects where user is owner OR invited member
-  var r=await sb.from("projects").select("*").order("created_at",{ascending:true});
+  var r=await sb.from("projects").select("*").eq("user_id",currentUser.id).order("created_at",{ascending:true});
   if(r.error){console.error(r.error);return;}
   projects=r.data||[];
-  
-  // Load project members for all projects
   if(projects.length){
     var pids=projects.map(function(p){return p.id;});
-    var rMembers=await sb.from("project_members").select("*").in("project_id",pids);
-    projectMembers=rMembers.data||[];
-    
     var rs=await sb.from("sequences").select("*").in("project_id",pids).order("code",{ascending:true});
     sequences=rs.data||[];
     var rsh=await sb.from("shots").select("*").in("project_id",pids).order("code",{ascending:true});
@@ -1106,11 +1085,7 @@ async function loadAll(){
   if(found){activeProject=found;projExpanded[found.id]=true;}
   else if(projects.length>0){activeProject=projects[0];projExpanded[projects[0].id]=true;}
   renderSidebar();
-  if(activeProject){
-    var membership=projectMembers.find(function(m){return m.project_id===activeProject.id&&m.user_id===currentUser.id;});
-    userRole=membership?membership.role:null;
-    setHeaderProject(activeProject);showTab("schedule");loadTasks();
-  }
+  if(activeProject){setHeaderProject(activeProject);showTab("schedule");loadTasks();}
   else showNoProject();
 }
 
@@ -1157,11 +1132,6 @@ window.selectProject=function(id){
   if(activeProject&&activeProject.id===id){ projExpanded[id]=!projExpanded[id];renderSidebar();return; }
   if(activeShot)backToProject();
   activeProject=p;projExpanded[id]=true;
-  
-  // Determine current user's role in this project
-  var membership=projectMembers.find(function(m){return m.project_id===p.id&&m.user_id===currentUser.id;});
-  userRole=membership?membership.role:null;
-  
   localStorage.setItem("celio-proj-"+currentUser.id,id);
   setHeaderProject(p);renderSidebar();showShotPage(false);showTab("schedule");loadTasks();
   if(isMobile())closeMobileSidebar();
@@ -2115,16 +2085,6 @@ window.ganttPrev=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttSt
 window.ganttNext=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,1);renderGantt();};
 window.ganttToday=function(){ganttStart=new Date(today.getFullYear(),today.getMonth(),1);renderGantt();};
 
-window.isProjectOwner = function() {
-  if(!activeProject || !currentUser) return false;
-  var p=projects.find(function(x){return x.id===activeProject.id;});
-  return p && p.user_id===currentUser.id;
-};
-
-window.canEditProject = function() {
-  return isProjectOwner() || userRole === 'Owner';
-};
-
 window.populateTeamDropdowns = function() {
   if (!activeProject) return;
   // Find all tasks categorized as "team"
@@ -2275,206 +2235,6 @@ window.exportCSV = async function(id) {
   showToast("CSV Downloaded!");
 };
 
-// ============================================================
-// INVITE SYSTEM FUNCTIONS
-// ============================================================
-
-window.showInviteCodeInput = function() {
-  document.getElementById("invite-code-modal").classList.add("open");
-  setTimeout(function(){ document.getElementById("invite-code-input").focus(); }, 100);
-};
-
-window.closeInviteCodeModal = function() {
-  document.getElementById("invite-code-modal").classList.remove("open");
-  document.getElementById("invite-code-input").value = "";
-};
-
-window.submitInviteCode = async function() {
-  var code = document.getElementById("invite-code-input").value.trim();
-  if(!code) { showToast("Please enter an invite code", "error"); return; }
-  
-  // Check if user is logged in
-  if(!currentUser) {
-    setMsg("Please sign in or create an account first", "error");
-    closeInviteCodeModal();
-    return;
-  }
-  
-  // Lookup the invite
-  var r = await sb.from("project_invites")
-    .select("*")
-    .eq("invite_code", code)
-    .single();
-  
-  if(r.error || !r.data) {
-    showToast("Invalid or expired invite code", "error");
-    return;
-  }
-  
-  var invite = r.data;
-  
-  // Check if already a member
-  var existing = await sb.from("project_members")
-    .select("*")
-    .eq("project_id", invite.project_id)
-    .eq("user_id", currentUser.id)
-    .single();
-  
-  if(existing.data) {
-    showToast("You're already a member of this project!");
-    closeInviteCodeModal();
-    location.reload();
-    return;
-  }
-  
-  // Determine role
-  var role = invite.role;
-  if(!role) {
-    role = prompt("What's your role on this project? (e.g. Animator, Modeller, Compositor)");
-    if(!role) return;
-  }
-  
-  // Add user as member
-  await sb.from("project_members").insert({
-    project_id: invite.project_id,
-    user_id: currentUser.id,
-    role: role,
-    invited_by: invite.created_by,
-    accepted_at: new Date().toISOString()
-  });
-  
-  // Increment invite uses
-  await sb.from("project_invites")
-    .update({ uses: invite.uses + 1 })
-    .eq("id", invite.id);
-  
-  showToast("Welcome to the project!");
-  closeInviteCodeModal();
-  location.reload();
-};
-
-window.openInviteModal = async function(projectId) {
-  var project = projects.find(function(p){ return p.id === projectId; });
-  if(!project) return;
-  
-  // Populate role dropdown from team roster
-  var teamRoles = tasks.filter(function(t){
-    return t.category === "team" && t.project_id === projectId;
-  });
-  var roleSet = {};
-  teamRoles.forEach(function(t){ if(t.lead) roleSet[t.lead] = true; });
-  
-  var roleSelect = document.getElementById("invite-role");
-  roleSelect.innerHTML = '<option value="">Let them choose their role</option>';
-  Object.keys(roleSet).sort().forEach(function(role){
-    roleSelect.innerHTML += '<option value="' + role + '">' + role + '</option>';
-  });
-  
-  // Generate or fetch existing invite code
-  var r = await sb.from("project_invites")
-    .select("*")
-    .eq("project_id", projectId)
-    .eq("created_by", currentUser.id)
-    .gt("expires_at", new Date().toISOString())
-    .maybeSingle();
-  
-  var inviteCode;
-  if(r.data) {
-    inviteCode = r.data.invite_code;
-  } else {
-    // Create new invite
-    inviteCode = Math.random().toString(36).substring(2, 10);
-    var expires = new Date();
-    expires.setDate(expires.getDate() + 90); // 90 day expiry
-    
-    await sb.from("project_invites").insert({
-      project_id: projectId,
-      invite_code: inviteCode,
-      role: null,
-      created_by: currentUser.id,
-      expires_at: expires.toISOString(),
-      max_uses: 999
-    });
-  }
-  
-  var inviteUrl = window.location.origin + window.location.pathname + "?invite=" + inviteCode;
-  document.getElementById("invite-link").value = inviteUrl;
-  
-  // Load and display current members
-  renderProjectMembers(projectId);
-  
-  document.getElementById("invite-modal").classList.add("open");
-};
-
-window.closeInviteModal = function() {
-  document.getElementById("invite-modal").classList.remove("open");
-};
-
-window.copyInviteLink = function() {
-  var input = document.getElementById("invite-link");
-  input.select();
-  input.setSelectionRange(0, 99999);
-  document.execCommand("copy");
-  showToast("Invite link copied to clipboard!");
-};
-
-window.renderProjectMembers = async function(projectId) {
-  var r = await sb.from("project_members").select("*").eq("project_id", projectId);
-  var members = r.data || [];
-  var container = document.getElementById("members-list-container");
-  
-  if(!members.length) {
-    container.innerHTML = '<div style="padding:14px;color:var(--text4);font-size:.82rem;text-align:center">No members yet — share the invite link to add team members</div>';
-    return;
-  }
-  
-  container.innerHTML = "";
-  members.forEach(function(m){
-    var div = document.createElement("div");
-    div.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border2);gap:10px";
-    
-    var info = document.createElement("div");
-    info.style.flex = "1";
-    
-    // Show current user's email, or just show role for others
-    var displayEmail = m.user_id === currentUser.id ? currentUser.email : 'Team Member';
-    
-    info.innerHTML = '<div style="font-size:.84rem;font-weight:600">' + displayEmail + 
-      '</div><div style="font-size:.72rem;color:var(--text4);margin-top:2px">🎭 ' + m.role + '</div>';
-    
-    div.appendChild(info);
-    
-    if(m.role !== 'Owner') {
-      var removeBtn = document.createElement("button");
-      removeBtn.className = "btn btn-sm btn-del";
-      removeBtn.style.fontSize = ".68rem";
-      removeBtn.textContent = "Remove";
-      removeBtn.onclick = (function(mid, projectId){ return async function(){
-        if(!confirm("Remove this team member from the project?")) return;
-        await sb.from("project_members").delete().eq("id", mid);
-        renderProjectMembers(projectId);
-        showToast("Member removed");
-      }; })(m.id, projectId);
-      div.appendChild(removeBtn);
-    }
-    
-    container.appendChild(div);
-  });
-};
-      removeBtn.textContent = "Remove";
-      removeBtn.onclick = (function(mid, projectId){ return async function(){
-        if(!confirm("Remove this team member from the project?")) return;
-        await sb.from("project_members").delete().eq("id", mid);
-        renderProjectMembers(projectId);
-        showToast("Member removed");
-      }; })(m.id, projectId);
-      div.appendChild(removeBtn);
-    }
-    
-    container.appendChild(div);
-  });
-};
-
 window.renderMilestones=function(){
   var projList=document.getElementById("admin-list-projects");
   if(projList){
@@ -2497,12 +2257,9 @@ window.renderMilestones=function(){
       var csvBtn=document.createElement("button");csvBtn.className="btn btn-ghost btn-sm";csvBtn.style.fontSize=".68rem";csvBtn.innerHTML="⬇ CSV";
       csvBtn.onclick=(function(pid){return function(){exportCSV(pid);};})(p.id);
       
-      var inviteBtn=document.createElement("button");inviteBtn.className="btn btn-ghost btn-sm";inviteBtn.style.fontSize=".68rem";inviteBtn.innerHTML="👥 Invite";
-      inviteBtn.onclick=(function(pid){return function(){openInviteModal(pid);};})(p.id);
-      
       var delBtn=document.createElement("button");delBtn.className="btn btn-sm btn-del";delBtn.style.fontSize=".68rem";delBtn.textContent="Delete";
       delBtn.onclick=(function(pid){return function(){deleteProject(pid);};})(p.id);
-      entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(csvBtn);entry.appendChild(inviteBtn);entry.appendChild(delBtn);
+      entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(csvBtn);entry.appendChild(delBtn);
       projList.appendChild(entry);
     });
   }
@@ -2539,7 +2296,6 @@ window.renderMilestones=function(){
 };
 
 var adminCat=null,adminEditId=null;
-var projectMembers=[],userRole=null;
 window.openAdminModal=function(cat,editId){
   adminCat=cat||null;adminEditId=editId||null;
   var labels={client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Team Member"};
@@ -2678,56 +2434,6 @@ window.addEventListener('DOMContentLoaded', function() {
         <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
           <button class="btn btn-ghost" onclick="closeAdminModal()">Cancel</button>
           <button class="btn btn-primary" onclick="saveAdminEntry()">Save</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-bg" id="invite-code-modal">
-      <div class="modal" style="width:92%;max-width:420px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <h3 style="margin:0">Enter Invite Code</h3>
-          <button onclick="closeInviteCodeModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">×</button>
-        </div>
-        <div style="margin-bottom:16px">
-          <input id="invite-code-input" class="inp" placeholder="e.g. abc123xyz" style="text-align:center;font-size:1.1rem;letter-spacing:2px">
-        </div>
-        <div style="display:flex;justify-content:flex-end;gap:10px">
-          <button class="btn btn-ghost" onclick="closeInviteCodeModal()">Cancel</button>
-          <button class="btn btn-primary" onclick="submitInviteCode()">Join Project</button>
-        </div>
-      </div>
-    </div>
-
-    <div class="modal-bg" id="invite-modal">
-      <div class="modal" style="width:92%;max-width:540px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
-          <h3 style="margin:0">Invite Team Members</h3>
-          <button onclick="closeInviteModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">×</button>
-        </div>
-        
-        <div style="margin-bottom:20px">
-          <label class="flbl">Pre-select Role (Optional)</label>
-          <select id="invite-role" class="inp">
-            <option value="">Let them choose their role</option>
-          </select>
-          <div style="font-size:.72rem;color:var(--text4);margin-top:4px">If you select a role, it will be pre-filled when they join</div>
-        </div>
-        
-        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px">
-          <div style="font-size:.75rem;color:var(--text4);margin-bottom:6px;font-weight:700">SHARE THIS LINK:</div>
-          <div style="display:flex;gap:8px">
-            <input id="invite-link" class="inp" readonly style="flex:1;font-size:.78rem;font-family:monospace">
-            <button class="btn btn-primary btn-sm" onclick="copyInviteLink()">📋 Copy</button>
-          </div>
-        </div>
-        
-        <div id="invite-members-section">
-          <h4 style="font-size:.88rem;margin-bottom:10px;font-weight:700">Current Members</h4>
-          <div id="members-list-container"></div>
-        </div>
-        
-        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
-          <button class="btn btn-ghost" onclick="closeInviteModal()">Close</button>
         </div>
       </div>
     </div>
