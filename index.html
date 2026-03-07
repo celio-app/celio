@@ -2499,76 +2499,113 @@ window.openAdminModal=function(cat,editId){
 
 window.closeAdminModal=function(){document.getElementById("admin-modal").classList.remove("open");};
 
-window.saveAdminEntry = async function() {
-  var title = document.getElementById("af-title").value.trim();
-  if (!title) { showToast("Please enter a title.", "error"); return; }
-  var dueDate = document.getElementById("af-date").value || null;
-  if (adminCat === "team" && !dueDate) { dueDate = "2099-12-31"; }
-  var payload = { name: title, lead: document.getElementById("af-assignee").value.trim() || null, due_date: dueDate, priority: document.getElementById("af-priority").value, status: document.getElementById("af-status").value, category: adminCat, asset: document.getElementById("af-notes").value.trim() || null, user_id: currentUser.id, project_id: activeProject.id };
-  var r;
-  if (adminEditId) r = await sb.from("tasks").update(payload).eq("id", adminEditId).select();
-  else r = await sb.from("tasks").insert(payload).select();
-  if (r.error) { showToast("Database Error: " + r.error.message, "error"); return; }
-  if (adminEditId) { var idx = tasks.findIndex(function(t) { return t.id === adminEditId; }); if (idx >= 0 && r.data && r.data[0]) tasks[idx] = r.data[0]; } 
-  else { if (r.data && r.data[0]) tasks.push(r.data[0]); }
-  closeAdminModal();
-  showToast("Saved!");
-  populateTeamDropdowns();
-  renderMilestones();
-};
-
-var inputEl = document.getElementById("invite-code-input");
+window.submitInviteCode = async function(codeOverride) {
+  var inputEl = document.getElementById("invite-code-input");
   var code = "";
-  if (typeof codeOverride === "string") { code = codeOverride; } 
-  else if (inputEl && inputEl.value) { code = inputEl.value; }
-  code = code.trim();
-  
-  if (!code) { 
-    var msgEl = document.getElementById("invite-code-msg");
-    if (msgEl) { msgEl.textContent = "Please enter an invite code."; msgEl.className = "auth-msg error"; }
-    else { showToast("Please enter an invite code", "error"); }
-    return; 
+
+  if (typeof codeOverride === "string") {
+    code = codeOverride;
+  } else if (inputEl && inputEl.value) {
+    code = inputEl.value;
   }
-  
-  localStorage.setItem("celio-pending-invite", code);
-  
-  if (!currentUser) { 
+
+  code = code.trim();
+
+  if (!code) {
     var msgEl = document.getElementById("invite-code-msg");
     if (msgEl) {
-      msgEl.textContent = "Code saved! Please close this, sign in or create an account, and your invite will process.";
-      msgEl.className = "auth-msg success";
+      msgEl.textContent = "Please enter an invite code.";
+      msgEl.className = "auth-msg error";
+    } else {
+      showToast("Please enter an invite code", "error");
     }
-    return; 
+    return;
   }
-  
+
+  localStorage.setItem("celio-pending-invite", code);
+
+  if (!currentUser) {
+    var msgEl2 = document.getElementById("invite-code-msg");
+    if (msgEl2) {
+      msgEl2.textContent = "Code saved! Please close this, sign in or create an account, and your invite will process.";
+      msgEl2.className = "auth-msg success";
+    }
+    return;
+  }
+
   try {
     showToast("Verifying invite...");
-    var inviteRes = await sb.from("project_invites").select("*").eq("invite_code", code).gt("expires_at", new Date().toISOString()).maybeSingle();
+
+    var inviteRes = await sb
+      .from("project_invites")
+      .select("*")
+      .eq("invite_code", code)
+      .gt("expires_at", new Date().toISOString())
+      .maybeSingle();
+
     if (inviteRes.error) throw new Error("Invite check failed: " + inviteRes.error.message);
-    if (!inviteRes.data) { clearPendingInviteCode(); throw new Error("This invite code is invalid or has expired."); }
+    if (!inviteRes.data) {
+      clearPendingInviteCode();
+      throw new Error("This invite code is invalid or has expired.");
+    }
+
     var invite = inviteRes.data;
-    var existingRes = await sb.from("project_members").select("*").eq("project_id", invite.project_id).eq("user_id", currentUser.id).maybeSingle();
-    if (existingRes.error && existingRes.error.code !== "PGRST116") { throw new Error("Membership check failed: " + existingRes.error.message); }
+
+    var existingRes = await sb
+      .from("project_members")
+      .select("*")
+      .eq("project_id", invite.project_id)
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+
+    if (existingRes.error && existingRes.error.code !== "PGRST116") {
+      throw new Error("Membership check failed: " + existingRes.error.message);
+    }
+
     if (!existingRes.data) {
       var role = invite.role;
       if (!role) {
         role = prompt("What is your role on this project? (e.g. Animator, Modeller, Reviewer)");
-        if (!role) { clearPendingInviteCode(); showToast("Join cancelled."); return; }
+        if (!role) {
+          clearPendingInviteCode();
+          showToast("Join cancelled.");
+          return;
+        }
       }
-      var insertRes = await sb.from("project_members").insert({ project_id: invite.project_id, user_id: currentUser.id, role: role, invited_by: invite.created_by, accepted_at: new Date().toISOString() }).select().single();
-      if (insertRes.error) throw new Error("Could not join: " + insertRes
-    .error.message);
-      
-      // Increment invite uses
-      await sb.from("project_invites").update({ uses: (invite.uses || 0) + 1 }).eq("id", invite.id);
+
+      var insertRes = await sb
+        .from("project_members")
+        .insert({
+          project_id: invite.project_id,
+          user_id: currentUser.id,
+          role: role,
+          invited_by: invite.created_by,
+          accepted_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (insertRes.error) {
+        throw new Error("Could not join: " + insertRes.error.message);
+      }
+
+      await sb
+        .from("project_invites")
+        .update({ uses: (invite.uses || 0) + 1 })
+        .eq("id", invite.id);
     }
 
     clearPendingInviteCode();
     closeInviteCodeModal();
     await loadAll();
 
-    var invitedProject = projects.find(function(p) { return p.id === invite.project_id; });
-    if (!invitedProject) { throw new Error("Joined successfully, but project data is hidden. Check RLS policies."); }
+    var invitedProject = projects.find(function(p) {
+      return p.id === invite.project_id;
+    });
+
+    if (!invitedProject) {
+      throw new Error("Joined successfully, but project data is hidden. Check RLS policies.");
+    }
 
     activeProject = invitedProject;
     uiState.projExpanded[invitedProject.id] = true;
@@ -2920,5 +2957,4 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
-
 
