@@ -32,8 +32,8 @@ body{font-family:"Segoe UI",system-ui,sans-serif;background:var(--bg);color:var(
 .auth-tab.active{background:#7c3aed;color:#fff;}
 .form-row{margin-bottom:14px;}
 .form-row label{display:block;font-size:.73rem;color:var(--text2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px;font-weight:600;}
-.form-row input, .form-row select, .form-row textarea{width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.87rem;outline:none;}
-.form-row input:focus, .form-row select:focus, .form-row textarea:focus{border-color:#7c3aed;}
+.form-row input{width:100%;background:var(--bg4);border:1px solid var(--border);border-radius:8px;padding:10px 13px;color:var(--text);font-size:.87rem;outline:none;}
+.form-row input:focus{border-color:#7c3aed;}
 .btn-auth{width:100%;padding:11px;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:6px;}
 .auth-msg{text-align:center;font-size:.78rem;margin-top:12px;min-height:18px;}
 .auth-msg.error{color:#ef4444;}.auth-msg.success{color:#10b981;}
@@ -705,11 +705,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
       <div class="tab-content" id="tab-milestones" style="display:none">
         <div class="admin-wrap">
           <div class="admin-section">
-            <div class="admin-sec-hdr">
-              <span style="font-size:1.1rem">&#128193;</span>
-              <span class="admin-sec-title">Projects</span>
-              <button class="btn btn-ghost btn-sm" onclick="promptProjectImport()">Import Archive</button>
-            </div>
+            <div class="admin-sec-hdr"><span style="font-size:1.1rem">&#128193;</span><span class="admin-sec-title">Projects</span></div>
             <div class="admin-list" id="admin-list-projects"></div>
           </div>
           <div class="admin-section">
@@ -804,7 +800,172 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   </div>
 </div>
 
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3 id="modal-title">Add Task</h3>
+    <div class="form-row">
+      <label class="flbl">Category</label>
+      <div class="cat-pills">
+        <button class="cat-pill active" data-cat="general" onclick="selectCat('general',this)">&#128203; Milestone / Admin</button>
+        <button class="cat-pill" data-cat="asset" onclick="selectCat('asset',this)">&#127912; Asset Task</button>
+      </div>
+    </div>
+    <div id="asset-fields" style="display:none">
+      <div class="form-row-2">
+        <div>
+          <label class="flbl">Asset Type</label>
+          <select id="f-asset-type" class="inp" onchange="updatePipelineStages()">
+            <option value="character">&#128100; Character</option>
+            <option value="prop">&#128218; Prop</option>
+            <option value="environment">&#127758; Environment</option>
+            <option value="vehicle">&#128663; Vehicle</option>
+            <option value="fx">&#10024; FX Element</option>
+          </select>
+        </div>
+        <div>
+          <label class="flbl">Asset Name</label>
+          <input id="f-asset-name" class="inp" placeholder="e.g. Hero Character">
+        </div>
+      </div>
+      <div class="form-row">
+        <label class="flbl">Pipeline Stage</label>
+        <div class="pipeline-stages" id="pipeline-stages-grid"></div>
+      </div>
+    </div>
+    <div class="form-row"><label class="flbl">Task Name / Notes</label><input id="f-name" class="inp" placeholder="e.g. Final rig sign-off"></div>
+    <div class="form-row"><label class="flbl">Lead / Artist</label><select id="f-lead" class="inp"></select></div>
+    <div class="form-row-2">
+      <div><label class="flbl">Start Date</label><input id="f-start" type="date" class="inp"></div>
+      <div><label class="flbl">Due Date</label><input id="f-due" type="date" class="inp"></div>
+    </div>
+    <div class="form-row-2">
+      <div><label class="flbl">Due Time (optional)</label><input id="f-time" type="time" class="inp"></div>
+      <div><label class="flbl">Priority</label>
+        <select id="f-priority" class="inp"><option value="high">High</option><option value="med" selected>Medium</option><option value="low">Low</option></select>
+      </div>
+    </div>
+    <div class="form-row"><label class="flbl">Status</label>
+      <select id="f-status" class="inp"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="review">In Review</option><option value="done">Done</option></select>
+    </div>
+    <div class="adv-toggle" id="adv-toggle" onclick="toggleAdv()">&#9658; Show Advanced Options</div>
+    <div id="general-extra-fields" style="display:none">
+      <div class="form-row"><label class="flbl">Handoff To (optional)</label><select id="f-handoff" class="inp"></select></div>
+      <div class="form-row-2">
+        <div><label class="flbl">Deliverable Name (optional)</label><input id="f-deliverable" class="inp"></div>
+        <div><label class="flbl">Deliverable URL (optional)</label><input id="f-deliverable-url" class="inp" placeholder="https://..."></div>
+      </div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="proj-modal">
+  <div class="modal" style="width:420px">
+    <h3 id="proj-modal-title">New Project</h3>
+    <div class="form-row"><label class="flbl">Project Name</label><input id="pf-name" class="inp" placeholder="e.g. Season 2 Production"></div>
+    <div class="form-row"><label class="flbl">Description (optional)</label><input id="pf-desc" class="inp" placeholder="Short description"></div>
+    <div class="form-row"><label class="flbl">Project Colour</label><div class="color-row" id="color-row"></div></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeProjModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProject()">Save Project</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="seq-modal">
+  <div class="modal" style="width:420px">
+    <h3 id="seq-modal-title">New Sequence</h3>
+    <div class="form-row">
+      <label class="flbl">Sequence Code</label>
+      <input id="sf-code" class="inp" placeholder="e.g. SQ010">
+      <div class="hint">Use increments of 10 — easier to insert sequences later.</div>
+    </div>
+    <div class="form-row"><label class="flbl">Sequence Name (optional)</label><input id="sf-name" class="inp" placeholder="e.g. Opening Chase"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeSeqModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSeq()">Save Sequence</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="shot-modal">
+  <div class="modal" style="width:420px">
+    <h3>New Shot</h3>
+    <div class="form-row">
+      <label class="flbl">Shot Code</label>
+      <input id="shf-code" class="inp" placeholder="e.g. SH010">
+      <div class="hint">Use increments of 10 — easier to insert shots later.</div>
+    </div>
+    <div class="form-row"><label class="flbl">Description (optional)</label><input id="shf-desc" class="inp" placeholder="e.g. Hero enters the lab"></div>
+    <div class="form-row-2" style="margin-top:8px">
+      <div><label class="flbl">Start Date <span style="font-size:.7rem;color:var(--text4);font-weight:400">(optional)</span></label><input id="shf-start" type="date" class="inp"></div>
+      <div><label class="flbl">Due Date <span style="font-size:.7rem;color:var(--text4);font-weight:400">(for Gantt)</span></label><input id="shf-due" type="date" class="inp"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeShotModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShot()">Save Shot</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="shot-task-modal">
+  <div class="modal" style="width:460px">
+    <h3>Add Shot Task</h3>
+    <div class="form-row">
+      <label class="flbl">Task Type</label>
+      <div class="pipeline-stages" id="shot-task-type-grid"></div>
+    </div>
+    <div class="form-row" id="custom-type-row" style="display:none">
+      <label class="flbl">Custom Task Name</label>
+      <input id="stf-custom" class="inp" placeholder="e.g. Matte Painting">
+    </div>
+    <div class="form-row"><label class="flbl">Assignee</label><select id="stf-assignee" class="inp"></select></div>
+    <div class="form-row-2">
+      <div><label class="flbl">Start Date</label><input id="stf-start" type="date" class="inp"></div>
+      <div><label class="flbl">Due Date</label><input id="stf-due" type="date" class="inp"></div>
+    </div>
+    <div class="form-row"><label class="flbl">Status</label>
+      <select id="stf-status" class="inp">
+        <option value="ready">Ready to Start</option>
+        <option value="inprogress">In Progress</option>
+        <option value="review">Supervisor Review</option>
+        <option value="approved">Approved</option>
+        <option value="final">Final</option>
+      </select>
+    </div>
+    <div class="form-row"><label class="flbl">Notes (optional)</label><input id="stf-notes" class="inp" placeholder="Any notes..."></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeShotTaskModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveShotTask()">Add Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="asset-link-modal">
+  <div class="modal" style="width:460px">
+    <h3>Link Assets to Shot</h3>
+    <p style="font-size:.8rem;color:var(--text3);margin-bottom:14px">Select assets from the schedule that appear in this shot. Their pipeline readiness will show on the shot page.</p>
+    <input class="inp" id="asset-search-inp" placeholder="Search assets..." oninput="filterAssetSearch(this.value)" style="margin-bottom:4px">
+    <div class="asset-search-list" id="asset-search-list"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeAssetLinkModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveAssetLinks()">Save Links</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="cmd-palette" onclick="if(event.target===this)closeCmd()">
+  <div class="modal">
+    <input class="cmd-input" id="cmd-input" placeholder="Search shots, tasks... (e.g. SH010)" oninput="filterCmd(this.value)" autocomplete="off">
+    <div class="cmd-list" id="cmd-list"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast">Saved!</div>
+
 <script>
 (function(){
 var SB_URL="https://uwocrciwfgggnopszpjb.supabase.co";
@@ -817,63 +978,8 @@ var calYear,calMonth,ganttStart;
 var today=new Date();today.setHours(0,0,0,0);
 var COL_W=34,selectedColor="#7c3aed",selectedCat="general",selectedPipelineStage=null,selectedShotTaskType=null;
 var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16","#f97316","#8b5cf6","#64748b","#0ea5e9"];
+var projExpanded={},seqOpen={},schedView="all",assetGroupCollapsed={},typeGroupCollapsed={},shotSectionCollapsed={},seqShotCollapsed={};
 var assetLinkSelection=[];
-var projectMembers=[],userRole=null;
-
-// Centralized UI State Memory
-var uiState = {
-  projExpanded: {},
-  seqOpen: {},
-  typeGroupCollapsed: {},
-  assetGroupCollapsed: {},
-  seqShotCollapsed: {},
-  shotSectionCollapsed: {},
-  ganttCollapsed: { tasks: false, shots: {} },
-  schedView: "all"
-};
-
-function saveUIState() {
-  if (currentUser) {
-    localStorage.setItem("celio_ui_" + currentUser.id, JSON.stringify(uiState));
-  }
-}
-
-function loadUIState() {
-  if (currentUser) {
-    try {
-      var saved = localStorage.getItem("celio_ui_" + currentUser.id);
-      if (saved) {
-        var p = JSON.parse(saved);
-        uiState.projExpanded = p.projExpanded || {};
-        uiState.seqOpen = p.seqOpen || {};
-        uiState.typeGroupCollapsed = p.typeGroupCollapsed || {};
-        uiState.assetGroupCollapsed = p.assetGroupCollapsed || {};
-        uiState.seqShotCollapsed = p.seqShotCollapsed || {};
-        uiState.shotSectionCollapsed = p.shotSectionCollapsed || {};
-        uiState.ganttCollapsed = p.ganttCollapsed || { tasks: false, shots: {} };
-        uiState.schedView = p.schedView || "all";
-      }
-    } catch(e) {}
-  }
-}
-
-function getPendingInviteCode() {
-  var url = new URL(window.location.href);
-  var code = url.searchParams.get("invite");
-  if (code) {
-    localStorage.setItem("celio-pending-invite", code);
-    return code;
-  }
-  return localStorage.getItem("celio-pending-invite");
-}
-
-function clearPendingInviteCode() {
-  localStorage.removeItem("celio-pending-invite");
-  var url = new URL(window.location.href);
-  url.searchParams.delete("invite");
-  var qs = url.searchParams.toString();
-  history.replaceState({}, "", url.pathname + (qs ? "?" + qs : "") + url.hash);
-}
 
 // Pipeline stages by asset type
 var PIPELINE_STAGES={
@@ -937,49 +1043,13 @@ window.toggleTheme=function(){var html=document.documentElement,isDark=html.getA
 
 function setMsg(m,type){var el=document.getElementById("auth-msg");el.textContent=m;el.className="auth-msg"+(type?" "+type:"");}
 window.switchTab=function(n){document.getElementById("login-form").style.display=n===0?"block":"none";document.getElementById("signup-form").style.display=n===1?"block":"none";document.getElementById("atab0").classList.toggle("active",n===0);document.getElementById("atab1").classList.toggle("active",n===1);setMsg("","");};
-
-window.doSignIn=async function(){
-  var e=document.getElementById("li-email").value.trim(),p=document.getElementById("li-pass").value;
-  if(!e||!p){setMsg("Please enter email and password.","error");return;}
-  setMsg("Signing in...","");
-  var r=await sb.auth.signInWithPassword({email:e,password:p});
-  if(r.error)setMsg(r.error.message,"error");
-};
-
-window.doSignUp = async function() {
-  var e = document.getElementById("su-email").value.trim();
-  var p = document.getElementById("su-pass").value;
-
-  if (!e || !p) {
-    setMsg("Fill in all fields.", "error");
-    return;
-  }
-  if (p.length < 6) {
-    setMsg("Password min 6 characters.", "error");
-    return;
-  }
-
-  var pendingInvite = getPendingInviteCode();
-  if (pendingInvite) {
-    localStorage.setItem("celio-pending-invite", pendingInvite);
-  }
-
-  setMsg("Creating account...", "");
-  var r = await sb.auth.signUp({ email: e, password: p });
-
-  if (r.error) {
-    setMsg(r.error.message, "error");
-  } else {
-    setMsg("Account created. Check your email if confirmation is required.", "success");
-  }
-};
-
+window.doSignIn=async function(){var e=document.getElementById("li-email").value.trim(),p=document.getElementById("li-pass").value;if(!e||!p){setMsg("Please enter email and password.","error");return;}setMsg("Signing in...","");var r=await sb.auth.signInWithPassword({email:e,password:p});if(r.error)setMsg(r.error.message,"error");};
+window.doSignUp=async function(){var e=document.getElementById("su-email").value.trim(),p=document.getElementById("su-pass").value;if(!e||!p){setMsg("Fill in all fields.","error");return;}if(p.length<6){setMsg("Password min 6 characters.","error");return;}setMsg("Creating account...","");var r=await sb.auth.signUp({email:e,password:p});if(r.error)setMsg(r.error.message,"error");else setMsg("Check your email to confirm.","success");};
 window.doSignOut=async function(){await sb.auth.signOut();};
 
 sb.auth.onAuthStateChange(function(event,session){
   if(session){
     currentUser=session.user;
-    loadUIState();
     document.getElementById("auth-screen").style.display="none";
     document.getElementById("app-screen").style.display="block";
     document.getElementById("sb-email").textContent=currentUser.email;
@@ -995,10 +1065,14 @@ sb.auth.onAuthStateChange(function(event,session){
     calYear=today.getFullYear();calMonth=today.getMonth();
     ganttStart=new Date(today.getFullYear(),today.getMonth(),1);
     
-    var inviteCode = getPendingInviteCode();
-    if (inviteCode) {
-      loadAll().then(function () {
-        submitInviteCode(inviteCode);
+    // Check for invite code in query parameter
+    var urlParams = new URLSearchParams(window.location.search);
+    var inviteCode = urlParams.get('invite');
+    if(inviteCode) {
+      // Auto-accept invite after loading
+      loadAll().then(function(){
+        submitInviteCode();
+        document.getElementById("invite-code-input").value = inviteCode;
       });
     } else {
       loadAll();
@@ -1011,10 +1085,12 @@ sb.auth.onAuthStateChange(function(event,session){
 });
 
 async function loadAll(){
+  // Load projects where user is owner OR invited member
   var r=await sb.from("projects").select("*").order("created_at",{ascending:true});
   if(r.error){console.error(r.error);return;}
   projects=r.data||[];
   
+  // Load project members for all projects
   if(projects.length){
     var pids=projects.map(function(p){return p.id;});
     var rMembers=await sb.from("project_members").select("*").in("project_id",pids);
@@ -1027,8 +1103,8 @@ async function loadAll(){
   }
   var lastId=localStorage.getItem("celio-proj-"+currentUser.id);
   var found=projects.find(function(p){return p.id===lastId;});
-  if(found){activeProject=found; uiState.projExpanded[found.id]=true; saveUIState();}
-  else if(projects.length>0){activeProject=projects[0]; uiState.projExpanded[projects[0].id]=true; saveUIState();}
+  if(found){activeProject=found;projExpanded[found.id]=true;}
+  else if(projects.length>0){activeProject=projects[0];projExpanded[projects[0].id]=true;}
   renderSidebar();
   if(activeProject){
     var membership=projectMembers.find(function(m){return m.project_id===activeProject.id&&m.user_id===currentUser.id;});
@@ -1044,7 +1120,7 @@ function renderSidebar(){
   var html="";
   projects.forEach(function(p){
     var isActive=activeProject&&activeProject.id===p.id;
-    var isExpanded=!!uiState.projExpanded[p.id];
+    var isExpanded=!!projExpanded[p.id];
     var projSeqs=sequences.filter(function(s){return s.project_id===p.id;});
     html += '<div class="proj-row' + (isActive ? ' active' : '') + '">';
     html+='<div class="proj-row-main" onclick="selectProject(\''+p.id+'\')"><span class="proj-dot" style="background:'+p.color+'"></span><span class="proj-row-name">'+p.name+'</span></div>';
@@ -1053,7 +1129,7 @@ function renderSidebar(){
       html+='<div class="proj-tree">';
       if(!projSeqs.length)html+='<div style="padding:4px 14px 4px 22px;font-size:.69rem;color:var(--text4)">No sequences yet</div>';
       projSeqs.forEach(function(seq){
-        var isSeqOpen=!uiState.seqOpen[p.id]||uiState.seqOpen[p.id][seq.id]!==false;
+        var isSeqOpen=!seqOpen[p.id]||seqOpen[p.id][seq.id]!==false;
         var seqShots=shots.filter(function(s){return s.sequence_id===seq.id;});
         html+='<div class="seq-row" onclick="toggleSeq(\''+p.id+'\',\''+seq.id+'\')">';
         html+='<span class="seq-arrow'+(isSeqOpen?" open":"")+'">&#9658;</span>';
@@ -1074,14 +1150,15 @@ function renderSidebar(){
   list.innerHTML=html;
 }
 
-window.toggleProjExpand=function(pid,e){e.stopPropagation();uiState.projExpanded[pid]=!uiState.projExpanded[pid];saveUIState();renderSidebar();};
-window.toggleSeq=function(pid,sid){if(!uiState.seqOpen[pid])uiState.seqOpen[pid]={};uiState.seqOpen[pid][sid]=uiState.seqOpen[pid][sid]===false?true:false;saveUIState();renderSidebar();};
+window.toggleProjExpand=function(pid,e){e.stopPropagation();projExpanded[pid]=!projExpanded[pid];renderSidebar();};
+window.toggleSeq=function(pid,sid){if(!seqOpen[pid])seqOpen[pid]={};seqOpen[pid][sid]=seqOpen[pid][sid]===false?true:false;renderSidebar();};
 window.selectProject=function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
-  if(activeProject&&activeProject.id===id){ uiState.projExpanded[id]=!uiState.projExpanded[id];saveUIState();renderSidebar();return; }
+  if(activeProject&&activeProject.id===id){ projExpanded[id]=!projExpanded[id];renderSidebar();return; }
   if(activeShot)backToProject();
-  activeProject=p; uiState.projExpanded[id]=true; saveUIState();
+  activeProject=p;projExpanded[id]=true;
   
+  // Determine current user's role in this project
   var membership=projectMembers.find(function(m){return m.project_id===p.id&&m.user_id===currentUser.id;});
   userRole=membership?membership.role:null;
   
@@ -1134,7 +1211,7 @@ window.openShot=async function(id){
   if(isMobile())closeMobileSidebar();
   var seq=sequences.find(function(x){return x.id===sh.sequence_id;});
   var proj=projects.find(function(x){return x.id===sh.project_id;})||activeProject;
-  if(!activeProject||activeProject.id!==sh.project_id){activeProject=proj; uiState.projExpanded[proj.id]=true; saveUIState(); localStorage.setItem("celio-proj-"+currentUser.id,proj.id);}
+  if(!activeProject||activeProject.id!==sh.project_id){activeProject=proj;projExpanded[proj.id]=true;localStorage.setItem("celio-proj-"+currentUser.id,proj.id);}
   document.getElementById("hdr-bc").innerHTML='<div class="breadcrumb"><span class="bc-proj" onclick="backToProject()">'+proj.name+'</span><span class="bc-sep">/</span><span class="bc-seq">'+(seq?seq.code:"")+'</span><span class="bc-sep">/</span><span class="bc-shot">'+sh.code+'</span></div>';
   document.getElementById("hdr-actions").innerHTML='<button class="btn btn-ghost btn-sm" onclick="backToProject()">&#8592; Back</button>';
   document.getElementById("sp-code").textContent=sh.code;
@@ -1368,7 +1445,7 @@ window.saveAssetLinks=async function(){
 
 async function loadTasks(){
   if(!activeProject)return;
-  var r=await sb.from("tasks").select("*").eq("project_id",activeProject.id).order("due_date",{ascending:true,nullsFirst:false});
+  var r=await sb.from("tasks").select("*").eq("user_id",currentUser.id).eq("project_id",activeProject.id).order("due_date",{ascending:true,nullsFirst:false});
   if(r.error){console.error(r.error);return;}
   tasks=r.data||[];
   var pids=projects.map(function(p){return p.id;});
@@ -1387,15 +1464,9 @@ async function loadTasks(){
 }
 
 window.setSchedView=function(v,el){
-  uiState.schedView=v;
-  saveUIState();
+  schedView=v;
   document.querySelectorAll(".sched-tab").forEach(function(t){t.classList.remove("active");});
-  if(el) el.classList.add("active");
-  else {
-      document.querySelectorAll(".sched-tab").forEach(function(t){
-          if((v==='all'&&t.textContent.includes('All Tasks')) || (v==='assets'&&t.textContent.includes('Assets'))) t.classList.add("active");
-      });
-  }
+  el.classList.add("active");
   renderSchedule();
 };
 
@@ -1404,13 +1475,7 @@ window.renderSchedule=function(){
   var assetTasks=tasks.filter(function(t){return t.category==="asset";});
   var assetSec=document.getElementById("asset-sections");
   var shotSec=document.getElementById("shot-schedule-section");
-  
-  document.querySelectorAll(".sched-tab").forEach(function(t){
-      t.classList.remove("active");
-      if((uiState.schedView==='all'&&t.textContent.includes('All Tasks')) || (uiState.schedView==='assets'&&t.textContent.includes('Assets'))) t.classList.add("active");
-  });
-
-  if(uiState.schedView==="assets"){
+  if(schedView==="assets"){
     if(assetSec)assetSec.style.display="";
     if(shotSec)shotSec.style.display="none";
   } else {
@@ -1447,7 +1512,7 @@ function renderAssetSections(assetTasks){
   typeOrder.forEach(function(at){
     if(!byType[at])return;
     var names=Object.keys(byType[at]);
-    var isTypeCollapsed=uiState.typeGroupCollapsed[at]===true;
+    var isTypeCollapsed=typeGroupCollapsed[at]===true;
     var typeRow=document.createElement("div");typeRow.className="type-group-hdr";
     var typeArrow=document.createElement("span");typeArrow.className="type-group-arrow"+(isTypeCollapsed?"":" open");typeArrow.innerHTML="&#9658;";
     var typeIcon=document.createElement("span");typeIcon.innerHTML=assetTypeIcon(at);typeIcon.style.fontSize=".9rem";
@@ -1460,7 +1525,7 @@ function renderAssetSections(assetTasks){
     (function(atype,arr,bdy){typeRow.onclick=function(e){
       if(addTBtn.contains(e.target))return;
       var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
-      arr.classList.toggle("open",!hiding);uiState.typeGroupCollapsed[atype]=hiding;saveUIState();
+      arr.classList.toggle("open",!hiding);typeGroupCollapsed[atype]=hiding;
     };})(at,typeArrow,typeBody);
     secWrap.appendChild(typeRow);
     names.forEach(function(name){
@@ -1469,7 +1534,7 @@ function renderAssetSections(assetTasks){
       var pct=total?Math.round(done/total*100):0;
       var anyLate=stageTasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
       var isReady=done===total&&total>0;
-      var key=at+"|"+name;var isCollapsed=uiState.assetGroupCollapsed[key]!==false;
+      var key=at+"|"+name;var isCollapsed=assetGroupCollapsed[key]!==false;
       var card=document.createElement("div");card.className="asset-card";
       var hdr=document.createElement("div");hdr.className="asset-card-hdr";
       var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
@@ -1486,7 +1551,7 @@ function renderAssetSections(assetTasks){
       var cardBody=document.createElement("div");cardBody.style.display=isCollapsed?"none":"";
       (function(k){hdr.onclick=function(e){if(delBtn.contains(e.target))return;
         var show=cardBody.style.display==="none";cardBody.style.display=show?"":"none";
-        arrow.classList.toggle("open",show);uiState.assetGroupCollapsed[k]=!show;saveUIState();
+        arrow.classList.toggle("open",show);assetGroupCollapsed[k]=!show;
       };})(key);
       var tbl=document.createElement("table");tbl.className="asset-body-table";
       tbl.innerHTML="<colgroup><col style='width:160px'><col style='width:90px'><col style='width:80px'><col style='width:90px'><col style='width:130px'><col></colgroup><thead><tr><th>Stage</th><th>Lead</th><th>Start</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>";
@@ -1559,7 +1624,7 @@ function renderShotSection(){
   }
   projSeqs.forEach(function(seq){
     var seqShots=projShots.filter(function(s){return s.sequence_id===seq.id;});
-    var isSeqCollapsed=uiState.seqShotCollapsed[seq.id]===true;
+    var isSeqCollapsed=seqShotCollapsed[seq.id]===true;
     var seqRow=document.createElement("div");seqRow.className="seq-shot-hdr";
     var seqArrow=document.createElement("span");seqArrow.className="seq-shot-arrow"+(isSeqCollapsed?"":" open");seqArrow.innerHTML="&#9658;";
     var seqLbl=document.createElement("span");seqLbl.className="seq-shot-label";
@@ -1572,7 +1637,7 @@ function renderShotSection(){
     var seqBody=document.createElement("div");seqBody.style.display=isSeqCollapsed?"none":"";
     (function(sid,arr,bdy){seqRow.onclick=function(){
       var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
-      arr.classList.toggle("open",!hiding);uiState.seqShotCollapsed[sid]=hiding;saveUIState();
+      arr.classList.toggle("open",!hiding);seqShotCollapsed[sid]=hiding;
     };})(seq.id,seqArrow,seqBody);
     wrap.appendChild(seqRow);
     if(!seqShots.length){
@@ -1583,7 +1648,7 @@ function renderShotSection(){
       var shTasks=(shotTasks||[]).filter(function(t){return t.shot_id===sh.id;});
       var total=shTasks.length,done=shTasks.filter(function(t){return t.status==="approved"||t.status==="final";}).length;
       var pct=total?Math.round(done/total*100):0;
-      var isCollapsed=uiState.shotSectionCollapsed[sh.id]!==false;
+      var isCollapsed=shotSectionCollapsed[sh.id]!==false;
       var card=document.createElement("div");card.className="asset-card";
       var hdr=document.createElement("div");hdr.className="asset-card-hdr";hdr.style.paddingLeft="28px";
       var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
@@ -1599,7 +1664,7 @@ function renderShotSection(){
       var shotBody=document.createElement("div");shotBody.style.display=isCollapsed?"none":"";
       (function(sid2){hdr.onclick=function(e){if(openBtn.contains(e.target))return;
         var show=shotBody.style.display==="none";shotBody.style.display=show?"":"none";
-        arrow.classList.toggle("open",show);uiState.shotSectionCollapsed[sid2]=!show;saveUIState();
+        arrow.classList.toggle("open",show);shotSectionCollapsed[sid2]=!show;
       };})(sh.id);
       if(shTasks.length){
         var stMap={ready:"ssp-ready",inprogress:"ssp-inprogress",review:"ssp-review",approved:"ssp-approved",final:"ssp-final"};
@@ -1680,7 +1745,7 @@ function renderAssetDeliverables(){var a=tasks.filter(function(t){return t.asset
 
 function mkStatusCell(t){var cls={todo:"b-todo",inprogress:"b-inprogress",review:"b-review",done:"b-done"};var lbl={todo:"To Do",inprogress:"In Progress",review:"In Review",done:"Done"};var opts=[{v:"todo",l:"To Do",d:"dot-todo"},{v:"inprogress",l:"In Progress",d:"dot-inprogress"},{v:"review",l:"In Review",d:"dot-review"},{v:"done",l:"Done",d:"dot-done"}];var oh=opts.map(function(o){return'<div class="status-option" onclick="setStatus(\''+t.id+'\',\''+o.v+'\',event)"><span class="dot '+o.d+'"></span>'+o.l+"</div>";}).join("");return'<td><div class="status-cell"><button class="status-badge-btn" onclick="toggleStatusDrop(\''+t.id+'\',event)"><span class="badge '+(cls[t.status]||"b-todo")+'">'+(lbl[t.status]||t.status)+'</span><span class="arr">&#9660;</span></button><div class="status-dropdown" id="sdrop-'+t.id+'">'+oh+"</div></div></td>";}
 window.toggleStatusDrop=function(id,e){e.stopPropagation();var d=document.getElementById("sdrop-"+id);document.querySelectorAll(".status-dropdown.open").forEach(function(x){if(x!==d)x.classList.remove("open");});d.classList.toggle("open");};
-window.setStatus=async function(id,status,e){e.stopPropagation();document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});await sb.from("tasks").update({status:status}).eq("id",id);showToast("Status updated!");loadTasks();};
+window.setStatus=async function(id,status,e){e.stopPropagation();document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});await sb.from("tasks").update({status:status}).eq("id",id).eq("user_id",currentUser.id);showToast("Status updated!");loadTasks();};
 document.addEventListener("click",function(){document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});});
 
 window.toggleAdv = function() {
@@ -1750,23 +1815,11 @@ window.openModal=function(id,forceCat,forceAssetType){
          document.getElementById("general-extra-fields").style.display = "none";
       }
 
-      document.getElementById("f-name").value=t.name;
-      var ld = document.getElementById("f-lead");
-      if(t.lead && !Array.from(ld.options).some(o => o.value === t.lead)){
-         ld.innerHTML += '<option value="'+t.lead+'">'+t.lead+' (Legacy)</option>';
-      }
-      ld.value=t.lead||"";
-      
+      document.getElementById("f-name").value=t.name;document.getElementById("f-lead").value=t.lead;
       document.getElementById("f-start").value=t.start_date||"";document.getElementById("f-due").value=t.due_date||"";
       document.getElementById("f-time").value=t.due_time||"";document.getElementById("f-priority").value=t.priority;
       document.getElementById("f-status").value=t.status;
-      
-      var hf = document.getElementById("f-handoff");
-      if(t.handoff_to && !Array.from(hf.options).some(o => o.value === t.handoff_to)){
-         hf.innerHTML += '<option value="'+t.handoff_to+'">'+t.handoff_to+' (Legacy)</option>';
-      }
-      hf.value=t.handoff_to||"";
-      
+      document.getElementById("f-handoff").value=t.handoff_to||"";
       document.getElementById("f-deliverable").value=t.asset||"";document.getElementById("f-deliverable-url").value=t.asset_url||"";
       if(cat==="asset"){document.getElementById("f-asset-type").value=t.asset_type||"character";document.getElementById("f-asset-name").value=t.asset_name||"";updatePipelineStages();selectedPipelineStage=t.pipeline_stage;if(t.pipeline_stage){document.querySelectorAll("#pipeline-stages-grid .stage-pill").forEach(function(p){if(p.textContent===t.pipeline_stage)p.classList.add("active");});}}
     }
@@ -1782,15 +1835,7 @@ window.openModal=function(id,forceCat,forceAssetType){
        document.getElementById("adv-toggle").style.display = "none";
        document.getElementById("general-extra-fields").style.display = "none";
     }
-    document.getElementById("f-name").value="";
-    document.getElementById("f-lead").value="";
-    document.getElementById("f-start").value="";
-    document.getElementById("f-due").value="";
-    document.getElementById("f-time").value="";
-    document.getElementById("f-handoff").value="";
-    document.getElementById("f-deliverable").value="";
-    document.getElementById("f-deliverable-url").value="";
-    document.getElementById("f-asset-name").value="";
+    ["f-name","f-lead","f-start","f-due","f-time","f-handoff","f-deliverable","f-deliverable-url","f-asset-name"].forEach(function(fid){document.getElementById(fid).value="";});
     document.getElementById("f-priority").value="med";document.getElementById("f-status").value="todo";
     if(forceAssetType)document.getElementById("f-asset-type").value=forceAssetType;
     selectedPipelineStage=null;
@@ -1801,31 +1846,15 @@ window.openModal=function(id,forceCat,forceAssetType){
 window.closeModal=function(){document.getElementById("modal").classList.remove("open");};
 
 window.saveTask = async function(){
-  var name = document.getElementById("f-name").value.trim();
-  var lead = document.getElementById("f-lead").value.trim() || null; 
-  
-  if(!name){showToast("Please fill in Task Name.", "error");return;}
+  var name = document.getElementById("f-name").value.trim(), lead = document.getElementById("f-lead").value.trim();
+  if(!name || !lead){showToast("Please fill in Task Name and Lead.", "error");return;}
   if(selectedCat === "asset" && !selectedPipelineStage){showToast("Please select a pipeline stage.", "error");return;}
-  
   var payload = {name:name, lead:lead, start_date:document.getElementById("f-start").value || null, due_date:document.getElementById("f-due").value || null, due_time:document.getElementById("f-time").value || null, priority:document.getElementById("f-priority").value, status:document.getElementById("f-status").value, category:selectedCat, user_id:currentUser.id, project_id:activeProject.id};
-  
-  if(selectedCat === "asset"){
-      payload.asset_type=document.getElementById("f-asset-type").value; 
-      payload.asset_name=document.getElementById("f-asset-name").value.trim(); 
-      payload.pipeline_stage=selectedPipelineStage; 
-      payload.handoff_to=null; 
-      payload.asset=null; 
-      payload.asset_url=null;
-  } else {
-      payload.handoff_to=document.getElementById("f-handoff").value.trim() || null; 
-      payload.asset=document.getElementById("f-deliverable").value.trim() || null; 
-      payload.asset_url=document.getElementById("f-deliverable-url").value.trim() || null; 
-      payload.asset_type=null; 
-      payload.asset_name=null; 
-      payload.pipeline_stage=null;
-  }
+  if(selectedCat === "asset"){payload.asset_type=document.getElementById("f-asset-type").value; payload.asset_name=document.getElementById("f-asset-name").value.trim(); payload.pipeline_stage=selectedPipelineStage; payload.handoff_to=null; payload.asset=null; payload.asset_url=null;}
+  else{payload.handoff_to=document.getElementById("f-handoff").value.trim() || null; payload.asset=document.getElementById("f-deliverable").value.trim() || null; payload.asset_url=document.getElementById("f-deliverable-url").value.trim() || null; payload.asset_type=null; payload.asset_name=null; payload.pipeline_stage=null;}
   
   var result;
+  // 1. We add .select() so Supabase hands us back the freshly saved row
   if (editTaskId) {
     result = await sb.from("tasks").update(payload).eq("id", editTaskId).select();
   } else {
@@ -1837,10 +1866,11 @@ window.saveTask = async function(){
     return;
   }
 
+  // 2. We patch the browser's local memory instantly to avoid race conditions
   if (editTaskId) {
     var idx = tasks.findIndex(function(t) { return t.id === editTaskId; });
     if (idx >= 0 && result.data && result.data[0]) {
-      tasks[idx] = result.data[0]; 
+      tasks[idx] = result.data[0]; // Overwrite the old memory with the fresh data
     }
   } else {
     if (result.data && result.data[0]) tasks.push(result.data[0]);
@@ -1849,6 +1879,7 @@ window.saveTask = async function(){
   closeModal();
   showToast("Task saved!");
   
+  // 3. Instantly redraw the current tab without triggering a full database reload
   var active = document.querySelector(".tab-content.active");
   var tabName = active ? active.id.replace("tab-","") : "schedule";
   if(tabName === "schedule") renderSchedule();
@@ -1912,6 +1943,7 @@ function renderGantt(){
 
   var dates=[];
   for(var i=0;i<numDays;i++)dates.push(new Date(ganttStart.getFullYear(),ganttStart.getMonth(),i+1));
+  if(!window.ganttCollapsed)window.ganttCollapsed={tasks:false,shots:{}};
 
   function mkRow(labelEl,barFn,visible){
     var lr=document.createElement("div");lr.className="gantt-label-row";lr.appendChild(labelEl);
@@ -1958,11 +1990,11 @@ function renderGantt(){
 
   var taskRows=[];
   if(assetTasks.length){
-    var tasksCollapsed=uiState.ganttCollapsed.tasks;
+    var tasksCollapsed=ganttCollapsed.tasks;
     var taskHdr=mkSectionHdr("Asset & Milestone Tasks","&#127912;",tasksCollapsed,function(){
-      uiState.ganttCollapsed.tasks=!uiState.ganttCollapsed.tasks; saveUIState();
-      taskRows.forEach(function(r){r.lr.style.display=uiState.ganttCollapsed.tasks?"none":"";r.row.style.display=uiState.ganttCollapsed.tasks?"none":"";});
-      taskHdr.arrow.classList.toggle("open",!uiState.ganttCollapsed.tasks);
+      ganttCollapsed.tasks=!ganttCollapsed.tasks;
+      taskRows.forEach(function(r){r.lr.style.display=ganttCollapsed.tasks?"none":"";r.row.style.display=ganttCollapsed.tasks?"none":"";});
+      taskHdr.arrow.classList.toggle("open",!ganttCollapsed.tasks);
     });
     labelsDiv.appendChild(taskHdr.lbl);rowsDiv.appendChild(taskHdr.chartHdr);
 
@@ -2007,15 +2039,15 @@ function renderGantt(){
     seqOrder.forEach(function(seq){
       var seqShots=bySeq[seq.id]||[];
       if(!seqShots.length)return;
-      var seqCollapsed=uiState.ganttCollapsed.shots[seq.id]===true;
+      var seqCollapsed=ganttCollapsed.shots[seq.id]===true;
       var seqRows=[];
 
       var seqHdr=mkSectionHdr(
         (seq.code?(seq.code+(seq.name?" \u2014 "+seq.name:"")):"Unassigned Shots"),
         "&#127916;",seqCollapsed,
         function(){
-          uiState.ganttCollapsed.shots[seq.id]=!uiState.ganttCollapsed.shots[seq.id]; saveUIState();
-          var nowCollapsed=uiState.ganttCollapsed.shots[seq.id];
+          ganttCollapsed.shots[seq.id]=!ganttCollapsed.shots[seq.id];
+          var nowCollapsed=ganttCollapsed.shots[seq.id];
           seqRows.forEach(function(r){r.lr.style.display=nowCollapsed?"none":"";r.row.style.display=nowCollapsed?"none":"";});
           seqHdr.arrow.classList.toggle("open",!nowCollapsed);
         }
@@ -2078,7 +2110,7 @@ function renderGantt(){
   inner.innerHTML="";inner.appendChild(labelsDiv);inner.appendChild(chartDiv);
 }
 
-function mkDraggable(el,row,task,origStart,origEnd,numDays,startOfMonth,mode){el.addEventListener("mousedown",function(e){if(mode==="move"&&(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left")))return;e.preventDefault();var bar=row.querySelector(".gantt-bar");bar.classList.add("dragging");var startX=e.clientX,cs=origStart,ce=origEnd;function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W),ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));bar.style.left=(ns*COL_W)+"px";bar.style.width=((ne-ns+1)*COL_W-4)+"px";}async function onUp(ev){document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);bar.classList.remove("dragging");var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;var ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));var nsd=new Date(startOfMonth.getTime()+ns*86400000),ned=new Date(startOfMonth.getTime()+ne*86400000);var payload={due_date:fmtYMD(ned)};if(task.start_date||mode!=="right")payload.start_date=fmtYMD(nsd);await sb.from("tasks").update(payload).eq("id",task.id);showToast("Dates updated!");loadTasks();}document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);});}
+function mkDraggable(el,row,task,origStart,origEnd,numDays,startOfMonth,mode){el.addEventListener("mousedown",function(e){if(mode==="move"&&(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left")))return;e.preventDefault();var bar=row.querySelector(".gantt-bar");bar.classList.add("dragging");var startX=e.clientX,cs=origStart,ce=origEnd;function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W),ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));bar.style.left=(ns*COL_W)+"px";bar.style.width=((ne-ns+1)*COL_W-4)+"px";}async function onUp(ev){document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);bar.classList.remove("dragging");var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;var ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));var nsd=new Date(startOfMonth.getTime()+ns*86400000),ned=new Date(startOfMonth.getTime()+ne*86400000);var payload={due_date:fmtYMD(ned)};if(task.start_date||mode!=="right")payload.start_date=fmtYMD(nsd);await sb.from("tasks").update(payload).eq("id",task.id).eq("user_id",currentUser.id);showToast("Dates updated!");loadTasks();}document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);});}
 window.ganttPrev=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()-1,1);renderGantt();};
 window.ganttNext=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,1);renderGantt();};
 window.ganttToday=function(){ganttStart=new Date(today.getFullYear(),today.getMonth(),1);renderGantt();};
@@ -2095,8 +2127,10 @@ window.canEditProject = function() {
 
 window.populateTeamDropdowns = function() {
   if (!activeProject) return;
+  // Find all tasks categorized as "team"
   var team = tasks.filter(function(t) { return t.category === "team" && t.project_id === activeProject.id; });
   
+  // Group them by their Role (stored in the lead field)
   var byRole = {};
   team.forEach(function(m) {
     var role = m.lead || "Other";
@@ -2104,6 +2138,7 @@ window.populateTeamDropdowns = function() {
     byRole[role].push(m.name);
   });
 
+  // Build the HTML with <optgroup> for filtering
   var html = '<option value="">-- Unassigned --</option>';
   Object.keys(byRole).sort().forEach(function(role) {
     html += '<optgroup label="' + role + '">';
@@ -2113,6 +2148,7 @@ window.populateTeamDropdowns = function() {
     html += '</optgroup>';
   });
 
+  // Safely inject options without destroying legacy string data
   function updateSelect(id) {
      var el = document.getElementById(id);
      if (!el) return;
@@ -2140,56 +2176,9 @@ window.showTab=function(name){
 
 window.openProjectModal=function(id){editProjId=id||null;document.getElementById("proj-modal-title").textContent=id?"Edit Project":"New Project";selectedColor=id?(projects.find(function(p){return p.id===id;})||{color:"#7c3aed"}).color:"#7c3aed";var row=document.getElementById("color-row");row.innerHTML="";COLORS.forEach(function(c){var sw=document.createElement("div");sw.className="color-swatch"+(c===selectedColor?" selected":"");sw.style.background=c;sw.dataset.color=c;sw.onclick=function(){selectedColor=c;document.querySelectorAll(".color-swatch").forEach(function(s){s.classList.toggle("selected",s.dataset.color===c);});};row.appendChild(sw);});if(id){var p=projects.find(function(x){return x.id===id;});if(p){document.getElementById("pf-name").value=p.name;document.getElementById("pf-desc").value=p.description||"";}}else{document.getElementById("pf-name").value="";document.getElementById("pf-desc").value="";}document.getElementById("proj-modal").classList.add("open");};
 window.closeProjModal=function(){document.getElementById("proj-modal").classList.remove("open");};
+window.saveProject=async function(){var name=document.getElementById("pf-name").value.trim();if(!name){showToast("Please enter a project name.", "error");return;}var payload={name:name,description:document.getElementById("pf-desc").value.trim(),color:selectedColor,user_id:currentUser.id};var r;if(editProjId)r=await sb.from("projects").update(payload).eq("id",editProjId);else r=await sb.from("projects").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}closeProjModal();if(!editProjId&&r.data&&r.data[0]){projects.push(r.data[0]);projExpanded[r.data[0].id]=true;activeProject=r.data[0];localStorage.setItem("celio-proj-"+currentUser.id,r.data[0].id);setHeaderProject(r.data[0]);showTab("schedule");loadTasks();}else{var idx=projects.findIndex(function(p){return p.id===editProjId;});if(idx>=0)projects[idx]=Object.assign(projects[idx],payload);}renderSidebar();showToast("Project saved!");};
 
-window.saveProject=async function(){
-  var name=document.getElementById("pf-name").value.trim();
-  if(!name){showToast("Please enter a project name.", "error");return;}
-  var payload={name:name,description:document.getElementById("pf-desc").value.trim(),color:selectedColor,user_id:currentUser.id};
-  var r;
-  if(editProjId){
-    r=await sb.from("projects").update(payload).eq("id",editProjId).select();
-  } else {
-    r=await sb.from("projects").insert(payload).select();
-  }
-  
-  if(r.error){showToast("Error: "+r.error.message, "error");return;}
-  closeProjModal();
-  
-  if(!editProjId&&r.data&&r.data[0]){
-    var newProj = r.data[0];
-
-    try {
-      await sb.from("project_members").upsert({
-        project_id: newProj.id,
-        user_id: currentUser.id,
-        role: "Owner",
-        invited_by: currentUser.id,
-        accepted_at: new Date().toISOString()
-      }, { onConflict: "project_id,user_id" });
-    } catch(e) { console.warn("Member upsert handled by trigger."); }
-
-    projects.push(newProj);
-    projectMembers.push({
-      project_id: newProj.id,
-      user_id: currentUser.id,
-      role: "Owner",
-      invited_by: currentUser.id,
-      accepted_at: new Date().toISOString()
-    });
-
-    uiState.projExpanded[newProj.id]=true; saveUIState();
-    activeProject=newProj;
-    localStorage.setItem("celio-proj-"+currentUser.id,newProj.id);
-    setHeaderProject(newProj);
-    showTab("schedule");
-    loadTasks();
-  } else {
-    var idx=projects.findIndex(function(p){return p.id===editProjId;});
-    if(idx>=0)projects[idx]=Object.assign(projects[idx],payload);
-  }
-  renderSidebar();
-  showToast("Project saved!");
-};
+["modal","proj-modal","seq-modal","shot-modal","shot-task-modal","asset-link-modal"].forEach(function(id){var el=document.getElementById(id);el.addEventListener("click",function(e){if(e.target===el){var closeFn={"modal":closeModal,"proj-modal":closeProjModal,"seq-modal":closeSeqModal,"shot-modal":closeShotModal,"shot-task-modal":closeShotTaskModal,"asset-link-modal":closeAssetLinkModal}[id];if(closeFn)closeFn();}});});
 
 window.deleteProject=async function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
@@ -2212,7 +2201,7 @@ window.deleteProject=async function(id){
       tasks=tasks.filter(function(x){return x.project_id!==id;});
       if(activeProject&&activeProject.id===id){
         activeProject=projects.length?projects[0]:null;
-        if(activeProject){uiState.projExpanded[activeProject.id]=true;saveUIState();setHeaderProject(activeProject);showTab("schedule");loadTasks();}
+        if(activeProject){projExpanded[activeProject.id]=true;setHeaderProject(activeProject);showTab("schedule");loadTasks();}
         else showNoProject();
       }
       renderSidebar();showToast("Project deleted.");
@@ -2223,322 +2212,268 @@ window.deleteProject=async function(id){
 window.exportProject = async function(id) {
   var p = projects.find(function(x) { return x.id === id; });
   if (!p) return;
-
-  showToast("Preparing archive...");
-
+  showToast("Preparing export…");
+  var rTasks = await sb.from("tasks").select("*").eq("project_id", id);
+  var projTasks = rTasks.data || [];
   var projSeqs = sequences.filter(function(s) { return s.project_id === id; });
   var projShots = shots.filter(function(s) { return s.project_id === id; });
   var shotIds = projShots.map(function(s) { return s.id; });
-
-  var results = await Promise.all([
-    sb.from("tasks").select("*").eq("project_id", id),
-    shotIds.length
-      ? sb.from("shot_tasks").select("*").in("shot_id", shotIds)
-      : Promise.resolve({ data: [] }),
-    sb.from("project_members").select("*").eq("project_id", id)
-  ]);
-
-  var rTasks = results[0];
-  var rShotTasks = results[1];
-  var rMembers = results[2];
-
-  if (rTasks.error) { showToast("Export failed: " + rTasks.error.message, "error"); return; }
-  if (rShotTasks.error) { showToast("Export failed: " + rShotTasks.error.message, "error"); return; }
-  if (rMembers.error) { showToast("Export failed: " + rMembers.error.message, "error"); return; }
-
-  var pkg = {
-    schemaVersion: 2,
-    app: "Celio",
-    exportedAt: new Date().toISOString(),
-    exportedBy: currentUser.email,
-    project: p,
-    sequences: projSeqs,
-    shots: projShots,
-    tasks: rTasks.data || [],
-    shotTasks: rShotTasks.data || [],
-    projectMembers: rMembers.data || []
-  };
-
+  var projShotTasks = [];
+  if (shotIds.length) {
+    var rShotTasks = await sb.from("shot_tasks").select("*").in("shot_id", shotIds);
+    projShotTasks = rShotTasks.data || [];
+  }
+  var pkg = { exportedAt: new Date().toISOString(), exportedBy: currentUser.email, project: p, sequences: projSeqs, shots: projShots, tasks: projTasks, shotTasks: projShotTasks };
   var blob = new Blob([JSON.stringify(pkg, null, 2)], { type: "application/json" });
   var url = URL.createObjectURL(blob);
-
-  var a = document.createElement("a");
-  a.href = url;
-  a.download = "celio-archive-" + p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() + "-" + new Date().toISOString().slice(0, 10) + ".json";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast("Archive downloaded!");
+  var a = document.createElement("a"); a.href = url;
+  a.download = "celio-" + p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() + "-" + new Date().toISOString().slice(0, 10) + ".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast("Downloaded!");
 };
 
 window.exportCSV = async function(id) {
   var p = projects.find(function(x) { return x.id === id; });
   if (!p) return;
-
   showToast("Preparing CSV...");
-
-  var projSeqs = sequences.filter(function(s) { return s.project_id === id; });
+  var rTasks = await sb.from("tasks").select("*").eq("project_id", id);
+  var projTasks = rTasks.data || [];
   var projShots = shots.filter(function(s) { return s.project_id === id; });
   var shotIds = projShots.map(function(s) { return s.id; });
-
-  var results = await Promise.all([
-    sb.from("tasks").select("*").eq("project_id", id),
-    shotIds.length
-      ? sb.from("shot_tasks").select("*").in("shot_id", shotIds)
-      : Promise.resolve({ data: [] }),
-    sb.from("project_members").select("*").eq("project_id", id)
-  ]);
-
-  if (results[0].error) { showToast("CSV export failed: " + results[0].error.message, "error"); return; }
-  if (results[1].error) { showToast("CSV export failed: " + results[1].error.message, "error"); return; }
-  if (results[2].error) { showToast("CSV export failed: " + results[2].error.message, "error"); return; }
-
-  var projTasks = results[0].data || [];
-  var projShotTasks = results[1].data || [];
-  var projMembers = results[2].data || [];
-
-  function esc(v) {
-    if (v === null || v === undefined) return "";
-    var s = String(v).replace(/"/g, '""');
-    if (/[",\n]/.test(s)) return '"' + s + '"';
+  var projShotTasks = [];
+  if (shotIds.length) {
+    var rShotTasks = await sb.from("shot_tasks").select("*").in("shot_id", shotIds);
+    projShotTasks = rShotTasks.data || [];
+  }
+  var csvRows = [ ["Category", "Sequence", "Shot/Asset", "Task Name", "Assignee", "Start Date", "Due Date", "Status", "Notes"] ];
+  function esc(str) {
+    if (!str) return "";
+    var s = String(str).replace(/"/g, '""');
+    if (s.indexOf(",") >= 0 || s.indexOf("\n") >= 0 || s.indexOf('"') >= 0) return '"' + s + '"';
     return s;
   }
-
-  var headers = [
-    "row_type", "project_id", "project_name", "project_description", "project_color",
-    "sequence_id", "sequence_code", "sequence_name",
-    "shot_id", "shot_sequence_id", "shot_code", "shot_description", "shot_status", "shot_start_date", "shot_due_date", "shot_frame_count", "shot_camera", "shot_storyboard_notes", "shot_linked_assets",
-    "task_id", "task_category", "task_name", "task_lead", "task_start_date", "task_due_date", "task_due_time", "task_priority", "task_status", "task_revision_count", "task_handoff_to", "task_asset", "task_asset_url", "task_asset_type", "task_asset_name", "task_pipeline_stage",
-    "shot_task_id", "shot_task_shot_id", "shot_task_type", "shot_task_department", "shot_task_assignee", "shot_task_start_date", "shot_task_due_date", "shot_task_status", "shot_task_notes", "shot_task_version", "shot_task_order_index",
-    "member_user_id", "member_role", "member_invited_by", "member_accepted_at"
-  ];
-
-  var rows = [headers];
-
-  function makeBlankRow() {
-    var row = {};
-    headers.forEach(function(h) { row[h] = ""; });
-    row.project_id = p.id || "";
-    row.project_name = p.name || "";
-    row.project_description = p.description || "";
-    row.project_color = p.color || "";
-    return row;
-  }
-
-  var projectRow = makeBlankRow();
-  projectRow.row_type = "PROJECT";
-  rows.push(headers.map(function(h) { return esc(projectRow[h]); }));
-
-  projSeqs.forEach(function(seq) {
-    var row = makeBlankRow();
-    row.row_type = "SEQUENCE";
-    row.sequence_id = seq.id || "";
-    row.sequence_code = seq.code || "";
-    row.sequence_name = seq.name || "";
-    rows.push(headers.map(function(h) { return esc(row[h]); }));
-  });
-
-  projShots.forEach(function(sh) {
-    var row = makeBlankRow();
-    row.row_type = "SHOT";
-    row.shot_id = sh.id || "";
-    row.shot_sequence_id = sh.sequence_id || "";
-    row.shot_code = sh.code || "";
-    row.shot_description = sh.description || "";
-    row.shot_status = sh.status || "";
-    row.shot_start_date = sh.start_date || "";
-    row.shot_due_date = sh.due_date || "";
-    row.shot_frame_count = sh.frame_count || "";
-    row.shot_camera = sh.camera || "";
-    row.shot_storyboard_notes = sh.storyboard_notes || "";
-    row.shot_linked_assets = sh.linked_assets || "";
-    rows.push(headers.map(function(h) { return esc(row[h]); }));
-  });
-
   projTasks.forEach(function(t) {
-    var row = makeBlankRow();
-    row.row_type = "TASK";
-    row.task_id = t.id || "";
-    row.task_category = t.category || "";
-    row.task_name = t.name || "";
-    row.task_lead = t.lead || "";
-    row.task_start_date = t.start_date || "";
-    row.task_due_date = t.due_date || "";
-    row.task_due_time = t.due_time || "";
-    row.task_priority = t.priority || "";
-    row.task_status = t.status || "";
-    row.task_revision_count = t.revision_count || 0;
-    row.task_handoff_to = t.handoff_to || "";
-    row.task_asset = t.asset || "";
-    row.task_asset_url = t.asset_url || "";
-    row.task_asset_type = t.asset_type || "";
-    row.task_asset_name = t.asset_name || "";
-    row.task_pipeline_stage = t.pipeline_stage || "";
-    rows.push(headers.map(function(h) { return esc(row[h]); }));
+    var assetRef = t.category === "asset" ? (t.asset_type + ": " + t.asset_name) : (t.category || "general");
+    csvRows.push([ esc(t.category), "", esc(assetRef), esc(t.name || t.pipeline_stage), esc(t.lead), esc(t.start_date), esc(t.due_date), esc(t.status), esc(t.asset_url || t.asset || "") ]);
   });
-
-  projShotTasks.forEach(function(st) {
-    var row = makeBlankRow();
-    row.row_type = "SHOT_TASK";
-    row.shot_task_id = st.id || "";
-    row.shot_task_shot_id = st.shot_id || "";
-    row.shot_task_type = st.task_type || "";
-    row.shot_task_department = st.department || "";
-    row.shot_task_assignee = st.assignee || "";
-    row.shot_task_start_date = st.start_date || "";
-    row.shot_task_due_date = st.due_date || "";
-    row.shot_task_status = st.status || "";
-    row.shot_task_notes = st.notes || "";
-    row.shot_task_version = st.version || 1;
-    row.shot_task_order_index = st.order_index || 0;
-    rows.push(headers.map(function(h) { return esc(row[h]); }));
+  projShotTasks.forEach(function(t) {
+    var sh = projShots.find(function(x) { return x.id === t.shot_id; });
+    var seqCode = "";
+    var shotCode = sh ? sh.code : "Unknown";
+    if (sh && sh.sequence_id) {
+      var sq = sequences.find(function(x) { return x.id === sh.sequence_id; });
+      if (sq) seqCode = sq.code;
+    }
+    csvRows.push([ "shot_task", esc(seqCode), esc(shotCode), esc(t.task_type), esc(t.assignee), esc(t.start_date), esc(t.due_date), esc(t.status), esc(t.notes || "") ]);
   });
-
-  projMembers.forEach(function(m) {
-    var row = makeBlankRow();
-    row.row_type = "MEMBER";
-    row.member_user_id = m.user_id || "";
-    row.member_role = m.role || "";
-    row.member_invited_by = m.invited_by || "";
-    row.member_accepted_at = m.accepted_at || "";
-    rows.push(headers.map(function(h) { return esc(row[h]); }));
-  });
-
-  var csvString = rows.map(function(r) { return r.join(","); }).join("\n");
+  var csvString = csvRows.map(function(row) { return row.join(","); }).join("\n");
   var blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
   var url = URL.createObjectURL(blob);
-
-  var a = document.createElement("a");
-  a.href = url;
-  a.download = "celio-full-export-" + p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() + "-" + new Date().toISOString().slice(0, 10) + ".csv";
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-  showToast("CSV downloaded!");
-};
-
-window.promptProjectImport = function() {
-  console.log("Import button clicked");
-  var input = document.getElementById("import-project-file");
-  if (!input) {
-      showToast("Error: File input not found in DOM", "error");
-      return;
-  }
-  input.click();
-};
-
-window.handleProjectImport = async function(event) {
-  var file = event.target.files && event.target.files[0];
-  if (!file) return;
-
-  try {
-    showToast("Reading archive...");
-    var text = await file.text();
-    var archive = JSON.parse(text);
-
-    if (!archive || !archive.project || !Array.isArray(archive.sequences) || !Array.isArray(archive.shots) || !Array.isArray(archive.tasks) || !Array.isArray(archive.shotTasks)) {
-      showToast("Invalid archive format.", "error");
-      return;
-    }
-
-    var importedProjectName = (archive.project.name || "Imported Project") + " (Imported)";
-
-    var projRes = await sb.from("projects").insert({
-      name: importedProjectName,
-      description: archive.project.description || "",
-      color: archive.project.color || "#7c3aed",
-      user_id: currentUser.id
-    }).select().single();
-
-    if (projRes.error) throw new Error("Project Insert: " + projRes.error.message);
-    var newProject = projRes.data;
-
-    try {
-      await sb.from("project_members").upsert({
-        project_id: newProject.id, user_id: currentUser.id, role: "Owner", invited_by: currentUser.id, accepted_at: new Date().toISOString()
-      }, { onConflict: "project_id,user_id" });
-    } catch(e) { console.warn("Member upsert handled by trigger."); }
-
-    var seqIdMap = {};
-    var shotIdMap = {};
-
-    if (archive.sequences.length) {
-      var seqPayload = archive.sequences.map(function(seq) {
-        return { code: seq.code || "", name: seq.name || "", project_id: newProject.id, user_id: currentUser.id };
-      });
-      var seqRes = await sb.from("sequences").insert(seqPayload).select();
-      if (seqRes.error) throw new Error("Sequences Insert: " + seqRes.error.message);
-      seqRes.data.forEach(function(newSeq, i) { seqIdMap[archive.sequences[i].id] = newSeq.id; });
-    }
-
-    if (archive.shots.length) {
-      var shotPayload = archive.shots.map(function(sh) {
-        return {
-          code: sh.code || "", description: sh.description || "", sequence_id: sh.sequence_id ? (seqIdMap[sh.sequence_id] || null) : null,
-          project_id: newProject.id, user_id: currentUser.id, status: sh.status || "pending", start_date: sh.start_date || null,
-          due_date: sh.due_date || null, frame_count: sh.frame_count || null, camera: sh.camera || null,
-          storyboard_notes: sh.storyboard_notes || null, linked_assets: sh.linked_assets || null
-        };
-      });
-      var shotRes = await sb.from("shots").insert(shotPayload).select();
-      if (shotRes.error) throw new Error("Shots Insert: " + shotRes.error.message);
-      shotRes.data.forEach(function(newShot, i) { shotIdMap[archive.shots[i].id] = newShot.id; });
-    }
-
-    if (archive.tasks.length) {
-      var taskPayload = archive.tasks.map(function(t) {
-        return {
-          name: t.name || "", lead: t.lead || null, start_date: t.start_date || null, due_date: t.due_date || null, due_time: t.due_time || null,
-          priority: t.priority || "med", status: t.status || "todo", category: t.category || "general", user_id: currentUser.id,
-          project_id: newProject.id, handoff_to: t.handoff_to || null, asset: t.asset || null, asset_url: t.asset_url || null,
-          asset_type: t.asset_type || null, asset_name: t.asset_name || null, pipeline_stage: t.pipeline_stage || null, revision_count: t.revision_count || 0
-        };
-      });
-      var taskRes = await sb.from("tasks").insert(taskPayload);
-      if (taskRes.error) throw new Error("Tasks Insert: " + taskRes.error.message);
-    }
-
-    if (archive.shotTasks.length) {
-      var shotTaskPayload = archive.shotTasks
-        .filter(function(st) { return !!shotIdMap[st.shot_id]; })
-        .map(function(st) {
-          return {
-            shot_id: shotIdMap[st.shot_id], project_id: newProject.id, user_id: currentUser.id, task_type: st.task_type || "",
-            department: st.department || null, assignee: st.assignee || null, start_date: st.start_date || null, due_date: st.due_date || null,
-            status: st.status || "ready", notes: st.notes || null, version: st.version || 1, order_index: st.order_index || 0
-          };
-        });
-
-      if (shotTaskPayload.length) {
-        var shotTaskRes = await sb.from("shot_tasks").insert(shotTaskPayload);
-        if (shotTaskRes.error) throw new Error("Shot Tasks Insert: " + shotTaskRes.error.message);
-      }
-    }
-
-    showToast("Project imported!");
-    await loadAll();
-
-    activeProject = newProject;
-    uiState.projExpanded[newProject.id] = true;
-    saveUIState();
-    localStorage.setItem("celio-proj-" + currentUser.id, newProject.id);
-    setHeaderProject(newProject);
-    renderSidebar();
-    showTab("schedule");
-    await loadTasks();
-  } catch (err) {
-    console.error(err);
-    showToast("Import failed: " + (err.message || err), "error");
-  } finally {
-    event.target.value = "";
-  }
+  var a = document.createElement("a"); a.href = url;
+  a.download = "celio-" + p.name.replace(/[^a-z0-9]/gi, "-").toLowerCase() + "-tasks.csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+  showToast("CSV Downloaded!");
 };
 
 // ============================================================
-// ADMIN / MILESTONES FUNCTIONS
+// INVITE SYSTEM FUNCTIONS
 // ============================================================
+
+window.showInviteCodeInput = function() {
+  document.getElementById("invite-code-modal").classList.add("open");
+  setTimeout(function(){ document.getElementById("invite-code-input").focus(); }, 100);
+};
+
+window.closeInviteCodeModal = function() {
+  document.getElementById("invite-code-modal").classList.remove("open");
+  document.getElementById("invite-code-input").value = "";
+};
+
+window.submitInviteCode = async function() {
+  var code = document.getElementById("invite-code-input").value.trim();
+  if(!code) { showToast("Please enter an invite code", "error"); return; }
+  
+  // Check if user is logged in
+  if(!currentUser) {
+    setMsg("Please sign in or create an account first", "error");
+    closeInviteCodeModal();
+    return;
+  }
+  
+  // Lookup the invite
+  var r = await sb.from("project_invites")
+    .select("*")
+    .eq("invite_code", code)
+    .single();
+  
+  if(r.error || !r.data) {
+    showToast("Invalid or expired invite code", "error");
+    return;
+  }
+  
+  var invite = r.data;
+  
+  // Check if already a member
+  var existing = await sb.from("project_members")
+    .select("*")
+    .eq("project_id", invite.project_id)
+    .eq("user_id", currentUser.id)
+    .single();
+  
+  if(existing.data) {
+    showToast("You're already a member of this project!");
+    closeInviteCodeModal();
+    location.reload();
+    return;
+  }
+  
+  // Determine role
+  var role = invite.role;
+  if(!role) {
+    role = prompt("What's your role on this project? (e.g. Animator, Modeller, Compositor)");
+    if(!role) return;
+  }
+  
+  // Add user as member
+  await sb.from("project_members").insert({
+    project_id: invite.project_id,
+    user_id: currentUser.id,
+    role: role,
+    invited_by: invite.created_by,
+    accepted_at: new Date().toISOString()
+  });
+  
+  // Increment invite uses
+  await sb.from("project_invites")
+    .update({ uses: invite.uses + 1 })
+    .eq("id", invite.id);
+  
+  showToast("Welcome to the project!");
+  closeInviteCodeModal();
+  location.reload();
+};
+
+window.openInviteModal = async function(projectId) {
+  var project = projects.find(function(p){ return p.id === projectId; });
+  if(!project) return;
+  
+  // Populate role dropdown from team roster
+  var teamRoles = tasks.filter(function(t){
+    return t.category === "team" && t.project_id === projectId;
+  });
+  var roleSet = {};
+  teamRoles.forEach(function(t){ if(t.lead) roleSet[t.lead] = true; });
+  
+  var roleSelect = document.getElementById("invite-role");
+  roleSelect.innerHTML = '<option value="">Let them choose their role</option>';
+  Object.keys(roleSet).sort().forEach(function(role){
+    roleSelect.innerHTML += '<option value="' + role + '">' + role + '</option>';
+  });
+  
+  // Generate or fetch existing invite code
+  var r = await sb.from("project_invites")
+    .select("*")
+    .eq("project_id", projectId)
+    .eq("created_by", currentUser.id)
+    .gt("expires_at", new Date().toISOString())
+    .maybeSingle();
+  
+  var inviteCode;
+  if(r.data) {
+    inviteCode = r.data.invite_code;
+  } else {
+    // Create new invite
+    inviteCode = Math.random().toString(36).substring(2, 10);
+    var expires = new Date();
+    expires.setDate(expires.getDate() + 90); // 90 day expiry
+    
+    await sb.from("project_invites").insert({
+      project_id: projectId,
+      invite_code: inviteCode,
+      role: null,
+      created_by: currentUser.id,
+      expires_at: expires.toISOString(),
+      max_uses: 999
+    });
+  }
+  
+  var inviteUrl = window.location.origin + window.location.pathname + "?invite=" + inviteCode;
+  document.getElementById("invite-link").value = inviteUrl;
+  
+  // Load and display current members
+  renderProjectMembers(projectId);
+  
+  document.getElementById("invite-modal").classList.add("open");
+};
+
+window.closeInviteModal = function() {
+  document.getElementById("invite-modal").classList.remove("open");
+};
+
+window.copyInviteLink = function() {
+  var input = document.getElementById("invite-link");
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  showToast("Invite link copied to clipboard!");
+};
+
+window.renderProjectMembers = async function(projectId) {
+  var r = await sb.from("project_members").select("*").eq("project_id", projectId);
+  var members = r.data || [];
+  var container = document.getElementById("members-list-container");
+  
+  if(!members.length) {
+    container.innerHTML = '<div style="padding:14px;color:var(--text4);font-size:.82rem;text-align:center">No members yet — share the invite link to add team members</div>';
+    return;
+  }
+  
+  container.innerHTML = "";
+  members.forEach(function(m){
+    var div = document.createElement("div");
+    div.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border2);gap:10px";
+    
+    var info = document.createElement("div");
+    info.style.flex = "1";
+    
+    // Show current user's email, or just show role for others
+    var displayEmail = m.user_id === currentUser.id ? currentUser.email : 'Team Member';
+    
+    info.innerHTML = '<div style="font-size:.84rem;font-weight:600">' + displayEmail + 
+      '</div><div style="font-size:.72rem;color:var(--text4);margin-top:2px">🎭 ' + m.role + '</div>';
+    
+    div.appendChild(info);
+    
+    if(m.role !== 'Owner') {
+      var removeBtn = document.createElement("button");
+      removeBtn.className = "btn btn-sm btn-del";
+      removeBtn.style.fontSize = ".68rem";
+      removeBtn.textContent = "Remove";
+      removeBtn.onclick = (function(mid, projectId){ return async function(){
+        if(!confirm("Remove this team member from the project?")) return;
+        await sb.from("project_members").delete().eq("id", mid);
+        renderProjectMembers(projectId);
+        showToast("Member removed");
+      }; })(m.id, projectId);
+      div.appendChild(removeBtn);
+    }
+    
+    container.appendChild(div);
+  });
+};
+      removeBtn.textContent = "Remove";
+      removeBtn.onclick = (function(mid, projectId){ return async function(){
+        if(!confirm("Remove this team member from the project?")) return;
+        await sb.from("project_members").delete().eq("id", mid);
+        renderProjectMembers(projectId);
+        showToast("Member removed");
+      }; })(m.id, projectId);
+      div.appendChild(removeBtn);
+    }
+    
+    container.appendChild(div);
+  });
+};
 
 window.renderMilestones=function(){
   var projList=document.getElementById("admin-list-projects");
@@ -2556,10 +2491,10 @@ window.renderMilestones=function(){
       var editBtn=document.createElement("button");editBtn.className="btn btn-ghost btn-sm";editBtn.style.fontSize=".68rem";editBtn.textContent="Edit";
       editBtn.onclick=(function(pid){return function(){openProjectModal(pid);};})(p.id);
       
-      var expBtn=document.createElement("button");expBtn.className="btn btn-ghost btn-sm";expBtn.style.fontSize=".68rem";expBtn.innerHTML="⬇ Export Archive (JSON)";
+      var expBtn=document.createElement("button");expBtn.className="btn btn-ghost btn-sm";expBtn.style.fontSize=".68rem";expBtn.innerHTML="⬇ JSON";
       expBtn.onclick=(function(pid){return function(){exportProject(pid);};})(p.id);
 
-      var csvBtn=document.createElement("button");csvBtn.className="btn btn-ghost btn-sm";csvBtn.style.fontSize=".68rem";csvBtn.innerHTML="⬇ Export Report (CSV)";
+      var csvBtn=document.createElement("button");csvBtn.className="btn btn-ghost btn-sm";csvBtn.style.fontSize=".68rem";csvBtn.innerHTML="⬇ CSV";
       csvBtn.onclick=(function(pid){return function(){exportCSV(pid);};})(p.id);
       
       var inviteBtn=document.createElement("button");inviteBtn.className="btn btn-ghost btn-sm";inviteBtn.style.fontSize=".68rem";inviteBtn.innerHTML="👥 Invite";
@@ -2604,10 +2539,12 @@ window.renderMilestones=function(){
 };
 
 var adminCat=null,adminEditId=null;
+var projectMembers=[],userRole=null;
 window.openAdminModal=function(cat,editId){
   adminCat=cat||null;adminEditId=editId||null;
   var labels={client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Team Member"};
 
+  // Dynamically change labels for Team members
   var isTeam = cat === "team";
   document.getElementById("lbl-af-title").textContent = isTeam ? "Name" : "Title";
   document.getElementById("lbl-af-assignee").textContent = isTeam ? "Role (e.g. Animator, Lighter)" : "Assignee";
@@ -2630,16 +2567,15 @@ window.openAdminModal=function(cat,editId){
   }
   document.getElementById("admin-modal").classList.add("open");
 };
-
 window.closeAdminModal=function(){document.getElementById("admin-modal").classList.remove("open");};
-
 window.saveAdminEntry = async function() {
   var title = document.getElementById("af-title").value.trim();
   if (!title) { showToast("Please enter a title.", "error"); return; }
   
+  // Team members don't need real due dates - use a default value to satisfy NOT NULL constraint
   var dueDate = document.getElementById("af-date").value || null;
   if (adminCat === "team" && !dueDate) {
-    dueDate = "2099-12-31"; 
+    dueDate = "2099-12-31"; // Default far-future date for team roster entries
   }
   
   var payload = {
@@ -2699,48 +2635,10 @@ window.filterCmd = function(q) {
   list.innerHTML = html;
 };
 
-window.addEventListener("DOMContentLoaded", function () {
-  [
-    "modal",
-    "proj-modal",
-    "seq-modal",
-    "shot-modal",
-    "shot-task-modal",
-    "asset-link-modal",
-    "admin-modal",
-    "invite-code-modal",
-    "invite-modal"
-  ].forEach(function (id) {
-    var el = document.getElementById(id);
-    if (!el) return;
-
-    var closeFnMap = {
-      "modal": closeModal,
-      "proj-modal": closeProjModal,
-      "seq-modal": closeSeqModal,
-      "shot-modal": closeShotModal,
-      "shot-task-modal": closeShotTaskModal,
-      "asset-link-modal": closeAssetLinkModal,
-      "admin-modal": closeAdminModal,
-      "invite-code-modal": closeInviteCodeModal,
-      "invite-modal": closeInviteModal
-    };
-
-    el.addEventListener("click", function (e) {
-      if (e.target !== el) return;
-      var closeFn = closeFnMap[id];
-      if (closeFn) closeFn();
-    });
-  });
-
-  var overlay = document.getElementById("confirm-overlay");
-  if (overlay) {
-    overlay.addEventListener("click", function (e) {
-      if (e.target === this) closeConfirm();
-    });
-  }
+window.addEventListener('DOMContentLoaded', function() {
+  var overlay = document.getElementById('confirm-overlay');
+  if (overlay) overlay.addEventListener('click', function(e) { if(e.target===this) closeConfirm(); });
 });
-
 })();
 </script>
 
@@ -2834,12 +2732,5 @@ window.addEventListener("DOMContentLoaded", function () {
       </div>
     </div>
 
-    <input
-      type="file"
-      id="import-project-file"
-      accept=".json,application/json"
-      style="display:none"
-      onchange="handleProjectImport(event)"
-    >
 </body>
 </html>
