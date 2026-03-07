@@ -2711,6 +2711,31 @@ window.filterCmd = function(q) {
   list.innerHTML = html;
 };
 
+// --- MISSING UI TOGGLE FUNCTIONS ---
+window.showConfirm = function(title,msg,okLabel,cb){
+  document.getElementById("confirm-title").textContent=title;
+  document.getElementById("confirm-msg").textContent=msg;
+  document.getElementById("confirm-ok-btn").textContent=okLabel||"Delete";
+  window._confirmCb=cb;
+  document.getElementById("confirm-overlay").style.display="flex";
+};
+window.closeConfirm = function(){
+  document.getElementById("confirm-overlay").style.display="none";
+  window._confirmCb=null;
+};
+window.confirmOk = function(){
+  document.getElementById("confirm-overlay").style.display="none";
+  if(window._confirmCb) window._confirmCb();
+  window._confirmCb=null;
+};
+window.showInviteCodeInput = function() {
+  document.getElementById("invite-code-modal").classList.add("open");
+};
+window.closeInviteCodeModal = function() {
+  document.getElementById("invite-code-modal").classList.remove("open");
+};
+// -----------------------------------
+  
 window.addEventListener("DOMContentLoaded", function () {
   [
     "modal",
@@ -2858,4 +2883,5 @@ window.addEventListener("DOMContentLoaded", function () {
 </html>
 
         
+
 
