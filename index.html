@@ -1970,7 +1970,7 @@ function renderGantt(){
 
   var dates=[];
   for(var i=0;i<numDays;i++)dates.push(new Date(ganttStart.getFullYear(),ganttStart.getMonth(),i+1));
-
+  
   function mkRow(labelEl,barFn,visible){
     var lr=document.createElement("div");lr.className="gantt-label-row";lr.appendChild(labelEl);
     var row=document.createElement("div");row.className="gantt-row";
@@ -2964,5 +2964,6 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
+
 
 
