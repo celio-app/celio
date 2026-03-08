@@ -1020,7 +1020,7 @@ var uiState = {
   seqShotCollapsed: {},
   shotSectionCollapsed: {},
   ganttCollapsed: { tasks: false, shots: {} },
-  schedView: "all", schedFilter: "all", adminCollapsed: {}
+  schedView: "all", schedFilter: "all", adminCollapsed: {}, schedSectionCollapsed: {}
 };
 
 function saveUIState() {
@@ -1044,6 +1044,7 @@ function loadUIState() {
         uiState.ganttCollapsed = p.ganttCollapsed || { tasks: false, shots: {} };
         uiState.schedView = p.schedView || "all";
         uiState.adminCollapsed = p.adminCollapsed || {};
+        uiState.schedSectionCollapsed = p.schedSectionCollapsed || {};
       }
     } catch(e) {}
   }
@@ -1651,14 +1652,19 @@ window.renderSchedule=function(){
 function renderAssetSections(assetTasks){
   var container=document.getElementById("asset-sections");container.innerHTML="";
   var secWrap=document.createElement("div");secWrap.className="asset-section";
-  var secHdr=document.createElement("div");secHdr.className="asset-section-hdr";
+  var _assetCollapsed=uiState.schedSectionCollapsed["assets"]===true;
+  var secHdr=document.createElement("div");secHdr.className="asset-section-hdr";secHdr.style.cursor="pointer";
   var h2=document.createElement("h2");h2.innerHTML="&#127912; Asset Pipeline";
   var addBtn=document.createElement("button");addBtn.className="btn btn-primary btn-sm";
-  addBtn.textContent="+ New Asset";addBtn.onclick=function(){openModal(null,"asset");};
-  secHdr.appendChild(h2);secHdr.appendChild(addBtn);secWrap.appendChild(secHdr);
+  addBtn.textContent="+ New Asset";addBtn.onclick=function(e){e.stopPropagation();openModal(null,"asset");};
+  var assetArrow=document.createElement("span");assetArrow.className="admin-collapse-arrow";assetArrow.innerHTML=_assetCollapsed?"&#9650;":"&#9660;";
+  secHdr.appendChild(h2);secHdr.appendChild(addBtn);secHdr.appendChild(assetArrow);
+  secHdr.onclick=function(){uiState.schedSectionCollapsed["assets"]=!uiState.schedSectionCollapsed["assets"];saveUIState();renderSchedule();};
+  secWrap.appendChild(secHdr);
+  var assetBody=document.createElement("div");assetBody.style.display=_assetCollapsed?"none":"";
   if(!assetTasks.length){
     var empty=document.createElement("div");empty.style.cssText="padding:24px;text-align:center;color:var(--text4);font-size:.82rem";
-    empty.textContent="No asset tasks yet.";secWrap.appendChild(empty);container.appendChild(secWrap);return;
+    empty.textContent="No asset tasks yet.";assetBody.appendChild(empty);secWrap.appendChild(assetBody);container.appendChild(secWrap);return;
   }
   var byType={};
   assetTasks.forEach(function(t){
@@ -1687,7 +1693,7 @@ function renderAssetSections(assetTasks){
       var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
       arr.classList.toggle("open",!hiding);uiState.typeGroupCollapsed[atype]=hiding;saveUIState();
     };})(at,typeArrow,typeBody);
-    secWrap.appendChild(typeRow);
+    assetBody.appendChild(typeRow);
     names.forEach(function(name){
       var stageTasks=byType[at][name];
       var total=stageTasks.length,done=stageTasks.filter(function(t){return t.status==="done";}).length;
@@ -1752,8 +1758,9 @@ function renderAssetSections(assetTasks){
       tbl.appendChild(tbody);cardBody.appendChild(tbl);
       card.appendChild(hdr);card.appendChild(cardBody);typeBody.appendChild(card);
     });
-    secWrap.appendChild(typeBody);
+    assetBody.appendChild(typeBody);
   });
+  secWrap.appendChild(assetBody);
   container.appendChild(secWrap);
 }
 
@@ -1763,14 +1770,19 @@ function renderShotSection(){
   var projShots=shots.filter(function(s){return s.project_id===activeProject.id;});
   var projSeqs=sequences.filter(function(s){return s.project_id===activeProject.id;});
   var wrap=document.createElement("div");wrap.className="asset-section";
-  var sh2=document.createElement("div");sh2.className="asset-section-hdr";
+  var _shotCollapsed=uiState.schedSectionCollapsed["shots"]===true;
+  var sh2=document.createElement("div");sh2.className="asset-section-hdr";sh2.style.cursor="pointer";
   var shTitle=document.createElement("h2");shTitle.innerHTML="&#127916; Shot Progression";
   var addSeqBtn=document.createElement("button");addSeqBtn.className="btn btn-ghost btn-sm";addSeqBtn.textContent="+ Add Sequence";
-  addSeqBtn.onclick=function(){openSeqModal(null,activeProject?activeProject.id:null);};
-  sh2.appendChild(shTitle);sh2.appendChild(addSeqBtn);wrap.appendChild(sh2);
+  addSeqBtn.onclick=function(e){e.stopPropagation();openSeqModal(null,activeProject?activeProject.id:null);};
+  var shotArrow=document.createElement("span");shotArrow.className="admin-collapse-arrow";shotArrow.innerHTML=_shotCollapsed?"&#9650;":"&#9660;";
+  sh2.appendChild(shTitle);sh2.appendChild(addSeqBtn);sh2.appendChild(shotArrow);
+  sh2.onclick=function(){uiState.schedSectionCollapsed["shots"]=!uiState.schedSectionCollapsed["shots"];saveUIState();renderSchedule();};
+  var sectionBody=document.createElement("div");sectionBody.style.display=_shotCollapsed?"none":"";
+  wrap.appendChild(sh2);
   if(!projShots.length){
     var emp=document.createElement("div");emp.style.cssText="padding:20px;text-align:center;color:var(--text4);font-size:.82rem";
-    emp.textContent="No shots yet. Add a sequence first, then add shots.";wrap.appendChild(emp);container.appendChild(wrap);return;
+    emp.textContent="No shots yet. Add a sequence first, then add shots.";sectionBody.appendChild(emp);wrap.appendChild(sectionBody);container.appendChild(wrap);return;
   }
   projSeqs.forEach(function(seq){
     var _activeShotIds=(shotTasks||[]).map(function(t){return t.shot_id;});
@@ -1795,7 +1807,7 @@ function renderShotSection(){
       var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
       arr.classList.toggle("open",!hiding);uiState.seqShotCollapsed[sid]=hiding;saveUIState();
     };})(seq.id,seqArrow,seqBody);
-    wrap.appendChild(seqRow);
+    sectionBody.appendChild(seqRow);
     if(!seqShots.length){
       var emptyShot=document.createElement("div");emptyShot.style.cssText="padding:14px 28px;font-size:.78rem;color:var(--text4);font-style:italic;";
       emptyShot.textContent="No shots yet — use \"+ Add Shot\" to get started.";seqBody.appendChild(emptyShot);
@@ -1842,7 +1854,7 @@ function renderShotSection(){
       }
       card.appendChild(hdr);card.appendChild(shotBody);seqBody.appendChild(card);
     });
-    wrap.appendChild(seqBody);
+    sectionBody.appendChild(seqBody);
   });
   var orphans=projShots.filter(function(s){
     if(s.sequence_id&&projSeqs.find(function(sq){return sq.id===s.sequence_id;})) return false;
@@ -1852,7 +1864,7 @@ function renderShotSection(){
   if(orphans.length){
     var orRow=document.createElement("div");orRow.className="seq-shot-hdr";
     var orLbl=document.createElement("span");orLbl.className="seq-shot-label";orLbl.textContent="Unassigned";
-    orRow.appendChild(orLbl);wrap.appendChild(orRow);
+    orRow.appendChild(orLbl);sectionBody.appendChild(orRow);
     orphans.forEach(function(sh){
       var card2=document.createElement("div");card2.className="asset-card";
       var hdr2=document.createElement("div");hdr2.className="asset-card-hdr";hdr2.style.paddingLeft="28px";
@@ -1862,9 +1874,10 @@ function renderShotSection(){
       var openBtn2=document.createElement("button");openBtn2.className="btn btn-ghost btn-sm";openBtn2.style.fontSize=".68rem";openBtn2.textContent="Open";
       openBtn2.onclick=(function(sid){return function(e){e.stopPropagation();openShot(sid);};})(sh.id);
       hdr2.appendChild(dot2);hdr2.appendChild(code2);hdr2.appendChild(desc2);hdr2.appendChild(openBtn2);
-      card2.appendChild(hdr2);wrap.appendChild(card2);
+      card2.appendChild(hdr2);sectionBody.appendChild(card2);
     });
   }
+  wrap.appendChild(sectionBody);
   container.appendChild(wrap);
 }
 
