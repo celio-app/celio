@@ -2686,7 +2686,7 @@ window.renderMilestones=function(){
       eb.onclick=(function(tid,c2){return function(){openAdminModal(c2,tid);};})(t.id,cat);
       var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="✕";
       db.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
-      entry.appendChild(main);entry.appendChild(pri);entry.appendChild(eb);entry.appendChild(db);
+      entry.appendChild(main);entry.appendChild(pri);if(_isOwner){entry.appendChild(eb);entry.appendChild(db);}
       cont.appendChild(entry);
     });
   });
