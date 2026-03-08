@@ -2775,14 +2775,12 @@ window.filterCmd = function(q) {
 
 // --- MISSING UI TOGGLE FUNCTIONS ---
 window.toggleSidebar = function() {
-  // 1. Target the correct element from your CSS
   var sb = document.querySelector('.sidebar-nav');
-  
+  // If the screen is mobile-sized (matching your @media 580px query)
   if (window.innerWidth <= 580) {
-    // 2. Mobile Logic: Toggle the 'mobile-open' class used in your @media query
     if (sb) sb.classList.toggle('mobile-open');
   } else {
-    // 3. Desktop Logic: Toggle 'sb-collapsed' on the body to shrink the sidebar
+    // On desktop, we collapse the width by adding the class to the body
     document.body.classList.toggle('sb-collapsed');
   }
 };
@@ -2965,4 +2963,5 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
+
 
