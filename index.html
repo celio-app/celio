@@ -1949,6 +1949,7 @@ window.calPrev=function(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}rende
 window.calNext=function(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();};
 window.calToday=function(){calYear=today.getFullYear();calMonth=today.getMonth();renderCalendar();};
 
+
 function renderGantt(){
   var months=["January","February","March","April","May","June","July","August","September","October","November","December"];
   var numDays=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,0).getDate();
@@ -1970,7 +1971,7 @@ function renderGantt(){
 
   var dates=[];
   for(var i=0;i<numDays;i++)dates.push(new Date(ganttStart.getFullYear(),ganttStart.getMonth(),i+1));
-  
+
   function mkRow(labelEl,barFn,visible){
     var lr=document.createElement("div");lr.className="gantt-label-row";lr.appendChild(labelEl);
     var row=document.createElement("div");row.className="gantt-row";
@@ -2964,6 +2965,3 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
-
-
-
