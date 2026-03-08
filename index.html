@@ -568,6 +568,9 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .admin-collapse-arrow.open { transform: rotate(0deg); }
 .admin-collapse-arrow.closed { transform: rotate(-90deg); }
 .admin-section.collapsed .admin-list { display:none; }
+
+.admin-owner-only{display:none;}
+body.is-project-owner .admin-owner-only{display:inline-flex;}
 </style>
 </head>
 <body>
@@ -646,7 +649,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
         <div class="nav-tab active" onclick="showTab('schedule')">Schedule</div>
         <div class="nav-tab" onclick="showTab('calendar')">Calendar</div>
         <div class="nav-tab" onclick="showTab('gantt')">Gantt Chart</div>
-        <div class="nav-tab" onclick="showTab('milestones')">&#128203; Admin</div>
+        <div class="nav-tab" id="nav-tab-admin" onclick="showTab('milestones')">&#128203; Admin</div>
       </div>
 
       <div id="no-proj" class="no-project" style="display:flex">
@@ -739,19 +742,19 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
             <div class="admin-list" id="admin-list-projects"></div>
           </div>
           <div class="admin-section" id="admin-sec-client">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('client')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128172;</span><span class="admin-sec-title">Client Feedback</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('client')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-client">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('client')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128172;</span><span class="admin-sec-title">Client Feedback</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('client')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-client">&#9660;</span></div>
             <div class="admin-list" id="admin-list-client"></div>
           </div>
           <div class="admin-section" id="admin-sec-marketing">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('marketing')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128227;</span><span class="admin-sec-title">Marketing</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('marketing')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-marketing">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('marketing')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128227;</span><span class="admin-sec-title">Marketing</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('marketing')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-marketing">&#9660;</span></div>
             <div class="admin-list" id="admin-list-marketing"></div>
           </div>
           <div class="admin-section" id="admin-sec-meetings">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('meetings')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128197;</span><span class="admin-sec-title">Meetings</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('meetings')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-meetings">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('meetings')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128197;</span><span class="admin-sec-title">Meetings</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('meetings')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-meetings">&#9660;</span></div>
             <div class="admin-list" id="admin-list-meetings"></div>
           </div>
           <div class="admin-section" id="admin-sec-team">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('team')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128101;</span><span class="admin-sec-title">Production Team</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('team')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-team">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('team')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128101;</span><span class="admin-sec-title">Production Team</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('team')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-team">&#9660;</span></div>
             <div class="admin-list" id="admin-list-team"></div>
           </div>
         </div>
@@ -1283,6 +1286,10 @@ function setHeaderProject(p){
   document.getElementById("hdr-actions").innerHTML='<button class="btn btn-primary" onclick="openModal(null)">+ Add Task</button>';
   document.getElementById("no-proj").style.display="none";
   document.getElementById("nav-tabs").style.display="";
+  var _owner=canEditProject();
+  var adminTab=document.getElementById("nav-tab-admin");
+  if(adminTab)adminTab.style.display=_owner?"":"none";
+  document.body.classList.toggle("is-project-owner",_owner);
 }
 function showNoProject(){document.getElementById("no-proj").style.display="flex";document.getElementById("nav-tabs").style.display="none";document.getElementById("hdr-actions").innerHTML="";}
 
@@ -2393,6 +2400,7 @@ window.populateTeamDropdowns = function() {
 };
 
 window.showTab=function(name){
+  if(name==="milestones"&&!canEditProject()){showToast("Admin access is owner-only.","error");name="schedule";}
   ["tab-schedule","tab-calendar","tab-gantt","tab-milestones"].forEach(function(id){var el=document.getElementById(id);el.style.display="none";el.classList.remove("active");});
   document.querySelectorAll(".nav-tab").forEach(function(el){el.classList.remove("active");});
   var el=document.getElementById("tab-"+name);el.style.display="block";el.classList.add("active");
@@ -2630,6 +2638,7 @@ window.toggleAdminSection = function(key) {
   if (arrow) { arrow.classList.toggle("open", isCollapsed); arrow.classList.toggle("closed", !isCollapsed); }
 };
 window.renderMilestones=function(){
+  var _isOwner=canEditProject();
   var projList=document.getElementById("admin-list-projects");
   if(projList){
     projList.innerHTML="";
@@ -2656,7 +2665,7 @@ window.renderMilestones=function(){
       
       var delBtn=document.createElement("button");delBtn.className="btn btn-sm btn-del";delBtn.style.fontSize=".68rem";delBtn.textContent="Delete";
       delBtn.onclick=(function(pid){return function(){deleteProject(pid);};})(p.id);
-      entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(csvBtn);entry.appendChild(inviteBtn);entry.appendChild(delBtn);
+      entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(csvBtn);entry.appendChild(inviteBtn);if(_isOwner)entry.appendChild(delBtn);
       projList.appendChild(entry);
     });
   }
