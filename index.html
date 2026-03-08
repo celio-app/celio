@@ -552,6 +552,10 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 
 .month-start-col { border-left: 1px solid var(--border) !important; }
 .gantt-date-cell.month-start-col { border-left: 1px solid var(--border); }
+
+.cal-drop-hover { background: var(--purple-dim, #3b1d6e) !important; outline: 2px dashed var(--purple); outline-offset: -2px; }
+.cal-chip-dragging { opacity: 0.35; }
+.cal-day { cursor: default; }
 </style>
 </head>
 <body>
@@ -982,7 +986,7 @@ var sb=supabase.createClient(SB_URL,SB_KEY);
 var currentUser=null,tasks=[],projects=[],sequences=[],shots=[],shotTasks=[],shotAssetLinks=[],activeShotTasks=[];
 var activeProject=null,activeShot=null;
 var editTaskId=null,editProjId=null,editSeqId=null,currentSeqId=null;
-var calYear,calMonth,ganttStart=parseInt(localStorage.getItem("celio-gantt-offset")||"-7",10);
+var calYear,calMonth,ganttStart=parseInt(sessionStorage.getItem("celio-gantt-offset")||"-7",10);
 var today=new Date();today.setHours(0,0,0,0);
 var COL_W=34,selectedColor="#7c3aed",selectedCat="general",selectedPipelineStage=null,selectedShotTaskType=null;
 var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16","#f97316","#8b5cf6","#64748b","#0ea5e9"];
@@ -1922,31 +1926,88 @@ window.deleteTask=async function(id){if(!confirm("Remove this task?"))return;awa
 window.editTask=function(id){openModal(id);};
 
 function renderCalendar(){var months=["January","February","March","April","May","June","July","August","September","October","November","December"];document.getElementById("cal-month-label").textContent=months[calMonth]+" "+calYear;var grid=document.getElementById("cal-grid");grid.querySelectorAll(".cal-day").forEach(function(c){c.remove();});var first=new Date(calYear,calMonth,1),sd=first.getDay(),dim=new Date(calYear,calMonth+1,0).getDate(),dip=new Date(calYear,calMonth,0).getDate();for(var i=sd-1;i>=0;i--)grid.appendChild(mkCalCell(calYear,calMonth-1,dip-i,true));for(var d=1;d<=dim;d++)grid.appendChild(mkCalCell(calYear,calMonth,d,false));var rem=(7-(sd+dim)%7)%7;for(var d=1;d<=rem;d++)grid.appendChild(mkCalCell(calYear,calMonth+1,d,true));}
-function mkCalCell(year,month,day,other){
-  var dt=new Date(year,month,day),ymd=fmtYMD(dt);
-  var cell=document.createElement("div");cell.className="cal-day"+(other?" other-month":"");
-  if(dt.getTime()===today.getTime())cell.classList.add("today");
-  var num=document.createElement("div");num.className="cal-day-num";num.textContent=day;
+function mkCalCell(year, month, day, other) {
+  var dt = new Date(year, month, day), ymd = fmtYMD(dt);
+  var cell = document.createElement("div");
+  cell.className = "cal-day" + (other ? " other-month" : "");
+  if (dt.getTime() === today.getTime()) cell.classList.add("today");
+  cell.dataset.ymd = ymd;
+
+  var num = document.createElement("div"); num.className = "cal-day-num"; num.textContent = day;
   cell.appendChild(num);
-  tasks.filter(function(t){return t.due_date===ymd;}).forEach(function(t){
-    var chip=document.createElement("div");chip.className="cal-task-chip "+calChipCls(t);
-    chip.textContent=(t.asset_name?t.asset_name+" — ":"")+(t.pipeline_stage||t.name);
-    chip.title=t.name;chip.addEventListener("click",function(){openModal(t.id);});
+
+  // ── Drop target ──
+  cell.addEventListener("dragover", function(e) {
+    e.preventDefault();
+    cell.classList.add("cal-drop-hover");
+  });
+  cell.addEventListener("dragleave", function() {
+    cell.classList.remove("cal-drop-hover");
+  });
+  cell.addEventListener("drop", async function(e) {
+    e.preventDefault();
+    cell.classList.remove("cal-drop-hover");
+    var raw = e.dataTransfer.getData("text/plain");
+    if (!raw) return;
+    var info;
+    try { info = JSON.parse(raw); } catch(ex) { return; }
+    if (info.ymd === ymd) return; // dropped on same day — no-op
+    if (info.type === "task") {
+      var t = tasks.find(function(x) { return x.id === info.id; });
+      if (!t) return;
+      var r = await sb.from("tasks").update({ due_date: ymd }).eq("id", info.id);
+      if (r.error) { showToast("Error: " + r.error.message, "error"); return; }
+      t.due_date = ymd;
+    } else if (info.type === "shottask") {
+      var st = (shotTasks || []).find(function(x) { return x.id === info.id; });
+      if (!st) return;
+      var r2 = await sb.from("shot_tasks").update({ due_date: ymd }).eq("id", info.id);
+      if (r2.error) { showToast("Error: " + r2.error.message, "error"); return; }
+      st.due_date = ymd;
+    }
+    showToast("Moved to " + ymd);
+    renderCalendar();
+  });
+
+  // ── Task chips ──
+  tasks.filter(function(t) { return t.due_date === ymd; }).forEach(function(t) {
+    var chip = document.createElement("div");
+    chip.className = "cal-task-chip " + calChipCls(t);
+    chip.textContent = (t.asset_name ? t.asset_name + " \u2014 " : "") + (t.pipeline_stage || t.name);
+    chip.title = t.name;
+    chip.draggable = true;
+    chip.addEventListener("dragstart", function(e) {
+      e.dataTransfer.setData("text/plain", JSON.stringify({ type: "task", id: t.id, ymd: ymd }));
+      chip.classList.add("cal-chip-dragging");
+    });
+    chip.addEventListener("dragend", function() { chip.classList.remove("cal-chip-dragging"); });
+    chip.addEventListener("click", function() { openModal(t.id); });
     cell.appendChild(chip);
   });
-  (shotTasks||[]).filter(function(t){return t.due_date===ymd;}).forEach(function(t){
-    var sh=shots.find(function(s){return s.id===t.shot_id;});
-    var isDone=t.status==="approved"||t.status==="final";
-    var isLate=!isDone&&daysUntil(t.due_date)<0;
-    var cls=isDone?"ct-shot-done":isLate?"ct-shot-late":"ct-shot";
-    var chip=document.createElement("div");chip.className="cal-task-chip "+cls;
-    chip.textContent=(sh?sh.code+" — ":"")+t.task_type;
-    chip.title=(sh?sh.code+" | ":"")+t.task_type+(t.assignee?" | "+t.assignee:"");
-    chip.addEventListener("click",function(){if(sh)openShot(sh.id);});
+
+  // ── Shot task chips ──
+  (shotTasks || []).filter(function(t) { return t.due_date === ymd; }).forEach(function(t) {
+    var sh = shots.find(function(s) { return s.id === t.shot_id; });
+    var isDone = t.status === "approved" || t.status === "final";
+    var isLate = !isDone && daysUntil(t.due_date) < 0;
+    var cls = isDone ? "ct-shot-done" : isLate ? "ct-shot-late" : "ct-shot";
+    var chip = document.createElement("div");
+    chip.className = "cal-task-chip " + cls;
+    chip.textContent = (sh ? sh.code + " \u2014 " : "") + t.task_type;
+    chip.title = (sh ? sh.code + " | " : "") + t.task_type + (t.assignee ? " | " + t.assignee : "");
+    chip.draggable = true;
+    chip.addEventListener("dragstart", function(e) {
+      e.dataTransfer.setData("text/plain", JSON.stringify({ type: "shottask", id: t.id, ymd: ymd }));
+      chip.classList.add("cal-chip-dragging");
+    });
+    chip.addEventListener("dragend", function() { chip.classList.remove("cal-chip-dragging"); });
+    chip.addEventListener("click", function() { if (sh) openShot(sh.id); });
     cell.appendChild(chip);
   });
+
   return cell;
 }
+
 
 window.calPrev=function(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}renderCalendar();};
 window.calNext=function(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}renderCalendar();};
@@ -2184,9 +2245,9 @@ function renderGantt() {
   inner.innerHTML = ""; inner.appendChild(labelsDiv); inner.appendChild(chartDiv);
 }
 
-window.ganttPrev  = function() { ganttStart -= 14; localStorage.setItem("celio-gantt-offset", ganttStart); renderGantt(); };
-window.ganttNext  = function() { ganttStart += 14; localStorage.setItem("celio-gantt-offset", ganttStart); renderGantt(); };
-window.ganttToday = function() { ganttStart = -7;  localStorage.setItem("celio-gantt-offset", ganttStart); renderGantt(); };
+window.ganttPrev  = function() { ganttStart -= 14; sessionStorage.setItem("celio-gantt-offset", ganttStart); renderGantt(); };
+window.ganttNext  = function() { ganttStart += 14; sessionStorage.setItem("celio-gantt-offset", ganttStart); renderGantt(); };
+window.ganttToday = function() { ganttStart = -7;  sessionStorage.setItem("celio-gantt-offset", ganttStart); renderGantt(); };
 window.isProjectOwner = function() {
   if(!activeProject || !currentUser) return false;
   var p=projects.find(function(x){return x.id===activeProject.id;});
