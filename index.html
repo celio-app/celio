@@ -2774,11 +2774,15 @@ window.filterCmd = function(q) {
 
 // --- MISSING UI TOGGLE FUNCTIONS ---
 window.toggleSidebar = function() {
-  // Find the sidebar element specifically
-  var sb = document.querySelector('.sidebar-nav');
-  if (sb) {
-    // Add or remove the 'mobile-open' class as defined in your CSS
-    sb.classList.toggle('mobile-open');
+  // 1. Mobile Logic: If screen is small, slide the menu in/out
+  if (window.innerWidth <= 580) {
+    var sb = document.querySelector('.sidebar-nav');
+    if (sb) {
+      sb.classList.toggle('mobile-open');
+    }
+  } else {
+    // 2. Desktop Logic: Collapse or expand the sidebar width
+    document.body.classList.toggle('sb-collapsed');
   }
 };
 
@@ -2960,4 +2964,5 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
+
 
