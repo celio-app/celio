@@ -2775,14 +2775,14 @@ window.filterCmd = function(q) {
 
 // --- MISSING UI TOGGLE FUNCTIONS ---
 window.toggleSidebar = function() {
-  // 1. Mobile Logic: If screen is small, slide the menu in/out
+  // 1. Target the correct element from your CSS
+  var sb = document.querySelector('.sidebar-nav');
+  
   if (window.innerWidth <= 580) {
-    var sb = document.querySelector('.sidebar-nav');
-    if (sb) {
-      sb.classList.toggle('mobile-open');
-    }
+    // 2. Mobile Logic: Toggle the 'mobile-open' class used in your @media query
+    if (sb) sb.classList.toggle('mobile-open');
   } else {
-    // 2. Desktop Logic: Collapse or expand the sidebar width
+    // 3. Desktop Logic: Toggle 'sb-collapsed' on the body to shrink the sidebar
     document.body.classList.toggle('sb-collapsed');
   }
 };
@@ -2965,3 +2965,4 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
+
