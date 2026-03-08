@@ -1415,44 +1415,60 @@ window.deleteShot = async function(id) {
   renderSidebar(); renderSchedule(); showToast("Deleted.");
 };
 
+/* --- FIXED SHOT & TASK RENDERING --- */
+
 window.openShot = async function(id) {
   var sh = shots.find(function(x) { return x.id === id; });
   if (!sh) return;
   activeShot = sh;
-  if (isMobile()) closeMobileSidebar();
-  var seq = sequences.find(function(x) { return x.id === sh.sequence_id; });
-  var proj = projects.find(function(x) { return x.id === sh.project_id; }) || activeProject;
   
-  if (!activeProject || activeProject.id !== sh.project_id) {
-    activeProject = proj;
-    uiState.projExpanded[proj.id] = true;
-    saveUIState();
-    localStorage.setItem("celio-proj-" + currentUser.id, proj.id);
-  }
-
-  document.getElementById("hdr-bc").innerHTML = '<div class="breadcrumb"><span class="bc-proj" onclick="backToProject()">' + proj.name + '</span><span class="bc-sep">/</span><span class="bc-seq">' + (seq ? seq.code : "") + '</span><span class="bc-sep">/</span><span class="bc-shot">' + sh.code + '</span></div>';
-  document.getElementById("hdr-actions").innerHTML = '<button class="btn btn-ghost btn-sm" onclick="backToProject()">&#8592; Back</button>';
-  
+  // Update UI Elements
   document.getElementById("sp-code").textContent = sh.code;
-  document.getElementById("sp-seq-label").textContent = seq ? seq.code + (seq.name ? " \u2014 " + seq.name : "") : "";
   document.getElementById("sp-desc").value = sh.description || "";
   document.getElementById("sp-status").value = sh.status || "pending";
-  document.getElementById("sp-proj-chip").textContent = proj.name;
-  document.getElementById("sp-seq-chip").textContent = seq ? seq.code + (seq.name ? " \u2014 " + seq.name : "") : "";
-  document.getElementById("sp-code-edit").value = sh.code;
-  document.getElementById("sp-seq-edit").value = seq ? seq.code + (seq.name ? " \u2014 " + seq.name : "") : "";
-  document.getElementById("sp-frames").value = sh.frame_count || "";
   
-  if (document.getElementById("sp-start-date")) document.getElementById("sp-start-date").value = sh.start_date || "";
-  if (document.getElementById("sp-due-date")) document.getElementById("sp-due-date").value = sh.due_date || "";
+  // Navigation: Show Shot Page, Hide Tabs
+  var shotPage = document.getElementById("shot-page");
+  var navTabs = document.getElementById("nav-tabs");
+  if(shotPage) shotPage.classList.add("active");
+  if(navTabs) navTabs.style.display = "none";
   
-  document.getElementById("sp-camera").value = sh.camera || "";
-  document.getElementById("sp-storyboard").value = sh.storyboard_notes || "";
-  
-  showShotPage(true);
+  // Reload shot-specific tasks
   await loadShotTasks();
-  await loadShotAssets();
+  if (typeof loadShotAssets === 'function') await loadShotAssets();
   renderSidebar();
+};
+
+window.backToProject = function() {
+  activeShot = null;
+  var shotPage = document.getElementById("shot-page");
+  var navTabs = document.getElementById("nav-tabs");
+  if(shotPage) shotPage.classList.remove("active");
+  if(navTabs) navTabs.style.display = ""; // Returns navigation tabs
+  
+  // Re-trigger the main Gantt/Schedule engine
+  renderSchedule(); 
+  renderSidebar();
+};
+
+// This function is critical for the Gantt chart to actually draw
+window.showTab = function(id) {
+  document.querySelectorAll(".tab-content").forEach(function(c) {
+    c.classList.remove("active");
+    c.style.display = "none";
+  });
+  document.querySelectorAll(".tab-btn").forEach(function(b) {
+    b.classList.remove("active");
+  });
+  
+  var target = document.getElementById("tab-" + id);
+  if(target) {
+    target.classList.add("active");
+    target.style.display = "block";
+  }
+  
+  // This line tells the Gantt chart logic to start drawing
+  renderSchedule(); 
 };
 
 window.backToProject = function() {
@@ -2900,4 +2916,5 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
+
 
