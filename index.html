@@ -986,7 +986,7 @@ var sb=supabase.createClient(SB_URL,SB_KEY);
 var currentUser=null,tasks=[],projects=[],sequences=[],shots=[],shotTasks=[],shotAssetLinks=[],activeShotTasks=[];
 var activeProject=null,activeShot=null;
 var editTaskId=null,editProjId=null,editSeqId=null,currentSeqId=null;
-var calYear,calMonth,ganttStart=parseInt(sessionStorage.getItem("celio-gantt-offset")||"-7",10);
+var calYear,calMonth,ganttStart=(function(){var _v=parseInt(sessionStorage.getItem("celio-gantt-offset"),10);return isNaN(_v)?-7:_v;})();
 var today=new Date();today.setHours(0,0,0,0);
 var COL_W=34,selectedColor="#7c3aed",selectedCat="general",selectedPipelineStage=null,selectedShotTaskType=null;
 var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16","#f97316","#8b5cf6","#64748b","#0ea5e9"];
