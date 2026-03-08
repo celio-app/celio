@@ -1882,10 +1882,15 @@ function renderShotSection(){
 }
 
 function updateStats(){
+  // tasks use: todo/inprogress/review/done
+  // shotTasks use: ready/inprogress/review/approved/final
+  function isDone(t){return t.status==="done"||t.status==="approved"||t.status==="final";}
+  function isInProg(t){return t.status==="inprogress"||t.status==="review";}
+  function isLate(t){return !isDone(t)&&t.due_date&&daysUntil(t.due_date)<0;}
   var allT=(tasks||[]).concat(shotTasks||[]);
-  var total=allT.length,done=allT.filter(function(t){return t.status==="done";}).length;
-  var inprog=allT.filter(function(t){return t.status==="inprogress"||t.status==="review";}).length;
-  var late=allT.filter(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;}).length;
+  var total=allT.length,done=allT.filter(isDone).length;
+  var inprog=allT.filter(isInProg).length;
+  var late=allT.filter(isLate).length;
   var revs=allT.reduce(function(sum,t){return sum+(t.revision_count||0);},0);
   document.getElementById("s-total").textContent=total;
   document.getElementById("s-done").textContent=done;
