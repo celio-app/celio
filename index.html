@@ -1740,7 +1740,7 @@ function renderAssetSections(assetTasks){
           await sb.from("tasks").update({status:nv, revision_count: revCount}).eq("id",tid);
           showToast("Updated!");
           updateStats();
-          renderAssetSections(tasks.filter(function(t){return t.category==="asset";}));
+          renderSchedule();
         };})(t.id,baseSelStyle,stColors,t.status);
         c5.appendChild(sel);
         var c6=document.createElement("td");c6.style.whiteSpace="nowrap";
@@ -1773,7 +1773,13 @@ function renderShotSection(){
     emp.textContent="No shots yet. Add a sequence first, then add shots.";wrap.appendChild(emp);container.appendChild(wrap);return;
   }
   projSeqs.forEach(function(seq){
-    var seqShots=projShots.filter(function(s){return s.sequence_id===seq.id;});
+    var _activeShotIds=(shotTasks||[]).map(function(t){return t.shot_id;});
+    var seqShots=projShots.filter(function(s){
+      if(s.sequence_id!==seq.id) return false;
+      // When a filter is active, only show shots that have matching tasks
+      if((uiState.schedFilter||"all")!=="all" && _activeShotIds.indexOf(s.id)===-1) return false;
+      return true;
+    });
     var isSeqCollapsed=uiState.seqShotCollapsed[seq.id]===true;
     var seqRow=document.createElement("div");seqRow.className="seq-shot-hdr";
     var seqArrow=document.createElement("span");seqArrow.className="seq-shot-arrow"+(isSeqCollapsed?"":" open");seqArrow.innerHTML="&#9658;";
@@ -1838,7 +1844,11 @@ function renderShotSection(){
     });
     wrap.appendChild(seqBody);
   });
-  var orphans=projShots.filter(function(s){return !s.sequence_id||!projSeqs.find(function(sq){return sq.id===s.sequence_id;});});
+  var orphans=projShots.filter(function(s){
+    if(s.sequence_id&&projSeqs.find(function(sq){return sq.id===s.sequence_id;})) return false;
+    if((uiState.schedFilter||"all")!=="all" && _activeShotIds.indexOf(s.id)===-1) return false;
+    return true;
+  });
   if(orphans.length){
     var orRow=document.createElement("div");orRow.className="seq-shot-hdr";
     var orLbl=document.createElement("span");orLbl.className="seq-shot-label";orLbl.textContent="Unassigned";
