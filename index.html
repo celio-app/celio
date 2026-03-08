@@ -1370,7 +1370,7 @@ window.deleteSeq = async function(id) {
 
 window.openShotModal=function(seqId){currentSeqId=seqId;document.getElementById("shf-code").value="";if(document.getElementById("shf-start"))document.getElementById("shf-start").value="";if(document.getElementById("shf-due"))document.getElementById("shf-due").value="";document.getElementById("shf-desc").value="";document.getElementById("shot-modal").classList.add("open");};
 window.closeShotModal=function(){document.getElementById("shot-modal").classList.remove("open");};
-window.saveShot=async function(){var code=document.getElementById("shf-code").value.trim().toUpperCase();if(!code){showToast("Please enter a shot code.", "error");return;}var seq=sequences.find(function(s){return s.id===currentSeqId;});var pid=seq?seq.project_id:activeProject.id;var payload={code:code,description:document.getElementById("shf-desc").value.trim(),sequence_id:currentSeqId,project_id:pid,user_id:currentUser.id,status:"pending",start_date:document.getElementById("shf-start")?document.getElementById("shf-start").value||null:null,due_date:document.getElementById("shf-due")?document.getElementById("shf-due").value||null:null};var r=await sb.from("shots").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}shots=shots.concat(r.data);closeShotModal();renderSidebar();renderSchedule();showToast("Shot added!");};
+window.saveShot=async function(){var code=document.getElementById("shf-code").value.trim().toUpperCase();if(!code){showToast("Please enter a shot code.", "error");return;}var seq=sequences.find(function(s){return s.id===currentSeqId;});var pid=seq?seq.project_id:activeProject.id;var payload={code:code,description:document.getElementById("shf-desc").value.trim(),sequence_id:currentSeqId,project_id:pid,user_id:currentUser.id,status:"pending",start_date:document.getElementById("shf-start")?document.getElementById("shf-start").value||null:null,due_date:document.getElementById("shf-due")?document.getElementById("shf-due").value||null:null};var r=await sb.from("shots").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}shots=shots.concat(r.data);closeShotModal();renderSidebar();();showToast("Shot added!");};
 window.deleteShot = async function(id) {
   if (!confirm("Delete this shot?")) return;
   if (activeShot && activeShot.id === id) backToProject();
@@ -1649,238 +1649,471 @@ window.setSchedView=function(v,el){
   renderSchedule();
 };
 
-window.renderSchedule=function(){
-  updateStats();
-  var assetTasks=tasks.filter(function(t){return t.category==="asset";});
-  var assetSec=document.getElementById("asset-sections");
-  var shotSec=document.getElementById("shot-schedule-section");
-  
-  document.querySelectorAll(".sched-tab").forEach(function(t){
-      t.classList.remove("active");
-      if((uiState.schedView==='all'&&t.textContent.includes('All Tasks')) || (uiState.schedView==='assets'&&t.textContent.includes('Assets'))) t.classList.add("active");
-  });
+window.renderSchedule = function() {
+    updateStats();
+    var assetTasks = tasks.filter(function(t) { return t.category === "asset"; });
+    var assetSec = document.getElementById("asset-sections");
+    var shotSec = document.getElementById("shot-schedule-section");
 
-  if(uiState.schedView==="assets"){
-    if(assetSec)assetSec.style.display="";
-    if(shotSec)shotSec.style.display="none";
-  } else {
-    if(assetSec)assetSec.style.display="";
-    if(shotSec)shotSec.style.display="";
-  }
-  renderAssetSections(assetTasks);
-  renderShotSection();
-  renderHandoffs();
-  renderAssetDeliverables();
+    // Update Tab Active States
+    document.querySelectorAll(".sched-tab").forEach(function(t) {
+        t.classList.remove("active");
+        if ((uiState.schedView === 'all' && t.textContent.includes('All Tasks')) || 
+            (uiState.schedView === 'assets' && t.textContent.includes('Assets'))) {
+            t.classList.add("active");
+        }
+    });
+
+    // Handle View Toggling (Assets Only vs All)
+    if (uiState.schedView === "assets") {
+        if (assetSec) assetSec.style.display = "block";
+        if (shotSec) shotSec.style.display = "none";
+    } else {
+        if (assetSec) assetSec.style.display = "block";
+        if (shotSec) shotSec.style.display = "block";
+    }
+
+    renderAssetSections(assetTasks);
+    renderShotSection();
+    renderHandoffs();
+    renderAssetDeliverables();
 };
 
-function renderAssetSections(assetTasks){
-  var container=document.getElementById("asset-sections");container.innerHTML="";
-  var secWrap=document.createElement("div");secWrap.className="asset-section";
-  var secHdr=document.createElement("div");secHdr.className="asset-section-hdr";
-  var h2=document.createElement("h2");h2.innerHTML="&#127912; Asset Pipeline";
-  var addBtn=document.createElement("button");addBtn.className="btn btn-primary btn-sm";
-  addBtn.textContent="+ New Asset";addBtn.onclick=function(){openModal(null,"asset");};
-  secHdr.appendChild(h2);secHdr.appendChild(addBtn);secWrap.appendChild(secHdr);
-  if(!assetTasks.length){
-    var empty=document.createElement("div");empty.style.cssText="padding:24px;text-align:center;color:var(--text4);font-size:.82rem";
-    empty.textContent="No asset tasks yet.";secWrap.appendChild(empty);container.appendChild(secWrap);return;
-  }
-  var byType={};
-  assetTasks.forEach(function(t){
-    var at=t.asset_type||"other",n=t.asset_name||"Unnamed";
-    if(!byType[at])byType[at]={};
-    if(!byType[at][n])byType[at][n]=[];
-    byType[at][n].push(t);
-  });
-  var typeOrder=["character","prop","environment","vehicle","fx","other"];
-  var typeLabels={character:"Characters",prop:"Props",environment:"Environments",vehicle:"Vehicles",fx:"FX Elements",other:"Other"};
-  typeOrder.forEach(function(at){
-    if(!byType[at])return;
-    var names=Object.keys(byType[at]);
-    var isTypeCollapsed=uiState.typeGroupCollapsed[at]===true;
-    var typeRow=document.createElement("div");typeRow.className="type-group-hdr";
-    var typeArrow=document.createElement("span");typeArrow.className="type-group-arrow"+(isTypeCollapsed?"":" open");typeArrow.innerHTML="&#9658;";
-    var typeIcon=document.createElement("span");typeIcon.innerHTML=assetTypeIcon(at);typeIcon.style.fontSize=".9rem";
-    var typeLbl=document.createElement("span");typeLbl.style.cssText="font-size:.78rem;font-weight:800;flex:1;";typeLbl.textContent=typeLabels[at];
-    var typeCnt=document.createElement("span");typeCnt.style.cssText="font-size:.68rem;color:var(--text4);";typeCnt.textContent=names.length+" asset"+(names.length!==1?"s":"");
-    var addTBtn=document.createElement("button");addTBtn.className="btn btn-ghost btn-sm";addTBtn.style.fontSize=".68rem";addTBtn.textContent="+ Add";
-    addTBtn.onclick=function(e){e.stopPropagation();openModal(null,"asset",at);};
-    typeRow.appendChild(typeArrow);typeRow.appendChild(typeIcon);typeRow.appendChild(typeLbl);typeRow.appendChild(typeCnt);typeRow.appendChild(addTBtn);
-    var typeBody=document.createElement("div");typeBody.style.display=isTypeCollapsed?"none":"";
-    (function(atype,arr,bdy){typeRow.onclick=function(e){
-      if(addTBtn.contains(e.target))return;
-      var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
-      arr.classList.toggle("open",!hiding);uiState.typeGroupCollapsed[atype]=hiding;saveUIState();
-    };})(at,typeArrow,typeBody);
-    secWrap.appendChild(typeRow);
-    names.forEach(function(name){
-      var stageTasks=byType[at][name];
-      var total=stageTasks.length,done=stageTasks.filter(function(t){return t.status==="done";}).length;
-      var pct=total?Math.round(done/total*100):0;
-      var anyLate=stageTasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
-      var isReady=done===total&&total>0;
-      var key=at+"|"+name;var isCollapsed=uiState.assetGroupCollapsed[key]!==false;
-      var card=document.createElement("div");card.className="asset-card";
-      var hdr=document.createElement("div");hdr.className="asset-card-hdr";
-      var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
-      var nameSpan=document.createElement("span");nameSpan.className="asset-card-name";nameSpan.textContent=name;
-      var badge=document.createElement("span");badge.className="asset-status-badge "+(isReady?"asb-ready":anyLate?"asb-blocked":"asb-inprog");
-      badge.textContent=isReady?"Ready":anyLate?"Blocked":"In Progress";
-      var pbar=document.createElement("div");pbar.className="asset-prog-bar";
-      var pfill=document.createElement("div");pfill.className="asset-prog-fill";pfill.style.width=pct+"%";pbar.appendChild(pfill);
-      var ppct=document.createElement("span");ppct.className="asset-prog-pct";ppct.textContent=pct+"%";
-      var delBtn=document.createElement("button");delBtn.className="btn btn-sm btn-del";
-      delBtn.style.cssText="font-size:.65rem;padding:2px 7px;flex-shrink:0;";delBtn.textContent="Delete";
-      delBtn.onclick=(function(n2,at2){return function(e){e.stopPropagation();deleteAsset(n2,at2);};})(name,at);
-      hdr.appendChild(arrow);hdr.appendChild(nameSpan);hdr.appendChild(badge);hdr.appendChild(pbar);hdr.appendChild(ppct);hdr.appendChild(delBtn);
-      var cardBody=document.createElement("div");cardBody.style.display=isCollapsed?"none":"";
-      (function(k){hdr.onclick=function(e){if(delBtn.contains(e.target))return;
-        var show=cardBody.style.display==="none";cardBody.style.display=show?"":"none";
-        arrow.classList.toggle("open",show);uiState.assetGroupCollapsed[k]=!show;saveUIState();
-      };})(key);
-      var tbl=document.createElement("table");tbl.className="asset-body-table";
-      tbl.innerHTML="<colgroup><col style='width:160px'><col style='width:90px'><col style='width:80px'><col style='width:90px'><col style='width:130px'><col></colgroup><thead><tr><th>Stage</th><th>Lead</th><th>Start</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>";
-      var tbody=document.createElement("tbody");
-      stageTasks.forEach(function(t){
-        var tr=document.createElement("tr");
-        var d=t.due_date?daysUntil(t.due_date):null;
-        var c1=document.createElement("td");var stg=document.createElement("span");stg.className="pipeline-stage-badge";stg.textContent=t.pipeline_stage||t.name;c1.appendChild(stg);
-        var c2=document.createElement("td");if(t.lead){var ch=document.createElement("span");ch.className="chip";ch.textContent=t.lead;c2.appendChild(ch);}else{c2.textContent="—";c2.style.color="var(--text4)";}
-        var c3=document.createElement("td");c3.style.fontSize=".75rem";c3.textContent=fmtDate(t.start_date)||"—";
-        var c4=document.createElement("td");if(t.due_date){var ds=document.createElement("span");ds.className=t.status==="done"?"d-ok":d<0?"d-late":d<=2?"d-soon":"d-ok";ds.textContent=fmtDate(t.due_date);c4.appendChild(ds);}else{c4.textContent="—";}
-        var c5=document.createElement("td");
-        var stColors={todo:"background:#374151;color:#9ca3af",inprogress:"background:#1e3a5f;color:#60a5fa",review:"background:#3b2f00;color:#fbbf24",done:"background:#064e3b;color:#34d399"};
-        var baseSelStyle="font-size:.7rem;font-weight:700;border:none;border-radius:6px;padding:3px 6px;cursor:pointer;appearance:none;-webkit-appearance:none;outline:none;";
-        var sel=document.createElement("select");
-        sel.style.cssText=baseSelStyle+(stColors[t.status]||stColors.todo);
-        [["todo","To Do"],["inprogress","In Progress"],["review","In Review"],["done","Done"]].forEach(function(pair){
-          var o=document.createElement("option");o.value=pair[0];o.textContent=pair[1];if(t.status===pair[0])o.selected=true;sel.appendChild(o);
-        });
-        sel.onchange=(function(tid,bss,sc,oldStat){return async function(){
-          var nv=this.value;this.style.cssText=bss+(sc[nv]||sc.todo);
-          var tk=tasks.find(function(x){return x.id===tid;});
-          var revCount = tk ? (tk.revision_count || 0) : 0;
-          if ((oldStat === "review" || oldStat === "done") && (nv === "inprogress" || nv === "todo")) revCount++;
-          if(tk) { tk.status=nv; tk.revision_count = revCount; }
-          await sb.from("tasks").update({status:nv, revision_count: revCount}).eq("id",tid);
-          showToast("Updated!");
-          updateStats();
-          renderAssetSections(tasks.filter(function(t){return t.category==="asset";}));
-        };})(t.id,baseSelStyle,stColors,t.status);
-        c5.appendChild(sel);
-        var c6=document.createElement("td");c6.style.whiteSpace="nowrap";
-        var eb=document.createElement("button");eb.className="btn btn-ghost btn-sm";eb.style.fontSize=".68rem";eb.textContent="Edit";eb.onclick=(function(tid){return function(){editTask(tid);};})(t.id);
-        var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="Remove";db.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
-        c6.appendChild(eb);c6.appendChild(db);
-        tr.appendChild(c1);tr.appendChild(c2);tr.appendChild(c3);tr.appendChild(c4);tr.appendChild(c5);tr.appendChild(c6);tbody.appendChild(tr);
-      });
-      tbl.appendChild(tbody);cardBody.appendChild(tbl);
-      card.appendChild(hdr);card.appendChild(cardBody);typeBody.appendChild(card);
+function renderAssetSections(assetTasks) {
+    var container = document.getElementById("asset-sections");
+    if (!container) return;
+    container.innerHTML = "";
+
+    var secWrap = document.createElement("div");
+    secWrap.className = "asset-section";
+
+    // Header matching Shot Section style
+    var secHdr = document.createElement("div");
+    secHdr.className = "asset-section-hdr";
+    secHdr.innerHTML = `
+        <h2><span class="asset-type-icon">🎨</span> Asset Pipeline</h2>
+        <button class="btn btn-primary btn-sm" onclick="openModal(null, 'asset')">+ New Asset</button>
+    `;
+    secWrap.appendChild(secHdr);
+
+    if (!assetTasks.length) {
+        secWrap.innerHTML += `<div style="padding:40px; text-align:center; color:var(--text4); font-size:.85rem;">No asset tasks yet.</div>`;
+        container.appendChild(secWrap);
+        return;
+    }
+
+    // Grouping assets by Type (Character, Prop, etc.)
+    var byType = {};
+    assetTasks.forEach(t => {
+        var at = t.asset_type || "other", n = t.asset_name || "Unnamed";
+        if (!byType[at]) byType[at] = {};
+        if (!byType[at][n]) byType[at][n] = [];
+        byType[at][n].push(t);
     });
-    secWrap.appendChild(typeBody);
-  });
-  container.appendChild(secWrap);
+
+    var typeOrder = ["character", "prop", "environment", "vehicle", "fx", "other"];
+    var typeLabels = { character: "Characters", prop: "Props", environment: "Environments", vehicle: "Vehicles", fx: "FX Elements", other: "Other" };
+
+    typeOrder.forEach(at => {
+        if (!byType[at]) return;
+        var names = Object.keys(byType[at]);
+        var isTypeCollapsed = uiState.typeGroupCollapsed[at] === true;
+
+        var typeGroup = document.createElement("div");
+        typeGroup.className = "asset-group";
+
+        // Category Header
+        var typeRow = document.createElement("div");
+        typeRow.className = "asset-group-hdr";
+        typeRow.innerHTML = `
+            <span class="asset-group-arrow ${isTypeCollapsed ? '' : 'open'}">▶</span>
+            <span style="font-size:.9rem; margin-right:8px;">${assetTypeIcon(at)}</span>
+            <span class="asset-group-name">${typeLabels[at]}</span>
+            <span class="asset-progress-lbl" style="margin-right:10px">${names.length} assets</span>
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); openModal(null, 'asset', '${at}')">+ Add</button>
+        `;
+
+        var typeBody = document.createElement("div");
+        typeBody.style.display = isTypeCollapsed ? "none" : "block";
+
+        typeRow.onclick = function() {
+            var isHidden = typeBody.style.display === "none";
+            typeBody.style.display = isHidden ? "block" : "none";
+            this.querySelector(".asset-group-arrow").classList.toggle("open", isHidden);
+            uiState.typeGroupCollapsed[at] = !isHidden;
+            saveUIState();
+        };
+
+        // Render individual assets
+        names.forEach(name => {
+            var stageTasks = byType[at][name];
+            var total = stageTasks.length, done = stageTasks.filter(t => t.status === "done").length;
+            var pct = total ? Math.round(done / total * 100) : 0;
+            var anyLate = stageTasks.some(t => t.status !== "done" && t.due_date && daysUntil(t.due_date) < 0);
+            var isReady = done === total && total > 0;
+            
+            var key = at + "|" + name;
+            var isCollapsed = uiState.assetGroupCollapsed[key] !== false;
+
+            var card = document.createElement("div");
+            card.className = "asset-card";
+            card.innerHTML = `
+                <div class="asset-card-hdr" style="padding: 10px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid var(--border2);">
+                    <span class="shot-arrow ${isCollapsed ? '' : 'open'}" style="font-size:.6rem; color:var(--text4)">▶</span>
+                    <span class="asset-card-name" style="font-weight:700; flex:1;">${name}</span>
+                    <span class="badge ${isReady ? 'b-done' : anyLate ? 'b-todo' : 'b-inprogress'}" style="font-size:.65rem;">
+                        ${isReady ? "READY" : anyLate ? "BLOCKED" : "IN PROGRESS"}
+                    </span>
+                    <div class="asset-prog-bar" style="width:80px; height:6px;"><div class="asset-prog-fill" style="width:${pct}%"></div></div>
+                    <span style="font-size:.7rem; color:var(--text4); min-width:30px;">${pct}%</span>
+                    <button class="btn-remove" onclick="event.stopPropagation(); deleteAsset('${name}', '${at}')">&times;</button>
+                </div>
+            `;
+
+            var cardBody = document.createElement("div");
+            cardBody.style.display = isCollapsed ? "none" : "block";
+            
+            var tableHtml = `<table class="asset-tasks-table">
+                <thead><tr><th>Stage</th><th>Lead</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>`;
+            
+            stageTasks.forEach(t => {
+                var d = t.due_date ? daysUntil(t.due_date) : null;
+                var dateClass = t.status === "done" ? "d-ok" : d < 0 ? "d-late" : d <= 2 ? "d-soon" : "d-ok";
+                
+                tableHtml += `
+                    <tr>
+                        <td><span class="pipeline-stage-badge">${t.pipeline_stage || t.name}</span></td>
+                        <td>${t.lead ? `<span class="chip">${t.lead}</span>` : '—'}</td>
+                        <td><span class="${dateClass}">${t.due_date ? fmtDate(t.due_date) : '—'}</span></td>
+                        <td>
+                            <select class="status-select ${t.status}" onchange="updateTaskStatus('${t.id}', this.value, '${t.status}')">
+                                <option value="todo" ${t.status==='todo'?'selected':''}>To Do</option>
+                                <option value="inprogress" ${t.status==='inprogress'?'selected':''}>In Progress</option>
+                                <option value="review" ${t.status==='review'?'selected':''}>Review</option>
+                                <option value="done" ${t.status==='done'?'selected':''}>Done</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div style="display:flex; gap:4px;">
+                                <button class="tree-btn" onclick="editTask('${t.id}')">✎</button>
+                                <button class="tree-btn" onclick="deleteTask('${t.id}')">✕</button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+            tableHtml += `</tbody></table>`;
+            cardBody.innerHTML = tableHtml;
+
+            card.querySelector(".asset-card-hdr").onclick = function(e) {
+                if(e.target.closest("button")) return;
+                var isHidden = cardBody.style.display === "none";
+                cardBody.style.display = isHidden ? "block" : "none";
+                this.querySelector(".shot-arrow").classList.toggle("open", isHidden);
+                uiState.assetGroupCollapsed[key] = !isHidden;
+                saveUIState();
+            };
+
+            card.appendChild(cardBody);
+            typeBody.appendChild(card);
+        });
+
+        typeGroup.appendChild(typeRow);
+        typeGroup.appendChild(typeBody);
+        secWrap.appendChild(typeGroup);
+    });
+
+    container.appendChild(secWrap);
 }
 
-function renderShotSection(){
-  var container=document.getElementById("shot-schedule-section");if(!container)return;
-  container.innerHTML="";if(!activeProject)return;
-  var projShots=shots.filter(function(s){return s.project_id===activeProject.id;});
-  var projSeqs=sequences.filter(function(s){return s.project_id===activeProject.id;});
-  var wrap=document.createElement("div");wrap.className="asset-section";
-  var sh2=document.createElement("div");sh2.className="asset-section-hdr";
-  var shTitle=document.createElement("h2");shTitle.innerHTML="&#127916; Shot Progression";
-  var addSeqBtn=document.createElement("button");addSeqBtn.className="btn btn-ghost btn-sm";addSeqBtn.textContent="+ Add Sequence";
-  addSeqBtn.onclick=function(){openSeqModal(null,activeProject?activeProject.id:null);};
-  sh2.appendChild(shTitle);sh2.appendChild(addSeqBtn);wrap.appendChild(sh2);
-  if(!projShots.length){
-    var emp=document.createElement("div");emp.style.cssText="padding:20px;text-align:center;color:var(--text4);font-size:.82rem";
-    emp.textContent="No shots yet. Add a sequence first, then add shots.";wrap.appendChild(emp);container.appendChild(wrap);return;
-  }
-  projSeqs.forEach(function(seq){
-    var seqShots=projShots.filter(function(s){return s.sequence_id===seq.id;});
-    var isSeqCollapsed=uiState.seqShotCollapsed[seq.id]===true;
-    var seqRow=document.createElement("div");seqRow.className="seq-shot-hdr";
-    var seqArrow=document.createElement("span");seqArrow.className="seq-shot-arrow"+(isSeqCollapsed?"":" open");seqArrow.innerHTML="&#9658;";
-    var seqLbl=document.createElement("span");seqLbl.className="seq-shot-label";
-    seqLbl.textContent=seq.code+(seq.name?" — "+seq.name:"");
-    var seqCnt=document.createElement("span");seqCnt.className="seq-shot-cnt";
-    seqCnt.textContent=seqShots.length?seqShots.length+" shot"+(seqShots.length!==1?"s":""):"No shots yet";
-    var addShotBtn=document.createElement("button");addShotBtn.className="btn btn-ghost btn-sm";addShotBtn.style.fontSize=".68rem";addShotBtn.textContent="+ Add Shot";
-    (function(sqid){addShotBtn.onclick=function(e){e.stopPropagation();openShotModal(sqid);};})(seq.id);
-    seqRow.appendChild(seqArrow);seqRow.appendChild(seqLbl);seqRow.appendChild(seqCnt);seqRow.appendChild(addShotBtn);
-    var seqBody=document.createElement("div");seqBody.style.display=isSeqCollapsed?"none":"";
-    (function(sid,arr,bdy){seqRow.onclick=function(){
-      var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
-      arr.classList.toggle("open",!hiding);uiState.seqShotCollapsed[sid]=hiding;saveUIState();
-    };})(seq.id,seqArrow,seqBody);
-    wrap.appendChild(seqRow);
-    if(!seqShots.length){
-      var emptyShot=document.createElement("div");emptyShot.style.cssText="padding:14px 28px;font-size:.78rem;color:var(--text4);font-style:italic;";
-      emptyShot.textContent="No shots yet — use \"+ Add Shot\" to get started.";seqBody.appendChild(emptyShot);
-    }
-    seqShots.forEach(function(sh){
-      var shTasks=(shotTasks||[]).filter(function(t){return t.shot_id===sh.id;});
-      var total=shTasks.length,done=shTasks.filter(function(t){return t.status==="approved"||t.status==="final";}).length;
-      var pct=total?Math.round(done/total*100):0;
-      var isCollapsed=uiState.shotSectionCollapsed[sh.id]!==false;
-      var card=document.createElement("div");card.className="asset-card";
-      var hdr=document.createElement("div");hdr.className="asset-card-hdr";hdr.style.paddingLeft="28px";
-      var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
-      var dot=document.createElement("span");dot.style.cssText="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:"+shotStatusColor(sh.status);
-      var code=document.createElement("span");code.style.cssText="font-size:.85rem;font-weight:800;color:var(--purple);";code.textContent=sh.code;
-      var desc=document.createElement("span");desc.style.cssText="font-size:.75rem;color:var(--text3);flex:1;";desc.textContent=sh.description||"";
-      var pbar=document.createElement("div");pbar.className="asset-prog-bar";
-      var pfill=document.createElement("div");pfill.className="asset-prog-fill";pfill.style.width=pct+"%";pbar.appendChild(pfill);
-      var ppct=document.createElement("span");ppct.className="asset-prog-pct";ppct.textContent=pct+"%";
-      var openBtn=document.createElement("button");openBtn.className="btn btn-ghost btn-sm";openBtn.style.fontSize=".68rem";openBtn.textContent="Open";
-      openBtn.onclick=function(e){e.stopPropagation();openShot(sh.id);};
-      hdr.appendChild(arrow);hdr.appendChild(dot);hdr.appendChild(code);hdr.appendChild(desc);hdr.appendChild(pbar);hdr.appendChild(ppct);hdr.appendChild(openBtn);
-      var shotBody=document.createElement("div");shotBody.style.display=isCollapsed?"none":"";
-      (function(sid2){hdr.onclick=function(e){if(openBtn.contains(e.target))return;
-        var show=shotBody.style.display==="none";shotBody.style.display=show?"":"none";
-        arrow.classList.toggle("open",show);uiState.shotSectionCollapsed[sid2]=!show;saveUIState();
-      };})(sh.id);
-      if(shTasks.length){
-        var stMap={ready:"ssp-ready",inprogress:"ssp-inprogress",review:"ssp-review",approved:"ssp-approved",final:"ssp-final"};
-        var stLbl={ready:"Ready",inprogress:"In Progress",review:"In Review",approved:"Approved",final:"Final"};
-        var tbl=document.createElement("table");tbl.style.cssText="width:100%;border-collapse:collapse;";
-        tbl.innerHTML="<thead style='background:var(--bg3)'><tr><th style='padding:6px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;color:var(--text4);font-weight:700'>Task</th><th style='padding:6px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;color:var(--text4);font-weight:700'>Assignee</th><th style='padding:6px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;color:var(--text4);font-weight:700'>Due</th><th style='padding:6px 12px;text-align:left;font-size:.67rem;text-transform:uppercase;color:var(--text4);font-weight:700'>Status</th></tr></thead>";
-        var stbody=document.createElement("tbody");
-        shTasks.forEach(function(t){
-          var tr=document.createElement("tr");
-          var td1=document.createElement("td");td1.style.cssText="padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2)";var pb=document.createElement("span");pb.className="pipeline-stage-badge";pb.textContent=t.task_type;td1.appendChild(pb);
-          var td2=document.createElement("td");td2.style.cssText="padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2)";if(t.assignee){var ch2=document.createElement("span");ch2.className="chip";ch2.style.fontSize=".7rem";ch2.textContent=t.assignee;td2.appendChild(ch2);}else td2.textContent="—";
-          var td3=document.createElement("td");td3.style.cssText="padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2)";td3.textContent=t.due_date?fmtDate(t.due_date):"—";
-          var td4=document.createElement("td");td4.style.cssText="padding:8px 12px;font-size:.78rem;border-top:1px solid var(--border2)";var pill=document.createElement("span");pill.className="shot-status-pill "+(stMap[t.status]||"ssp-ready");pill.textContent=stLbl[t.status]||t.status;td4.appendChild(pill);
-          tr.appendChild(td1);tr.appendChild(td2);tr.appendChild(td3);tr.appendChild(td4);stbody.appendChild(tr);
+    // Grouping Logic
+    var byType = {};
+    assetTasks.forEach(t => {
+        var at = t.asset_type || "other", n = t.asset_name || "Unnamed";
+        if (!byType[at]) byType[at] = {};
+        if (!byType[at][n]) byType[at][n] = [];
+        byType[at][n].push(t);
+    });
+
+    var typeOrder = ["character", "prop", "environment", "vehicle", "fx", "other"];
+    var typeLabels = { character: "Characters", prop: "Props", environment: "Environments", vehicle: "Vehicles", fx: "FX Elements", other: "Other" };
+
+    typeOrder.forEach(at => {
+        if (!byType[at]) return;
+        var names = Object.keys(byType[at]);
+        var isTypeCollapsed = uiState.typeGroupCollapsed[at] === true;
+
+        var typeGroup = document.createElement("div");
+        typeGroup.className = "asset-group";
+
+        // Category Header (Characters, Props, etc.)
+        var typeRow = document.createElement("div");
+        typeRow.className = "asset-group-hdr";
+        typeRow.innerHTML = `
+            <span class="asset-group-arrow ${isTypeCollapsed ? '' : 'open'}">▶</span>
+            <span style="font-size:.9rem; margin-right:8px;">${assetTypeIcon(at)}</span>
+            <span class="asset-group-name">${typeLabels[at]}</span>
+            <span class="asset-progress-lbl" style="margin-right:10px">${names.length} assets</span>
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); openModal(null, 'asset', '${at}')">+ Add</button>
+        `;
+
+        var typeBody = document.createElement("div");
+        typeBody.style.display = isTypeCollapsed ? "none" : "block";
+
+        typeRow.onclick = function() {
+            var isHidden = typeBody.style.display === "none";
+            typeBody.style.display = isHidden ? "block" : "none";
+            this.querySelector(".asset-group-arrow").classList.toggle("open", isHidden);
+            uiState.typeGroupCollapsed[at] = !isHidden;
+            saveUIState();
+        };
+
+        // Render individual assets (Characters, Props, etc.)
+        names.forEach(name => {
+            var stageTasks = byType[at][name];
+            var total = stageTasks.length, done = stageTasks.filter(t => t.status === "done").length;
+            var pct = total ? Math.round(done / total * 100) : 0;
+            var anyLate = stageTasks.some(t => t.status !== "done" && t.due_date && daysUntil(t.due_date) < 0);
+            var isReady = done === total && total > 0;
+            
+            var key = at + "|" + name;
+            var isCollapsed = uiState.assetGroupCollapsed[key] !== false;
+
+            var card = document.createElement("div");
+            card.className = "asset-card";
+            card.innerHTML = `
+                <div class="asset-card-hdr" style="padding: 10px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid var(--border2);">
+                    <span class="shot-arrow ${isCollapsed ? '' : 'open'}" style="font-size:.6rem; color:var(--text4)">▶</span>
+                    <span class="asset-card-name" style="font-weight:700; flex:1;">${name}</span>
+                    <span class="badge ${isReady ? 'b-done' : anyLate ? 'b-todo' : 'b-inprogress'}" style="font-size:.65rem;">
+                        ${isReady ? "READY" : anyLate ? "BLOCKED" : "IN PROGRESS"}
+                    </span>
+                    <div class="asset-prog-bar" style="width:80px; height:6px;"><div class="asset-prog-fill" style="width:${pct}%"></div></div>
+                    <span style="font-size:.7rem; color:var(--text4); min-width:30px;">${pct}%</span>
+                    <button class="btn-remove" onclick="event.stopPropagation(); deleteAsset('${name}', '${at}')">&times;</button>
+                </div>
+            `;
+
+            var cardBody = document.createElement("div");
+            cardBody.style.display = isCollapsed ? "none" : "block";
+            
+            // Task Table for the Asset
+            var tableHtml = `<table class="asset-tasks-table">
+                <thead><tr><th>Stage</th><th>Lead</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>`;
+            
+            stageTasks.forEach(t => {
+                var d = t.due_date ? daysUntil(t.due_date) : null;
+                var dateClass = t.status === "done" ? "d-ok" : d < 0 ? "d-late" : d <= 2 ? "d-soon" : "d-ok";
+                
+                tableHtml += `
+                    <tr>
+                        <td><span class="pipeline-stage-badge">${t.pipeline_stage || t.name}</span></td>
+                        <td>${t.lead ? `<span class="chip">${t.lead}</span>` : '—'}</td>
+                        <td><span class="${dateClass}">${t.due_date ? fmtDate(t.due_date) : '—'}</span></td>
+                        <td>
+                            <select class="status-select ${t.status}" onchange="updateTaskStatus('${t.id}', this.value, '${t.status}')">
+                                <option value="todo" ${t.status==='todo'?'selected':''}>To Do</option>
+                                <option value="inprogress" ${t.status==='inprogress'?'selected':''}>In Progress</option>
+                                <option value="review" ${t.status==='review'?'selected':''}>Review</option>
+                                <option value="done" ${t.status==='done'?'selected':''}>Done</option>
+                            </select>
+                        </td>
+                        <td>
+                            <div style="display:flex; gap:4px;">
+                                <button class="tree-btn" onclick="editTask('${t.id}')">✎</button>
+                                <button class="tree-btn" onclick="deleteTask('${t.id}')">✕</button>
+                            </div>
+                        </td>
+                    </tr>`;
+            });
+            tableHtml += `</tbody></table>`;
+            cardBody.innerHTML = tableHtml;
+
+            card.querySelector(".asset-card-hdr").onclick = function(e) {
+                if(e.target.closest("button")) return;
+                var isHidden = cardBody.style.display === "none";
+                cardBody.style.display = isHidden ? "block" : "none";
+                this.querySelector(".shot-arrow").classList.toggle("open", isHidden);
+                uiState.assetGroupCollapsed[key] = !isHidden;
+                saveUIState();
+            };
+
+            card.appendChild(cardBody);
+            typeBody.appendChild(card);
         });
-        tbl.appendChild(stbody);shotBody.appendChild(tbl);
-      } else {
-        var nt=document.createElement("div");nt.style.cssText="padding:10px 16px;font-size:.78rem;color:var(--text4)";nt.textContent="No pipeline tasks yet.";shotBody.appendChild(nt);
-      }
-      card.appendChild(hdr);card.appendChild(shotBody);seqBody.appendChild(card);
+
+        typeGroup.appendChild(typeRow);
+        typeGroup.appendChild(typeBody);
+        secWrap.appendChild(typeGroup);
     });
-    wrap.appendChild(seqBody);
-  });
-  var orphans=projShots.filter(function(s){return !s.sequence_id||!projSeqs.find(function(sq){return sq.id===s.sequence_id;});});
-  if(orphans.length){
-    var orRow=document.createElement("div");orRow.className="seq-shot-hdr";
-    var orLbl=document.createElement("span");orLbl.className="seq-shot-label";orLbl.textContent="Unassigned";
-    orRow.appendChild(orLbl);wrap.appendChild(orRow);
-    orphans.forEach(function(sh){
-      var card2=document.createElement("div");card2.className="asset-card";
-      var hdr2=document.createElement("div");hdr2.className="asset-card-hdr";hdr2.style.paddingLeft="28px";
-      var dot2=document.createElement("span");dot2.style.cssText="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:"+shotStatusColor(sh.status);
-      var code2=document.createElement("span");code2.style.cssText="font-size:.85rem;font-weight:800;color:var(--purple);";code2.textContent=sh.code;
-      var desc2=document.createElement("span");desc2.style.cssText="font-size:.75rem;color:var(--text3);flex:1;";desc2.textContent=sh.description||"";
-      var openBtn2=document.createElement("button");openBtn2.className="btn btn-ghost btn-sm";openBtn2.style.fontSize=".68rem";openBtn2.textContent="Open";
-      openBtn2.onclick=(function(sid){return function(e){e.stopPropagation();openShot(sid);};})(sh.id);
-      hdr2.appendChild(dot2);hdr2.appendChild(code2);hdr2.appendChild(desc2);hdr2.appendChild(openBtn2);
-      card2.appendChild(hdr2);wrap.appendChild(card2);
+
+    container.appendChild(secWrap);
+}
+
+// Separate function for status updates to keep the render clean
+async function updateTaskStatus(tid, nv, oldStat) {
+    var tk = tasks.find(x => x.id === tid);
+    var revCount = tk ? (tk.revision_count || 0) : 0;
+    if ((oldStat === "review" || oldStat === "done") && (nv === "inprogress" || nv === "todo")) revCount++;
+    
+    if(tk) { tk.status = nv; tk.revision_count = revCount; }
+    await sb.from("tasks").update({status: nv, revision_count: revCount}).eq("id", tid);
+    
+    showToast("Updated!");
+    updateStats();
+    renderAssetSections(tasks.filter(t => t.category === "asset"));
+}
+
+function renderShotSection() {
+    var container = document.getElementById("shot-schedule-section");
+    if (!container) return;
+    container.innerHTML = "";
+    if (!activeProject) return;
+
+    var projShots = shots.filter(s => s.project_id === activeProject.id);
+    var projSeqs = sequences.filter(s => s.project_id === activeProject.id);
+
+    // Main Wrapper
+    var wrap = document.createElement("div");
+    wrap.className = "asset-section";
+
+    // Header
+    var sh2 = document.createElement("div");
+    sh2.className = "asset-section-hdr";
+    sh2.innerHTML = `
+        <h2><span class="asset-type-icon">🎬</span> Shot Progression</h2>
+        <button class="btn btn-primary btn-sm" onclick="openSeqModal(null, '${activeProject.id}')">+ Add Sequence</button>
+    `;
+    wrap.appendChild(sh2);
+
+    if (!projShots.length && !projSeqs.length) {
+        wrap.innerHTML += `<div style="padding:40px; text-align:center; color:var(--text4); font-size:.85rem;">
+            No sequences or shots yet. Start by adding a sequence.
+        </div>`;
+        container.appendChild(wrap);
+        return;
+    }
+
+    projSeqs.forEach(seq => {
+        var seqShots = projShots.filter(s => s.sequence_id === seq.id);
+        var isSeqCollapsed = uiState.seqShotCollapsed[seq.id] === true;
+
+        var seqSection = document.createElement("div");
+        seqSection.className = "asset-group";
+
+        // Sequence Header
+        var seqRow = document.createElement("div");
+        seqRow.className = "asset-group-hdr";
+        seqRow.innerHTML = `
+            <span class="asset-group-arrow ${isSeqCollapsed ? '' : 'open'}">▶</span>
+            <span class="asset-group-name">${seq.code} ${seq.name ? '— ' + seq.name : ''}</span>
+            <span class="asset-progress-lbl" style="margin-right:10px">${seqShots.length} shots</span>
+            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); openShotModal('${seq.id}')">+ Add Shot</button>
+            <button class="btn-remove" onclick="event.stopPropagation(); deleteSequence('${seq.id}')">&times;</button>
+        `;
+
+        var seqBody = document.createElement("div");
+        seqBody.className = "asset-group-body";
+        seqBody.style.display = isSeqCollapsed ? "none" : "block";
+
+        // Toggle Logic
+        seqRow.onclick = function() {
+            var isHidden = seqBody.style.display === "none";
+            seqBody.style.display = isHidden ? "block" : "none";
+            seqRow.querySelector(".asset-group-arrow").classList.toggle("open", isHidden);
+            uiState.seqShotCollapsed[seq.id] = !isHidden;
+            saveUIState();
+        };
+
+        // Render individual shots
+        seqShots.forEach(sh => {
+            var shTasks = (shotTasks || []).filter(t => t.shot_id === sh.id);
+            var total = shTasks.length, 
+                done = shTasks.filter(t => ["approved", "final"].includes(t.status)).length;
+            var pct = total ? Math.round((done / total) * 100) : 0;
+            var isCollapsed = uiState.shotSectionCollapsed[sh.id] !== false;
+
+            var shotCard = document.createElement("div");
+            shotCard.className = "asset-card";
+            shotCard.style.borderBottom = "1px solid var(--border2)";
+
+            shotCard.innerHTML = `
+                <div class="asset-card-hdr" style="padding: 10px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <span class="shot-arrow ${isCollapsed ? '' : 'open'}" style="font-size:.6rem; color:var(--text4)">▶</span>
+                    <div style="width:8px; height:8px; border-radius:50%; background:${shotStatusColor(sh.status)}"></div>
+                    <span style="font-size:.85rem; font-weight:800; color:var(--purple); min-width:60px;">${sh.code}</span>
+                    <span style="font-size:.75rem; color:var(--text3); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${sh.description || ''}</span>
+                    <div class="asset-prog-bar" style="width:80px; height:6px;"><div class="asset-prog-fill" style="width:${pct}%"></div></div>
+                    <span style="font-size:.7rem; color:var(--text4); min-width:30px;">${pct}%</span>
+                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); openShot('${sh.id}')">Open</button>
+                    <button class="btn-remove" onclick="event.stopPropagation(); deleteShot('${sh.id}')">&times;</button>
+                </div>
+            `;
+
+            var shotBody = document.createElement("div");
+            shotBody.style.display = isCollapsed ? "none" : "block";
+            shotBody.style.background = "var(--bg4)";
+
+            // Build Task Table
+            if (shTasks.length) {
+                var tableHtml = `<table class="asset-tasks-table">
+                    <thead>
+                        <tr><th>Task</th><th>Assignee</th><th>Due</th><th>Status</th></tr>
+                    </thead>
+                    <tbody>`;
+                
+                shTasks.forEach(t => {
+                    tableHtml += `
+                        <tr>
+                            <td><span class="pipeline-stage-badge">${t.task_type}</span></td>
+                            <td>${t.assignee ? `<span class="chip">${t.assignee}</span>` : '—'}</td>
+                            <td>${t.due_date ? fmtDate(t.due_date) : '—'}</td>
+                            <td><span class="badge ${getStatusClass(t.status)}">${t.status.toUpperCase()}</span></td>
+                        </tr>`;
+                });
+                tableHtml += `</tbody></table>`;
+                shotBody.innerHTML = tableHtml;
+            } else {
+                shotBody.innerHTML = `<div style="padding:10px 45px; font-size:.75rem; color:var(--text4); font-style:italic;">No tasks assigned to this shot.</div>`;
+            }
+
+            // Shot Toggle Click
+            shotCard.querySelector(".asset-card-hdr").onclick = function(e) {
+                if(e.target.tagName === "BUTTON") return;
+                var isHidden = shotBody.style.display === "none";
+                shotBody.style.display = isHidden ? "block" : "none";
+                this.querySelector(".shot-arrow").classList.toggle("open", isHidden);
+                uiState.shotSectionCollapsed[sh.id] = !isHidden;
+                saveUIState();
+            };
+
+            shotCard.appendChild(shotBody);
+            seqBody.appendChild(shotCard);
+        });
+
+        if (!seqShots.length) {
+            seqBody.innerHTML += `<div style="padding:15px 45px; font-size:.75rem; color:var(--text4);">No shots in this sequence.</div>`;
+        }
+
+        seqSection.appendChild(seqRow);
+        seqSection.appendChild(seqBody);
+        wrap.appendChild(seqSection);
     });
-  }
-  container.appendChild(wrap);
+
+    container.appendChild(wrap);
+}
+
+// Helper to match your CSS badge classes
+function getStatusClass(status) {
+    const map = {
+        'todo': 'b-todo',
+        'inprogress': 'b-inprogress',
+        'review': 'b-review',
+        'approved': 'b-done',
+        'final': 'b-done'
+    };
+    return map[status.toLowerCase()] || 'b-todo';
 }
 
 function updateStats(){
