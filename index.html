@@ -571,6 +571,11 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 
 .admin-owner-only{display:none;}
 body.is-project-owner .admin-owner-only{display:inline-flex;}
+
+@keyframes celebBounce{from{transform:translateY(0) rotate(-5deg);}to{transform:translateY(-12px) rotate(5deg);}}
+@keyframes celebWiggle{0%,100%{transform:rotate(-8deg) scale(1);}50%{transform:rotate(8deg) scale(1.1);}}
+#celebration-modal.open #celebration-backdrop{opacity:1;}
+#celebration-modal.open #celebration-box{transform:translate(-50%,-50%) scale(1);opacity:1;}
 </style>
 </head>
 <body>
@@ -1910,6 +1915,8 @@ function updateStats(){
   var pct=total?Math.round(done/total*100):0;
   if(document.getElementById("prog-pct")) document.getElementById("prog-pct").textContent=pct+"%";
   if(document.getElementById("prog-fill")) document.getElementById("prog-fill").style.width=pct+"%";
+  if(total>0 && pct===100 && _celebLastPct!==100){triggerCelebration();}
+  _celebLastPct=pct;
 }
 
 function renderHandoffs(){var h=tasks.filter(function(t){return t.handoff_to;});var el=document.getElementById("handoff-list");if(!h.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No handoffs configured.</div>';return;}var html="";h.forEach(function(t){var conf=t.status==="done";html+='<div class="hitem"><div class="hrow"><span class="chip">'+t.lead+'</span><span style="color:#7c3aed;margin:0 5px;font-weight:700">&#8594;</span><span class="chip" style="color:#3b82f6">'+t.handoff_to+'</span><span style="margin-left:auto" class="'+(conf?"conf":"pend")+'">'+(conf?"Done":"Pending")+'</span></div><div class="htask">'+t.name+"</div></div>";});el.innerHTML=html;}
@@ -3089,6 +3096,27 @@ window.addEventListener("DOMContentLoaded", function () {
 });
 
 })();
+
+var _celebLastPct = 0;
+window.triggerCelebration = function() {
+  var modal = document.getElementById("celebration-modal");
+  var nameEl = document.getElementById("celebration-proj-name");
+  if (nameEl && activeProject) nameEl.textContent = activeProject.name;
+  // Cycle through fun emoji combos
+  var combos = ["🎉🥳🎊","🏆🌟💫","🎬🎥✨","🚀🎯🔥","🥂🎶🎁"];
+  var chars = document.getElementById("celebration-chars");
+  if (chars) chars.textContent = combos[Math.floor(Math.random()*combos.length)];
+  var emojis = ["🎉","🥳","🏆","🎊","🌟","🚀"];
+  var em = document.getElementById("celebration-emoji");
+  if (em) em.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+  modal.style.display = "block";
+  setTimeout(function(){ modal.classList.add("open"); }, 10);
+};
+window.closeCelebration = function() {
+  var modal = document.getElementById("celebration-modal");
+  modal.classList.remove("open");
+  setTimeout(function(){ modal.style.display = "none"; }, 500);
+};
 </script>
 
     <div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;">
@@ -3190,6 +3218,19 @@ window.addEventListener("DOMContentLoaded", function () {
       style="display:none"
       onchange="handleProjectImport(event)"
     >
+
+<!-- ═══ CELEBRATION MODAL ═══ -->
+<div id="celebration-modal" style="display:none;position:fixed;inset:0;z-index:9999;pointer-events:none;">
+  <div id="celebration-backdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.55);opacity:0;transition:opacity .4s;pointer-events:all;" onclick="closeCelebration()"></div>
+  <div id="celebration-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%) scale(.7);opacity:0;transition:transform .5s cubic-bezier(.34,1.56,.64,1),opacity .4s;background:var(--bg2);border:2px solid var(--border);border-radius:24px;padding:40px 48px;text-align:center;min-width:320px;max-width:420px;pointer-events:all;">
+    <div id="celebration-emoji" style="font-size:5rem;line-height:1;margin-bottom:8px;display:block;animation:celebBounce 1s ease infinite alternate;">🎉</div>
+    <div style="font-size:1.6rem;font-weight:800;color:#7c3aed;margin-bottom:8px;">Project Complete!</div>
+    <div id="celebration-proj-name" style="font-size:1rem;color:var(--text3);margin-bottom:6px;font-weight:600;"></div>
+    <div style="font-size:.85rem;color:var(--text4);margin-bottom:28px;">Every task is wrapped. Time to ship it. 🚀</div>
+    <div id="celebration-chars" style="font-size:2.8rem;letter-spacing:6px;margin-bottom:24px;animation:celebWiggle 1.5s ease infinite;">✨🏆✨</div>
+    <button class="btn btn-primary" style="padding:10px 32px;font-size:.95rem;" onclick="closeCelebration()">Hell yeah! 🎬</button>
+  </div>
+</div>
 </body>
 </html>
 
