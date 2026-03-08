@@ -1658,7 +1658,7 @@ function renderAssetSections(assetTasks){
   secHdr.appendChild(h2);secHdr.appendChild(addBtn);secWrap.appendChild(secHdr);
   if(!assetTasks.length){
     var empty=document.createElement("div");empty.style.cssText="padding:24px;text-align:center;color:var(--text4);font-size:.82rem";
-    empty.textContent="No asset tasks yet.";secWrap.appendChild(empty);container.appendChild(secWrap);return;
+    empty.textContent="No asset tasks yet.";assetBody.appendChild(empty);secWrap.appendChild(assetBody);container.appendChild(secWrap);return;
   }
   var byType={};
   assetTasks.forEach(function(t){
@@ -1687,7 +1687,7 @@ function renderAssetSections(assetTasks){
       var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
       arr.classList.toggle("open",!hiding);uiState.typeGroupCollapsed[atype]=hiding;saveUIState();
     };})(at,typeArrow,typeBody);
-    secWrap.appendChild(typeRow);
+    assetBody.appendChild(typeRow);
     names.forEach(function(name){
       var stageTasks=byType[at][name];
       var total=stageTasks.length,done=stageTasks.filter(function(t){return t.status==="done";}).length;
@@ -1752,8 +1752,9 @@ function renderAssetSections(assetTasks){
       tbl.appendChild(tbody);cardBody.appendChild(tbl);
       card.appendChild(hdr);card.appendChild(cardBody);typeBody.appendChild(card);
     });
-    secWrap.appendChild(typeBody);
+    assetBody.appendChild(typeBody);
   });
+  secWrap.appendChild(assetBody);
   container.appendChild(secWrap);
 }
 
@@ -1763,14 +1764,22 @@ function renderShotSection(){
   var projShots=shots.filter(function(s){return s.project_id===activeProject.id;});
   var projSeqs=sequences.filter(function(s){return s.project_id===activeProject.id;});
   var wrap=document.createElement("div");wrap.className="asset-section";
-  var sh2=document.createElement("div");sh2.className="asset-section-hdr";
+  var _shotCollapsed = uiState.schedSectionCollapsed["shots"] === true;
+  var sh2=document.createElement("div");sh2.className="asset-section-hdr";sh2.style.cursor="pointer";
   var shTitle=document.createElement("h2");shTitle.innerHTML="&#127916; Shot Progression";
   var addSeqBtn=document.createElement("button");addSeqBtn.className="btn btn-ghost btn-sm";addSeqBtn.textContent="+ Add Sequence";
-  addSeqBtn.onclick=function(){openSeqModal(null,activeProject?activeProject.id:null);};
-  sh2.appendChild(shTitle);sh2.appendChild(addSeqBtn);wrap.appendChild(sh2);
+  addSeqBtn.onclick=function(e){e.stopPropagation();openSeqModal(null,activeProject?activeProject.id:null);};
+  var shotArrow=document.createElement("span");shotArrow.className="admin-collapse-arrow "+(_shotCollapsed?"closed":"open");shotArrow.innerHTML="&#9660;";
+  sh2.appendChild(shTitle);sh2.appendChild(addSeqBtn);sh2.appendChild(shotArrow);
+  sh2.onclick=function(){
+    uiState.schedSectionCollapsed["shots"]=!uiState.schedSectionCollapsed["shots"];
+    saveUIState();renderSchedule();
+  };
+  var shotBody=document.createElement("div");shotBody.style.display=_shotCollapsed?"none":"";
+  wrap.appendChild(sh2);
   if(!projShots.length){
     var emp=document.createElement("div");emp.style.cssText="padding:20px;text-align:center;color:var(--text4);font-size:.82rem";
-    emp.textContent="No shots yet. Add a sequence first, then add shots.";wrap.appendChild(emp);container.appendChild(wrap);return;
+    emp.textContent="No shots yet. Add a sequence first, then add shots.";shotBody.appendChild(emp);wrap.appendChild(shotBody);container.appendChild(wrap);return;
   }
   projSeqs.forEach(function(seq){
     var _activeShotIds=(shotTasks||[]).map(function(t){return t.shot_id;});
@@ -1795,7 +1804,7 @@ function renderShotSection(){
       var hiding=bdy.style.display!=="none";bdy.style.display=hiding?"none":"";
       arr.classList.toggle("open",!hiding);uiState.seqShotCollapsed[sid]=hiding;saveUIState();
     };})(seq.id,seqArrow,seqBody);
-    wrap.appendChild(seqRow);
+    shotBody.appendChild(seqRow);
     if(!seqShots.length){
       var emptyShot=document.createElement("div");emptyShot.style.cssText="padding:14px 28px;font-size:.78rem;color:var(--text4);font-style:italic;";
       emptyShot.textContent="No shots yet — use \"+ Add Shot\" to get started.";seqBody.appendChild(emptyShot);
@@ -1842,7 +1851,7 @@ function renderShotSection(){
       }
       card.appendChild(hdr);card.appendChild(shotBody);seqBody.appendChild(card);
     });
-    wrap.appendChild(seqBody);
+    shotBody.appendChild(seqBody);
   });
   var orphans=projShots.filter(function(s){
     if(s.sequence_id&&projSeqs.find(function(sq){return sq.id===s.sequence_id;})) return false;
@@ -1865,6 +1874,7 @@ function renderShotSection(){
       card2.appendChild(hdr2);wrap.appendChild(card2);
     });
   }
+  wrap.appendChild(shotBody);
   container.appendChild(wrap);
 }
 
