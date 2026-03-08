@@ -556,6 +556,13 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .cal-drop-hover { background: var(--purple-dim, #3b1d6e) !important; outline: 2px dashed var(--purple); outline-offset: -2px; }
 .cal-chip-dragging { opacity: 0.35; }
 .cal-day { cursor: default; }
+
+.stat-clickable { cursor: pointer; transition: transform .12s, box-shadow .12s, border-color .12s; }
+.stat-clickable:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.15); }
+.stat-card.stat-active { border-color: var(--purple) !important; box-shadow: 0 0 0 2px var(--purple); }
+.stat-filter-bar { display:none; align-items:center; gap:8px; padding: 8px 20px 0; font-size:.8rem; color:var(--text3); }
+.stat-filter-bar.visible { display:flex; }
+.stat-filter-label { font-weight:700; color:var(--purple); }
 </style>
 </head>
 <body>
@@ -641,12 +648,13 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 
       <div class="tab-content" id="tab-schedule" style="display:none">
         <div class="stats">
-          <div class="stat-card"><div class="sval c-blue" id="s-total">0</div><div class="slbl">Total Tasks</div></div>
-          <div class="stat-card"><div class="sval c-green" id="s-done">0</div><div class="slbl">Completed</div></div>
-          <div class="stat-card"><div class="sval c-yellow" id="s-prog">0</div><div class="slbl">In Progress</div></div>
-          <div class="stat-card"><div class="sval c-red" id="s-late">0</div><div class="slbl">Overdue</div></div>
-          <div class="stat-card"><div class="sval c-purple" id="s-revisions">0</div><div class="slbl">Revisions</div></div>
+          <div class="stat-card stat-clickable" id="sc-all" onclick="setSchedFilter('all')"><div class="sval c-blue" id="s-total">0</div><div class="slbl">Total Tasks</div></div>
+          <div class="stat-card stat-clickable" id="sc-done" onclick="setSchedFilter('done')"><div class="sval c-green" id="s-done">0</div><div class="slbl">Completed</div></div>
+          <div class="stat-card stat-clickable" id="sc-prog" onclick="setSchedFilter('inprogress')"><div class="sval c-yellow" id="s-prog">0</div><div class="slbl">In Progress</div></div>
+          <div class="stat-card stat-clickable" id="sc-late" onclick="setSchedFilter('overdue')"><div class="sval c-red" id="s-late">0</div><div class="slbl">Overdue</div></div>
+          <div class="stat-card stat-clickable" id="sc-revisions" onclick="setSchedFilter('revisions')"><div class="sval c-purple" id="s-revisions">0</div><div class="slbl">Revisions</div></div>
         </div>
+        <div class="stat-filter-bar" id="stat-filter-bar">Showing: <span class="stat-filter-label" id="stat-filter-label"></span> <button class="btn btn-ghost btn-sm" onclick="setSchedFilter('all')">&#x2715; Clear</button></div>
         <div class="schedule-body">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div class="sched-tabs">
@@ -1002,7 +1010,7 @@ var uiState = {
   seqShotCollapsed: {},
   shotSectionCollapsed: {},
   ganttCollapsed: { tasks: false, shots: {} },
-  schedView: "all"
+  schedView: "all", schedFilter: "all"
 };
 
 function saveUIState() {
@@ -1551,9 +1559,34 @@ window.setSchedView=function(v,el){
   renderSchedule();
 };
 
+
+window.setSchedFilter = function(f) {
+  uiState.schedFilter = f;
+  // highlight active card
+  ["all","done","inprogress","overdue","revisions"].forEach(function(k) {
+    var el = document.getElementById("sc-" + k);
+    if (el) el.classList.toggle("stat-active", k === f && f !== "all");
+  });
+  // show/hide filter bar
+  var bar = document.getElementById("stat-filter-bar");
+  var lbl = document.getElementById("stat-filter-label");
+  if (bar && lbl) {
+    var names = { all:"All Tasks", done:"Completed", inprogress:"In Progress", overdue:"Overdue", revisions:"Has Revisions" };
+    bar.classList.toggle("visible", f !== "all");
+    lbl.textContent = names[f] || f;
+  }
+  renderSchedule();
+};
 window.renderSchedule=function(){
   updateStats();
-  var assetTasks=tasks.filter(function(t){return t.category==="asset";});
+  // Apply stat filter
+  var sf = uiState.schedFilter || "all";
+  var visibleTasks = tasks;
+  if (sf === "done")       visibleTasks = tasks.filter(function(t){return t.status==="done";});
+  else if (sf === "inprogress") visibleTasks = tasks.filter(function(t){return t.status==="inprogress"||t.status==="review";});
+  else if (sf === "overdue")    visibleTasks = tasks.filter(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
+  else if (sf === "revisions")  visibleTasks = tasks.filter(function(t){return (t.revision_count||0)>0;});
+  var assetTasks=visibleTasks.filter(function(t){return t.category==="asset";});
   var assetSec=document.getElementById("asset-sections");
   var shotSec=document.getElementById("shot-schedule-section");
   
@@ -1570,7 +1603,7 @@ window.renderSchedule=function(){
     if(shotSec)shotSec.style.display="";
   }
   renderAssetSections(assetTasks);
-  renderShotSection();
+  (function(){ var _t=tasks; if(sf!=="all"){tasks=visibleTasks;} renderShotSection(); tasks=_t; })();
   renderHandoffs();
   renderAssetDeliverables();
 };
