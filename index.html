@@ -2773,6 +2773,15 @@ window.filterCmd = function(q) {
 };
 
 // --- MISSING UI TOGGLE FUNCTIONS ---
+window.toggleSidebar = function() {
+  // Find the sidebar element specifically
+  var sb = document.querySelector('.sidebar-nav');
+  if (sb) {
+    // Add or remove the 'mobile-open' class as defined in your CSS
+    sb.classList.toggle('mobile-open');
+  }
+};
+
 window.showConfirm = function(title,msg,okLabel,cb){
   document.getElementById("confirm-title").textContent=title;
   document.getElementById("confirm-msg").textContent=msg;
@@ -2780,20 +2789,24 @@ window.showConfirm = function(title,msg,okLabel,cb){
   window._confirmCb=cb;
   document.getElementById("confirm-overlay").style.display="flex";
 };
+
 window.closeConfirm = function(){
   document.getElementById("confirm-overlay").style.display="none";
   window._confirmCb=null;
 };
+
 window.confirmOk = function(){
   document.getElementById("confirm-overlay").style.display="none";
   if(window._confirmCb) window._confirmCb();
   window._confirmCb=null;
 };
+
 window.showInviteCodeInput = function() {
   var msgEl = document.getElementById("invite-code-msg");
   if (msgEl) { msgEl.textContent = ""; msgEl.className = "auth-msg"; }
   document.getElementById("invite-code-modal").classList.add("open");
 };
+
 window.closeInviteCodeModal = function() {
   var msgEl = document.getElementById("invite-code-msg");
   if (msgEl) { msgEl.textContent = ""; msgEl.className = "auth-msg"; }
