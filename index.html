@@ -1950,27 +1950,73 @@ window.calNext=function(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}rende
 window.calToday=function(){calYear=today.getFullYear();calMonth=today.getMonth();renderCalendar();};
 
 
-function renderGantt(){
-  var months=["January","February","March","April","May","June","July","August","September","October","November","December"];
-  var numDays=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,0).getDate();
-  document.getElementById("gantt-label").textContent=months[ganttStart.getMonth()]+" "+ganttStart.getFullYear();
-  var inner=document.getElementById("gantt-inner");
-  var som=new Date(ganttStart.getFullYear(),ganttStart.getMonth(),1);
+function renderGantt() {
+  var monthsShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var inner = document.getElementById("gantt-inner");
+  if (!inner) return;
 
-  var assetTasks=tasks.filter(function(t){return t.due_date&&t.category!=="shot";});
-  var projShots=activeProject?shots.filter(function(s){return s.project_id===activeProject.id;}):[];
-  var projSeqs=activeProject?sequences.filter(function(s){return s.project_id===activeProject.id;}):[];
-
-  var shotsWithData=projShots.filter(function(sh){
-    if(sh.due_date)return true;
-    return (shotTasks||[]).some(function(t){return t.shot_id===sh.id&&t.due_date;});
-  });
-  if(!assetTasks.length&&!shotsWithData.length){
-    inner.innerHTML='<div style="text-align:center;padding:40px;color:var(--text3)">No tasks or shots with dates yet.</div>';return;
+  // 1. SET THE CONTINUOUS RANGE (7 days ago to 53 days in future = 60 days total)
+  var viewStart = new Date();
+  viewStart.setDate(viewStart.getDate() - 7);
+  viewStart.setHours(0,0,0,0);
+  
+  var totalDays = 60; 
+  var dates = [];
+  for (var i = 0; i < totalDays; i++) {
+    var d = new Date(viewStart);
+    d.setDate(d.getDate() + i);
+    dates.push(d);
   }
 
-  var dates=[];
-  for(var i=0;i<numDays;i++)dates.push(new Date(ganttStart.getFullYear(),ganttStart.getMonth(),i+1));
+  // Update label to show the current rolling range
+  var endRange = dates[dates.length - 1];
+  document.getElementById("gantt-label").textContent = 
+    viewStart.toLocaleDateString(undefined, {month:'short', day:'numeric'}) + " – " + 
+    endRange.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+
+  // 2. FILTER DATA (Asset Tasks and Shots)
+  var assetTasks = tasks.filter(function(t) { 
+    return t.project_id === (activeProject ? activeProject.id : null) && t.due_date && t.category !== "shot"; 
+  });
+  var projShots = activeProject ? shots.filter(function(s) { return s.project_id === activeProject.id; }) : [];
+  
+  if (!assetTasks.length && !projShots.length) {
+    inner.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">No tasks or shots with dates yet.</div>';
+    return;
+  }
+
+  // 3. RENDER HEADER (The scrollable day row)
+  var html = '<div class="g-header"><div class="g-name-col"></div><div class="g-days-row">';
+  dates.forEach(function(d) {
+    var isToday = d.toDateString() === new Date().toDateString();
+    var isWeekend = d.getDay() === 0 || d.getDay() === 6;
+    var cls = "g-day-cell" + (isToday ? " g-today" : "") + (isWeekend ? " g-weekend" : "");
+    html += '<div class="' + cls + '"><div>' + d.getDate() + '</div><div style="font-size:10px;opacity:0.6">' + monthsShort[d.getMonth()] + '</div></div>';
+  });
+  html += '</div></div>';
+
+  // 4. RENDER ROWS (Tasks)
+  assetTasks.forEach(function(t) {
+    html += '<div class="g-row"><div class="g-name-col">' + (t.name || 'Task') + '</div><div class="g-days-row">';
+    dates.forEach(function(d) {
+      var isDue = new Date(t.due_date).toDateString() === d.toDateString();
+      html += '<div class="g-day-cell">' + (isDue ? '<div class="g-bar g-bar-task"></div>' : '') + '</div>';
+    });
+    html += '</div></div>';
+  });
+
+  // 5. RENDER ROWS (Shots)
+  projShots.forEach(function(s) {
+    html += '<div class="g-row"><div class="g-name-col">' + s.code + '</div><div class="g-days-row">';
+    dates.forEach(function(d) {
+      var isDue = s.due_date && new Date(s.due_date).toDateString() === d.toDateString();
+      html += '<div class="g-day-cell">' + (isDue ? '<div class="g-bar g-bar-shot"></div>' : '') + '</div>';
+    });
+    html += '</div></div>';
+  });
+
+  inner.innerHTML = html;
+}
 
   function mkRow(labelEl,barFn,visible){
     var lr=document.createElement("div");lr.className="gantt-label-row";lr.appendChild(labelEl);
@@ -2776,11 +2822,11 @@ window.filterCmd = function(q) {
 // --- MISSING UI TOGGLE FUNCTIONS ---
 window.toggleSidebar = function() {
   var sb = document.querySelector('.sidebar-nav');
-  // If the screen is mobile-sized (matching your @media 580px query)
   if (window.innerWidth <= 580) {
+    // Mobile: Slide out
     if (sb) sb.classList.toggle('mobile-open');
   } else {
-    // On desktop, we collapse the width by adding the class to the body
+    // Desktop: Collapse width
     document.body.classList.toggle('sb-collapsed');
   }
 };
@@ -2963,5 +3009,4 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
-
 
