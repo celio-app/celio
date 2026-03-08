@@ -563,6 +563,11 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .stat-filter-bar { display:none; align-items:center; gap:8px; padding: 8px 20px 0; font-size:.8rem; color:var(--text3); }
 .stat-filter-bar.visible { display:flex; }
 .stat-filter-label { font-weight:700; color:var(--purple); }
+
+.admin-collapse-arrow { font-size:.7rem; color:var(--text4); margin-left:auto; transition:transform .2s; flex-shrink:0; }
+.admin-collapse-arrow.open { transform: rotate(0deg); }
+.admin-collapse-arrow.closed { transform: rotate(-90deg); }
+.admin-section.collapsed .admin-list { display:none; }
 </style>
 </head>
 <body>
@@ -725,28 +730,28 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 
       <div class="tab-content" id="tab-milestones" style="display:none">
         <div class="admin-wrap">
-          <div class="admin-section">
-            <div class="admin-sec-hdr">
+          <div class="admin-section" id="admin-sec-projects">
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('projects')" style="cursor:pointer;">
               <span style="font-size:1.1rem">&#128193;</span>
               <span class="admin-sec-title">Projects</span>
               <button class="btn btn-ghost btn-sm" onclick="promptProjectImport()">Import Archive</button>
-            </div>
+            <span class="admin-collapse-arrow open" id="admin-arrow-projects">&#9660;</span></div>
             <div class="admin-list" id="admin-list-projects"></div>
           </div>
-          <div class="admin-section">
-            <div class="admin-sec-hdr"><span style="font-size:1.1rem">&#128172;</span><span class="admin-sec-title">Client Feedback</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('client')">+ Add</button></div>
+          <div class="admin-section" id="admin-sec-client">
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('client')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128172;</span><span class="admin-sec-title">Client Feedback</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('client')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-client">&#9660;</span></div>
             <div class="admin-list" id="admin-list-client"></div>
           </div>
-          <div class="admin-section">
-            <div class="admin-sec-hdr"><span style="font-size:1.1rem">&#128227;</span><span class="admin-sec-title">Marketing</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('marketing')">+ Add</button></div>
+          <div class="admin-section" id="admin-sec-marketing">
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('marketing')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128227;</span><span class="admin-sec-title">Marketing</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('marketing')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-marketing">&#9660;</span></div>
             <div class="admin-list" id="admin-list-marketing"></div>
           </div>
-          <div class="admin-section">
-            <div class="admin-sec-hdr"><span style="font-size:1.1rem">&#128197;</span><span class="admin-sec-title">Meetings</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('meetings')">+ Add</button></div>
+          <div class="admin-section" id="admin-sec-meetings">
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('meetings')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128197;</span><span class="admin-sec-title">Meetings</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('meetings')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-meetings">&#9660;</span></div>
             <div class="admin-list" id="admin-list-meetings"></div>
           </div>
-          <div class="admin-section">
-            <div class="admin-sec-hdr"><span style="font-size:1.1rem">&#128101;</span><span class="admin-sec-title">Production Team</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('team')">+ Add</button></div>
+          <div class="admin-section" id="admin-sec-team">
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('team')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128101;</span><span class="admin-sec-title">Production Team</span><button class="btn btn-ghost btn-sm" onclick="openAdminModal('team')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-team">&#9660;</span></div>
             <div class="admin-list" id="admin-list-team"></div>
           </div>
         </div>
@@ -1015,7 +1020,7 @@ var uiState = {
   seqShotCollapsed: {},
   shotSectionCollapsed: {},
   ganttCollapsed: { tasks: false, shots: {} },
-  schedView: "all", schedFilter: "all"
+  schedView: "all", schedFilter: "all", adminCollapsed: {}
 };
 
 function saveUIState() {
@@ -1038,6 +1043,7 @@ function loadUIState() {
         uiState.shotSectionCollapsed = p.shotSectionCollapsed || {};
         uiState.ganttCollapsed = p.ganttCollapsed || { tasks: false, shots: {} };
         uiState.schedView = p.schedView || "all";
+        uiState.adminCollapsed = p.adminCollapsed || {};
       }
     } catch(e) {}
   }
@@ -2582,6 +2588,16 @@ window.handleProjectImport = async function(event) {
   }
 };
 
+
+window.toggleAdminSection = function(key) {
+  var isCollapsed = uiState.adminCollapsed[key] === true;
+  uiState.adminCollapsed[key] = !isCollapsed;
+  saveUIState();
+  var sec = document.getElementById("admin-sec-" + key);
+  var arrow = document.getElementById("admin-arrow-" + key);
+  if (sec) sec.classList.toggle("collapsed", !isCollapsed);
+  if (arrow) { arrow.classList.toggle("open", isCollapsed); arrow.classList.toggle("closed", !isCollapsed); }
+};
 window.renderMilestones=function(){
   var projList=document.getElementById("admin-list-projects");
   if(projList){
@@ -2642,6 +2658,14 @@ window.renderMilestones=function(){
       entry.appendChild(main);entry.appendChild(pri);entry.appendChild(eb);entry.appendChild(db);
       cont.appendChild(entry);
     });
+  });
+  // Apply saved collapse state
+  ["projects","client","marketing","meetings","team"].forEach(function(key) {
+    var sec = document.getElementById("admin-sec-" + key);
+    var arrow = document.getElementById("admin-arrow-" + key);
+    var collapsed = uiState.adminCollapsed[key] === true;
+    if (sec) sec.classList.toggle("collapsed", collapsed);
+    if (arrow) { arrow.classList.toggle("open", !collapsed); arrow.classList.toggle("closed", collapsed); }
   });
 };
 
