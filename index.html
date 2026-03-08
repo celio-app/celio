@@ -1368,9 +1368,43 @@ window.deleteSeq = async function(id) {
   renderSidebar(); renderSchedule(); showToast("Deleted.");
 };
 
-window.openShotModal=function(seqId){currentSeqId=seqId;document.getElementById("shf-code").value="";if(document.getElementById("shf-start"))document.getElementById("shf-start").value="";if(document.getElementById("shf-due"))document.getElementById("shf-due").value="";document.getElementById("shf-desc").value="";document.getElementById("shot-modal").classList.add("open");};
-window.closeShotModal=function(){document.getElementById("shot-modal").classList.remove("open");};
-window.saveShot=async function(){var code=document.getElementById("shf-code").value.trim().toUpperCase();if(!code){showToast("Please enter a shot code.", "error");return;}var seq=sequences.find(function(s){return s.id===currentSeqId;});var pid=seq?seq.project_id:activeProject.id;var payload={code:code,description:document.getElementById("shf-desc").value.trim(),sequence_id:currentSeqId,project_id:pid,user_id:currentUser.id,status:"pending",start_date:document.getElementById("shf-start")?document.getElementById("shf-start").value||null:null,due_date:document.getElementById("shf-due")?document.getElementById("shf-due").value||null:null};var r=await sb.from("shots").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}shots=shots.concat(r.data);closeShotModal();renderSidebar();();showToast("Shot added!");};
+/* --- Shot Management --- */
+window.openShotModal = function(seqId) {
+  currentSeqId = seqId;
+  document.getElementById("shf-code").value = "";
+  if (document.getElementById("shf-start")) document.getElementById("shf-start").value = "";
+  if (document.getElementById("shf-due")) document.getElementById("shf-due").value = "";
+  document.getElementById("shf-desc").value = "";
+  document.getElementById("shot-modal").classList.add("open");
+};
+
+window.closeShotModal = function() {
+  document.getElementById("shot-modal").classList.remove("open");
+};
+
+window.saveShot = async function() {
+  var code = document.getElementById("shf-code").value.trim().toUpperCase();
+  if (!code) { showToast("Please enter a shot code.", "error"); return; }
+  var seq = sequences.find(function(s) { return s.id === currentSeqId; });
+  var pid = seq ? seq.project_id : activeProject.id;
+  var payload = {
+    code: code,
+    description: document.getElementById("shf-desc").value.trim(),
+    sequence_id: currentSeqId,
+    project_id: pid,
+    user_id: currentUser.id,
+    status: "pending",
+    start_date: document.getElementById("shf-start") ? document.getElementById("shf-start").value || null : null,
+    due_date: document.getElementById("shf-due") ? document.getElementById("shf-due").value || null : null
+  };
+  var r = await sb.from("shots").insert(payload).select();
+  if (r.error) { showToast("Error: " + r.error.message, "error"); return; }
+  shots = shots.concat(r.data);
+  closeShotModal();
+  renderSidebar();
+  showToast("Shot added!");
+};
+
 window.deleteShot = async function(id) {
   if (!confirm("Delete this shot?")) return;
   if (activeShot && activeShot.id === id) backToProject();
@@ -1381,882 +1415,538 @@ window.deleteShot = async function(id) {
   renderSidebar(); renderSchedule(); showToast("Deleted.");
 };
 
-window.openShot=async function(id){
-  var sh=shots.find(function(x){return x.id===id;});if(!sh)return;
-  activeShot=sh;
-  if(isMobile())closeMobileSidebar();
-  var seq=sequences.find(function(x){return x.id===sh.sequence_id;});
-  var proj=projects.find(function(x){return x.id===sh.project_id;})||activeProject;
-  if(!activeProject||activeProject.id!==sh.project_id){activeProject=proj; uiState.projExpanded[proj.id]=true; saveUIState(); localStorage.setItem("celio-proj-"+currentUser.id,proj.id);}
-  document.getElementById("hdr-bc").innerHTML='<div class="breadcrumb"><span class="bc-proj" onclick="backToProject()">'+proj.name+'</span><span class="bc-sep">/</span><span class="bc-seq">'+(seq?seq.code:"")+'</span><span class="bc-sep">/</span><span class="bc-shot">'+sh.code+'</span></div>';
-  document.getElementById("hdr-actions").innerHTML='<button class="btn btn-ghost btn-sm" onclick="backToProject()">&#8592; Back</button>';
-  document.getElementById("sp-code").textContent=sh.code;
-  document.getElementById("sp-seq-label").textContent=seq?seq.code+(seq.name?" \u2014 "+seq.name:""):"";
-  document.getElementById("sp-desc").value=sh.description||"";
-  document.getElementById("sp-status").value=sh.status||"pending";
-  document.getElementById("sp-proj-chip").textContent=proj.name;
-  document.getElementById("sp-seq-chip").textContent=seq?seq.code+(seq.name?" \u2014 "+seq.name:""):"";
-  document.getElementById("sp-code-edit").value=sh.code;
-  document.getElementById("sp-seq-edit").value=seq?seq.code+(seq.name?" \u2014 "+seq.name:""):"";
-  document.getElementById("sp-frames").value=sh.frame_count||"";
-  if(document.getElementById("sp-start-date"))document.getElementById("sp-start-date").value=sh.start_date||"";
-  if(document.getElementById("sp-due-date"))document.getElementById("sp-due-date").value=sh.due_date||"";
-  document.getElementById("sp-camera").value=sh.camera||"";
-  document.getElementById("sp-storyboard").value=sh.storyboard_notes||"";
+window.openShot = async function(id) {
+  var sh = shots.find(function(x) { return x.id === id; });
+  if (!sh) return;
+  activeShot = sh;
+  if (isMobile()) closeMobileSidebar();
+  var seq = sequences.find(function(x) { return x.id === sh.sequence_id; });
+  var proj = projects.find(function(x) { return x.id === sh.project_id; }) || activeProject;
+  
+  if (!activeProject || activeProject.id !== sh.project_id) {
+    activeProject = proj;
+    uiState.projExpanded[proj.id] = true;
+    saveUIState();
+    localStorage.setItem("celio-proj-" + currentUser.id, proj.id);
+  }
+
+  document.getElementById("hdr-bc").innerHTML = '<div class="breadcrumb"><span class="bc-proj" onclick="backToProject()">' + proj.name + '</span><span class="bc-sep">/</span><span class="bc-seq">' + (seq ? seq.code : "") + '</span><span class="bc-sep">/</span><span class="bc-shot">' + sh.code + '</span></div>';
+  document.getElementById("hdr-actions").innerHTML = '<button class="btn btn-ghost btn-sm" onclick="backToProject()">&#8592; Back</button>';
+  
+  document.getElementById("sp-code").textContent = sh.code;
+  document.getElementById("sp-seq-label").textContent = seq ? seq.code + (seq.name ? " \u2014 " + seq.name : "") : "";
+  document.getElementById("sp-desc").value = sh.description || "";
+  document.getElementById("sp-status").value = sh.status || "pending";
+  document.getElementById("sp-proj-chip").textContent = proj.name;
+  document.getElementById("sp-seq-chip").textContent = seq ? seq.code + (seq.name ? " \u2014 " + seq.name : "") : "";
+  document.getElementById("sp-code-edit").value = sh.code;
+  document.getElementById("sp-seq-edit").value = seq ? seq.code + (seq.name ? " \u2014 " + seq.name : "") : "";
+  document.getElementById("sp-frames").value = sh.frame_count || "";
+  
+  if (document.getElementById("sp-start-date")) document.getElementById("sp-start-date").value = sh.start_date || "";
+  if (document.getElementById("sp-due-date")) document.getElementById("sp-due-date").value = sh.due_date || "";
+  
+  document.getElementById("sp-camera").value = sh.camera || "";
+  document.getElementById("sp-storyboard").value = sh.storyboard_notes || "";
+  
   showShotPage(true);
   await loadShotTasks();
   await loadShotAssets();
   renderSidebar();
 };
 
-window.backToProject=function(){activeShot=null;showShotPage(false);if(activeProject){setHeaderProject(activeProject);showTab("schedule");}renderSidebar();};
+window.backToProject = function() {
+  activeShot = null;
+  showShotPage(false);
+  if (activeProject) {
+    setHeaderProject(activeProject);
+    showTab("schedule");
+  }
+  renderSidebar();
+};
 
-function showShotPage(show){
-  var sp=document.getElementById("shot-page"),nt=document.getElementById("nav-tabs"),tcs=document.querySelectorAll(".tab-content");
-  if(show){sp.classList.add("active");nt.style.display="none";tcs.forEach(function(el){el.style.display="none";el.classList.remove("active");});document.getElementById("no-proj").style.display="none";}
-  else{sp.classList.remove("active");if(activeProject)nt.style.display="";}
+function showShotPage(show) {
+  var sp = document.getElementById("shot-page"), nt = document.getElementById("nav-tabs"), tcs = document.querySelectorAll(".tab-content");
+  if (show) {
+    sp.classList.add("active");
+    nt.style.display = "none";
+    tcs.forEach(function(el) { el.style.display = "none"; el.classList.remove("active"); });
+    document.getElementById("no-proj").style.display = "none";
+  } else {
+    sp.classList.remove("active");
+    if (activeProject) nt.style.display = "";
+  }
 }
 
-window.saveShotField=async function(field,value){
-  if(!activeShot)return;
-  var payload={};payload[field]=value||null;
-  if(field==="frame_count")payload[field]=value?parseInt(value):null;
-  await sb.from("shots").update(payload).eq("id",activeShot.id);
-  activeShot[field]=payload[field];
-  var idx=shots.findIndex(function(s){return s.id===activeShot.id;});
-  if(idx>=0)shots[idx][field]=payload[field];
-  if(field==="code"){document.getElementById("sp-code").textContent=value;document.getElementById("sp-code-edit").value=value;}
-  if(field==="status"||field==="code"||field==="description")renderSidebar();
+window.saveShotField = async function(field, value) {
+  if (!activeShot) return;
+  var payload = {}; payload[field] = value || null;
+  if (field === "frame_count") payload[field] = value ? parseInt(value) : null;
+  await sb.from("shots").update(payload).eq("id", activeShot.id);
+  activeShot[field] = payload[field];
+  var idx = shots.findIndex(function(s) { return s.id === activeShot.id; });
+  if (idx >= 0) shots[idx][field] = payload[field];
+  if (field === "code") { document.getElementById("sp-code").textContent = value; document.getElementById("sp-code-edit").value = value; }
+  if (field === "status" || field === "code" || field === "description") renderSidebar();
   showToast("Saved!");
 };
-window.deleteShotConfirm=function(){if(activeShot)deleteShot(activeShot.id);};
 
-async function loadShotTasks(){
-  if(!activeShot)return;
-  var r=await sb.from("shot_tasks").select("*").eq("shot_id",activeShot.id).order("order_index",{ascending:true});
+window.deleteShotConfirm = function() { if (activeShot) deleteShot(activeShot.id); };
+
+/* --- Shot Task Management --- */
+async function loadShotTasks() {
+  if (!activeShot) return;
+  var r = await sb.from("shot_tasks").select("*").eq("shot_id", activeShot.id).order("order_index", { ascending: true });
   activeShotTasks = r.data || [];
   renderShotTasks();
 }
 
-function renderShotTasks(){
-  var el=document.getElementById("shot-tasks-list");
-  if(!activeShotTasks.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text4);font-size:.8rem">No tasks yet — click + Add Task to assign pipeline work to this shot.</div><button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';return;}
-  var html="";
-  activeShotTasks.forEach(function(st){
+function renderShotTasks() {
+  var el = document.getElementById("shot-tasks-list");
+  if (!activeShotTasks.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text4);font-size:.8rem">No tasks yet — click + Add Task to assign pipeline work to this shot.</div><button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';
+    return;
+  }
+  var html = "";
+  activeShotTasks.forEach(function(st) {
     var vNum = st.version || 1;
-    html+='<div class="shot-task-row">';
-    html+='<div style="flex:1;min-width:0"><div class="st-type">'+st.task_type+' <span class="version-badge">v'+vNum+'</span></div>';
-    if(st.department)html+='<div class="st-dept">'+st.department+'</div></div>';
-    else html+='</div>';
-    if(st.assignee)html+='<span class="chip" style="font-size:.7rem; margin-right:8px">'+st.assignee+'</span>';
-    if(st.due_date)html+='<span style="font-size:.72rem;color:var(--text3); margin-right:8px">'+fmtDate(st.due_date)+'</span>';
-    
-    var selHtml = '<select class="shot-status-sel" style="padding:2px 6px; font-size:.7rem; margin-right:8px; border-radius:4px" onchange="updateShotTaskStatus(\''+st.id+'\', this.value)">';
-    var opts = [
-        {v:"ready", l:"Ready"},{v:"inprogress", l:"In Progress"},
-        {v:"review", l:"In Review"},{v:"approved", l:"Approved"},{v:"final", l:"Final"}
-    ];
-    opts.forEach(function(o){
-        selHtml += '<option value="'+o.v+'" '+(st.status===o.v?'selected':'')+'>'+o.l+'</option>';
+    html += '<div class="shot-task-row">';
+    html += '<div style="flex:1;min-width:0"><div class="st-type">' + st.task_type + ' <span class="version-badge">v' + vNum + '</span></div>';
+    if (st.department) html += '<div class="st-dept">' + st.department + '</div></div>';
+    else html += '</div>';
+    if (st.assignee) html += '<span class="chip" style="font-size:.7rem; margin-right:8px">' + st.assignee + '</span>';
+    if (st.due_date) html += '<span style="font-size:.72rem;color:var(--text3); margin-right:8px">' + fmtDate(st.due_date) + '</span>';
+
+    var selHtml = '<select class="shot-status-sel" style="padding:2px 6px; font-size:.7rem; margin-right:8px; border-radius:4px" onchange="updateShotTaskStatus(\'' + st.id + '\', this.value)">';
+    var opts = [{ v: "ready", l: "Ready" }, { v: "inprogress", l: "In Progress" }, { v: "review", l: "In Review" }, { v: "approved", l: "Approved" }, { v: "final", l: "Final" }];
+    opts.forEach(function(o) {
+      selHtml += '<option value="' + o.v + '" ' + (st.status === o.v ? 'selected' : '') + '>' + o.l + '</option>';
     });
     selHtml += '</select>';
-    
-    html+= selHtml;
-    html+='<button class="st-del" onclick="deleteShotTask(\''+st.id+'\')">&#215;</button></div>';
+
+    html += selHtml;
+    html += '<button class="st-del" onclick="deleteShotTask(\'' + st.id + '\')">&#215;</button></div>';
   });
-  html+='<button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';
-  el.innerHTML=html;
+  html += '<button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';
+  el.innerHTML = html;
 }
 
 window.updateShotTaskStatus = async function(id, newStatus) {
   var st = activeShotTasks.find(function(x) { return x.id === id; });
-  if(!st) return;
+  if (!st) return;
   var oldStatus = st.status;
   var isRevision = (oldStatus === "review" || oldStatus === "approved" || oldStatus === "final") && (newStatus === "inprogress" || newStatus === "ready");
   var newVer = st.version || 1;
   if (isRevision) newVer++;
-  
+
   st.status = newStatus;
   st.version = newVer;
-
   var globalSt = shotTasks.find(function(x) { return x.id === id; });
-  if(globalSt) { globalSt.status = newStatus; globalSt.version = newVer; }
+  if (globalSt) { globalSt.status = newStatus; globalSt.version = newVer; }
 
-  await sb.from("shot_tasks").update({status: newStatus, version: newVer}).eq("id", id);
+  await sb.from("shot_tasks").update({ status: newStatus, version: newVer }).eq("id", id);
   renderShotTasks();
   showToast("Status updated!");
 };
 
-window.deleteShotTask=async function(id){
-  await sb.from("shot_tasks").delete().eq("id",id);
-  activeShotTasks=activeShotTasks.filter(function(s){return s.id!==id;});
-  shotTasks=shotTasks.filter(function(s){return s.id!==id;});
+window.deleteShotTask = async function(id) {
+  await sb.from("shot_tasks").delete().eq("id", id);
+  activeShotTasks = activeShotTasks.filter(function(s) { return s.id !== id; });
+  shotTasks = shotTasks.filter(function(s) { return s.id !== id; });
   renderShotTasks();
   showToast("Removed.");
 };
 
-window.openShotTaskModal=function(){
-  selectedShotTaskType=null;
-  document.getElementById("stf-assignee").value="";
-  document.getElementById("stf-start").value="";
-  document.getElementById("stf-due").value="";
-  document.getElementById("stf-status").value="ready";
-  document.getElementById("stf-notes").value="";
-  document.getElementById("stf-custom").value="";
-  document.getElementById("custom-type-row").style.display="none";
-  var grid=document.getElementById("shot-task-type-grid");
-  grid.innerHTML=SHOT_TASK_TYPES.map(function(t){return'<button class="stage-pill" onclick="selectShotTaskType(\''+t+'\',this)">'+t+'</button>';}).join("");
+window.openShotTaskModal = function() {
+  selectedShotTaskType = null;
+  document.getElementById("stf-assignee").value = "";
+  document.getElementById("stf-start").value = "";
+  document.getElementById("stf-due").value = "";
+  document.getElementById("stf-status").value = "ready";
+  document.getElementById("stf-notes").value = "";
+  document.getElementById("stf-custom").value = "";
+  document.getElementById("custom-type-row").style.display = "none";
+  var grid = document.getElementById("shot-task-type-grid");
+  grid.innerHTML = SHOT_TASK_TYPES.map(function(t) {
+    return '<button class="stage-pill" onclick="selectShotTaskType(\'' + t + '\',this)">' + t + '</button>';
+  }).join("");
   document.getElementById("shot-task-modal").classList.add("open");
 };
-window.closeShotTaskModal=function(){document.getElementById("shot-task-modal").classList.remove("open");};
-window.selectShotTaskType=function(t,el){
-  selectedShotTaskType=t;
-  document.querySelectorAll("#shot-task-type-grid .stage-pill").forEach(function(p){p.classList.remove("active");});
+
+window.closeShotTaskModal = function() { document.getElementById("shot-task-modal").classList.remove("open"); };
+
+window.selectShotTaskType = function(t, el) {
+  selectedShotTaskType = t;
+  document.querySelectorAll("#shot-task-type-grid .stage-pill").forEach(function(p) { p.classList.remove("active"); });
   el.classList.add("active");
-  document.getElementById("custom-type-row").style.display=t==="Custom..."?"block":"none";
-};
-window.saveShotTask=async function(){
-  var type=selectedShotTaskType;
-  if(!type){showToast("Please select a task type.", "error");return;}
-  if(type==="Custom..."){type=document.getElementById("stf-custom").value.trim();if(!type){showToast("Please enter a custom task name.", "error");return;}}
-  var payload={shot_id:activeShot.id,project_id:activeShot.project_id,user_id:currentUser.id,task_type:type,department:DEPT_MAP[type]||null,assignee:document.getElementById("stf-assignee").value.trim()||null,start_date:document.getElementById("stf-start").value||null,due_date:document.getElementById("stf-due").value||null,status:document.getElementById("stf-status").value,notes:document.getElementById("stf-notes").value.trim()||null,version:1,order_index:activeShotTasks.length};
-  var r=await sb.from("shot_tasks").insert(payload).select();
-  if(r.error){showToast("Error: "+r.error.message, "error");return;}
-  activeShotTasks=activeShotTasks.concat(r.data);
-  shotTasks=shotTasks.concat(r.data);
-  closeShotTaskModal();renderShotTasks();showToast("Task added!");
+  document.getElementById("custom-type-row").style.display = t === "Custom..." ? "block" : "none";
 };
 
-async function loadShotAssets(){
-  if(!activeShot)return;
-  var assetTasks=tasks.filter(function(t){return t.category==="asset"&&t.project_id===activeShot.project_id;});
+window.saveShotTask = async function() {
+  var type = selectedShotTaskType;
+  if (!type) { showToast("Please select a task type.", "error"); return; }
+  if (type === "Custom...") {
+    type = document.getElementById("stf-custom").value.trim();
+    if (!type) { showToast("Please enter a custom task name.", "error"); return; }
+  }
+  var payload = {
+    shot_id: activeShot.id,
+    project_id: activeShot.project_id,
+    user_id: currentUser.id,
+    task_type: type,
+    department: DEPT_MAP[type] || null,
+    assignee: document.getElementById("stf-assignee").value.trim() || null,
+    start_date: document.getElementById("stf-start").value || null,
+    due_date: document.getElementById("stf-due").value || null,
+    status: document.getElementById("stf-status").value,
+    notes: document.getElementById("stf-notes").value.trim() || null,
+    version: 1,
+    order_index: activeShotTasks.length
+  };
+  var r = await sb.from("shot_tasks").insert(payload).select();
+  if (r.error) { showToast("Error: " + r.error.message, "error"); return; }
+  activeShotTasks = activeShotTasks.concat(r.data);
+  shotTasks = shotTasks.concat(r.data);
+  closeShotTaskModal(); renderShotTasks(); showToast("Task added!");
+};
+
+/* --- Asset & Shot Linking Logic --- */
+async function loadShotAssets() {
+  if (!activeShot) return;
+  var assetTasks = tasks.filter(function(t) { return t.category === "asset" && t.project_id === activeShot.project_id; });
   renderShotAssets(assetTasks);
 }
 
-function renderShotAssets(assetTasks){
-  var el=document.getElementById("shot-assets-list");
-  if(!assetTasks||!assetTasks.length){
-    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text4);font-size:.8rem">No assets tracked yet. Add asset tasks in the Schedule tab, then link them here.</div>';
-    var banner = document.getElementById("sp-dep-banner");
-    if (banner) banner.style.display = "none";
+function renderShotAssets(assetTasks) {
+  var el = document.getElementById("shot-assets-list");
+  if (!el) return;
+
+  if (!assetTasks || !assetTasks.length) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text4);font-size:.8rem">No assets tracked yet. Add assets in the Schedule tab.</div>';
+    if (document.getElementById("sp-dep-banner")) document.getElementById("sp-dep-banner").style.display = "none";
     return;
   }
-  var groups={};
-  assetTasks.forEach(function(t){
-    var key=(t.asset_name||"Unknown")+"||"+(t.asset_type||"");
-    if(!groups[key])groups[key]={name:t.asset_name||"Unknown",type:t.asset_type||"",tasks:[]};
+
+  var groups = {};
+  assetTasks.forEach(function(t) {
+    var key = (t.asset_name || "Unknown") + "||" + (t.asset_type || "");
+    if (!groups[key]) groups[key] = { name: t.asset_name || "Unknown", type: t.asset_type || "", tasks: [] };
     groups[key].tasks.push(t);
   });
-  var linkedNames=activeShot.linked_assets?activeShot.linked_assets.split(","):[]; 
-  var html="";
-  var hasLinked=false;
+
+  var linkedNames = activeShot.linked_assets ? activeShot.linked_assets.split(",") : [];
+  var html = "";
   var hasLateLinked = false;
-  
-  Object.keys(groups).forEach(function(key){
-    var g=groups[key];
-    var isLinked=linkedNames.indexOf(key)>=0;
-    if(!isLinked)return;
-    hasLinked=true;
-    var total=g.tasks.length,done=g.tasks.filter(function(t){return t.status==="done";}).length,inprog=g.tasks.filter(function(t){return t.status==="inprogress"||t.status==="review";}).length;
-    var allReady=done===total,anyLate=g.tasks.some(function(t){return t.status!=="done"&&daysUntil(t.due_date)<0;});
-    if (anyLate || inprog > 0) hasLateLinked = true;
-    var dotColor=allReady?"#10b981":anyLate?"#ef4444":inprog>0?"#3b82f6":"#64748b";
-    html+='<div class="shot-asset-item">';
-    html+='<span class="asset-ready-dot" style="background:'+dotColor+'"></span>';
-    html+='<div class="asset-info"><div class="asset-info-name">'+g.name+'</div><div class="asset-info-type">'+assetTypeLabel(g.type)+'</div>';
-    html+='<div class="asset-pipeline-mini">';
-    g.tasks.forEach(function(t){var cls=t.status==="done"?"pmb-done":t.status==="inprogress"||t.status==="review"?"pmb-prog":"pmb-pend";html+='<span class="pipeline-mini-badge '+cls+'">'+(t.pipeline_stage||t.name)+'</span>';});
-    html+='</div></div>';
-    html+='<span style="font-size:.72rem;font-weight:700;color:'+(allReady?"#10b981":anyLate?"#ef4444":"#f59e0b")+'">'+done+'/'+total+' done</span>';
-    html+='</div>';
+
+  linkedNames.forEach(function(key) {
+    var g = groups[key];
+    if (!g) return;
+
+    var total = g.tasks.length;
+    var done = g.tasks.filter(function(t) { return t.status === "done"; }).length;
+    var inprog = g.tasks.filter(function(t) { return t.status === "inprogress" || t.status === "review"; }).length;
+    var anyLate = g.tasks.some(function(t) { return t.status !== "done" && t.due_date && daysUntil(t.due_date) < 0; });
+
+    if (anyLate || (done < total && total > 0)) hasLateLinked = true;
+
+    var allReady = (done === total && total > 0);
+    var dotColor = allReady ? "#10b981" : anyLate ? "#ef4444" : inprog > 0 ? "#3b82f6" : "#64748b";
+
+    html += '<div class="shot-asset-item">';
+    html += '<span class="asset-ready-dot" style="background:' + dotColor + '"></span>';
+    html += '<div class="asset-info"><div class="asset-info-name">' + g.name + '</div><div class="asset-info-type">' + assetTypeLabel(g.type) + '</div>';
+    html += '<div class="asset-pipeline-mini">';
+    g.tasks.forEach(function(t) {
+      var cls = t.status === "done" ? "pmb-done" : (t.status === "inprogress" || t.status === "review") ? "pmb-prog" : "pmb-pend";
+      html += '<span class="pipeline-mini-badge ' + cls + '">' + (t.pipeline_stage || t.name) + '</span>';
+    });
+    html += '</div></div>';
+    html += '<span style="font-size:.72rem;font-weight:700;color:' + (allReady ? "#10b981" : anyLate ? "#ef4444" : "#f59e0b") + '">' + done + '/' + total + ' done</span>';
+    html += '</div>';
   });
-  
+
   var banner = document.getElementById("sp-dep-banner");
-  if(banner) {
-    if(hasLateLinked) {
-      banner.style.display = "flex";
-      banner.innerHTML = "&#9888;&#65039; <span><strong>Warning:</strong> One or more upstream assets linked to this shot are currently blocked or in progress.</span>";
-    } else {
-      banner.style.display = "none";
-    }
+  if (banner) {
+    banner.style.display = hasLateLinked ? "flex" : "none";
+    banner.innerHTML = "&#9888;&#65039; <span><strong>Warning:</strong> Upstream assets for this shot are incomplete or late.</span>";
   }
 
-  if(!hasLinked){html='<div style="padding:14px 16px;font-size:.8rem;color:var(--text4)">No assets linked yet. Click + Link Asset to add.</div>';}
-  el.innerHTML=html+'<button class="add-asset-link-btn" onclick="openAssetLinkModal()">+ Link Asset</button>';
+  el.innerHTML = (html || '<div style="padding:14px 16px;font-size:.8rem;color:var(--text4)">No assets linked.</div>') +
+    '<button class="add-asset-link-btn" onclick="openAssetLinkModal()">+ Link Asset</button>';
 }
 
-window.openAssetLinkModal=function(){
-  var assetTasks=tasks.filter(function(t){return t.category==="asset"&&t.project_id===activeShot.project_id;});
-  var groups={};
-  assetTasks.forEach(function(t){var key=(t.asset_name||"Unknown")+"||"+(t.asset_type||"");if(!groups[key])groups[key]={name:t.asset_name||"Unknown",type:t.asset_type||""};});
-  var linkedNames=activeShot.linked_assets?activeShot.linked_assets.split(","):[];
-  assetLinkSelection=linkedNames.slice();
-  window._assetGroups=groups;
-  renderAssetSearchList("",groups,linkedNames);
-  document.getElementById("asset-search-inp").value="";
-  document.getElementById("asset-link-modal").classList.add("open");
-};
-window.closeAssetLinkModal=function(){document.getElementById("asset-link-modal").classList.remove("open");};
-function renderAssetSearchList(q,groups,sel){
-  var keys=Object.keys(groups).filter(function(k){return !q||groups[k].name.toLowerCase().indexOf(q.toLowerCase())>=0;});
-  if(!keys.length){document.getElementById("asset-search-list").innerHTML='<div style="padding:14px;text-align:center;color:var(--text4);font-size:.8rem">No assets found. Add asset tasks in the Schedule tab first.</div>';return;}
-  var html=keys.map(function(k){var g=groups[k];var isSel=assetLinkSelection.indexOf(k)>=0;return'<div class="asset-search-item'+(isSel?" selected":"")+'" onclick="toggleAssetLink(\''+k.replace(/'/g,"\\'")+'\')" data-key="'+k.replace(/"/g,"&quot;")+'"><div><div class="asi-name">'+g.name+'</div><div class="asi-type">'+assetTypeLabel(g.type)+'</div></div>'+(isSel?'<span class="asi-check">&#10003;</span>':'')+'</div>';}).join("");
-  document.getElementById("asset-search-list").innerHTML=html;
-}
-window.filterAssetSearch=function(q){renderAssetSearchList(q,window._assetGroups||{},assetLinkSelection);};
-window.toggleAssetLink=function(key){var idx=assetLinkSelection.indexOf(key);if(idx>=0)assetLinkSelection.splice(idx,1);else assetLinkSelection.push(key);renderAssetSearchList(document.getElementById("asset-search-inp").value,window._assetGroups||{},assetLinkSelection);};
-window.saveAssetLinks=async function(){
-  var val=assetLinkSelection.join(",");
-  await sb.from("shots").update({linked_assets:val}).eq("id",activeShot.id);
-  activeShot.linked_assets=val;
-  var idx=shots.findIndex(function(s){return s.id===activeShot.id;});
-  if(idx>=0)shots[idx].linked_assets=val;
-  closeAssetLinkModal();
-  var assetTasks=tasks.filter(function(t){return t.category==="asset"&&t.project_id===activeShot.project_id;});
-  renderShotAssets(assetTasks);
-  showToast("Assets linked!");
-};
+/* --- Schedule View Logic --- */
+async function loadTasks() {
+  if (!activeProject) return;
+  var r = await sb.from("tasks").select("*").eq("project_id", activeProject.id).order("due_date", { ascending: true, nullsFirst: false });
+  if (r.error) { console.error(r.error); return; }
+  tasks = r.data || [];
+  
+  var rshots = await sb.from("shots").select("*").order("code", { ascending: true });
+  if (!rshots.error) { shots = rshots.data || []; }
 
-async function loadTasks(){
-  if(!activeProject)return;
-  var r=await sb.from("tasks").select("*").eq("project_id",activeProject.id).order("due_date",{ascending:true,nullsFirst:false});
-  if(r.error){console.error(r.error);return;}
-  tasks=r.data||[];
-  var pids=projects.map(function(p){return p.id;});
-  var rshots=await sb.from("shots").select("*").in("project_id",pids).order("code",{ascending:true});
-  if(!rshots.error){shots=rshots.data||[];}
-  var shotIds=shots.filter(function(s){return s.project_id===activeProject.id;}).map(function(s){return s.id;});
-  if(shotIds.length){var rst=await sb.from("shot_tasks").select("*").in("shot_id",shotIds);shotTasks=rst.data||[];}
-  else{shotTasks=[];}
-  var active=document.querySelector(".tab-content.active");
-  var name=active?active.id.replace("tab-",""):"schedule";
+  var projectShotIds = shots.filter(s => s.project_id === activeProject.id).map(s => s.id);
+  if (projectShotIds.length) {
+    var rst = await sb.from("shot_tasks").select("*").in("shot_id", projectShotIds);
+    shotTasks = rst.data || [];
+  } else {
+    shotTasks = [];
+  }
+
   populateTeamDropdowns();
-  if(name==="schedule")renderSchedule();
-  else if(name==="calendar")renderCalendar();
-  else if(name==="gantt")renderGantt();
-  else if(name==="milestones")renderMilestones();
+  renderSchedule();
 }
 
-window.setSchedView=function(v,el){
-  uiState.schedView=v; saveUIState();
-  document.querySelectorAll(".sched-tab").forEach(function(t){t.classList.remove("active");});
-  if(el) el.classList.add("active");
-  else {
-      document.querySelectorAll(".sched-tab").forEach(function(t){
-          if((v==='all'&&t.textContent.includes('All Tasks')) || (v==='assets'&&t.textContent.includes('Assets'))) t.classList.add("active");
-      });
-  }
+window.setSchedView = function(v, el) {
+  uiState.schedView = v;
+  saveUIState();
   renderSchedule();
 };
 
 window.renderSchedule = function() {
-    updateStats();
-    var assetTasks = tasks.filter(function(t) { return t.category === "asset"; });
-    var assetSec = document.getElementById("asset-sections");
-    var shotSec = document.getElementById("shot-schedule-section");
+  updateStats();
+  if (!activeProject) return;
 
-    // Update Tab Active States
-    document.querySelectorAll(".sched-tab").forEach(function(t) {
-        t.classList.remove("active");
-        if ((uiState.schedView === 'all' && t.textContent.includes('All Tasks')) || 
-            (uiState.schedView === 'assets' && t.textContent.includes('Assets'))) {
-            t.classList.add("active");
-        }
-    });
+  var assetSec = document.getElementById("asset-sections");
+  var shotSec = document.getElementById("shot-schedule-section");
 
-    // Handle View Toggling (Assets Only vs All)
-    if (uiState.schedView === "assets") {
-        if (assetSec) assetSec.style.display = "block";
-        if (shotSec) shotSec.style.display = "none";
-    } else {
-        if (assetSec) assetSec.style.display = "block";
-        if (shotSec) shotSec.style.display = "block";
-    }
+  document.querySelectorAll(".sched-tab").forEach(t => {
+    var text = t.textContent.toLowerCase();
+    var isActive = (uiState.schedView === 'all' && text.includes('all tasks')) || 
+                   (uiState.schedView === 'assets' && text.includes('assets'));
+    t.classList.toggle("active", isActive);
+  });
 
-    renderAssetSections(assetTasks);
-    renderShotSection();
-    renderHandoffs();
-    renderAssetDeliverables();
+  if (assetSec) assetSec.style.display = "block";
+  if (shotSec) shotSec.style.display = (uiState.schedView === "assets") ? "none" : "block";
+
+  renderAssetSections(tasks.filter(t => t.category === "asset"));
+  renderShotSection();
+  if(typeof renderHandoffs === 'function') renderHandoffs();
+  if(typeof renderAssetDeliverables === 'function') renderAssetDeliverables();
 };
 
+/* --- Asset UI Rendering --- */
 function renderAssetSections(assetTasks) {
-    var container = document.getElementById("asset-sections");
-    if (!container) return;
-    container.innerHTML = "";
+  var container = document.getElementById("asset-sections");
+  if (!container) return;
+  container.innerHTML = "";
 
-    var secWrap = document.createElement("div");
-    secWrap.className = "asset-section";
+  var secWrap = document.createElement("div");
+  secWrap.className = "asset-section";
+  secWrap.innerHTML = `<div class="asset-section-hdr"><h2>🎨 Asset Pipeline</h2><button class="btn btn-primary btn-sm" onclick="openModal(null, 'asset')">+ New Asset</button></div>`;
 
-    // Header matching Shot Section style
-    var secHdr = document.createElement("div");
-    secHdr.className = "asset-section-hdr";
-    secHdr.innerHTML = `
-        <h2><span class="asset-type-icon">🎨</span> Asset Pipeline</h2>
-        <button class="btn btn-primary btn-sm" onclick="openModal(null, 'asset')">+ New Asset</button>
-    `;
-    secWrap.appendChild(secHdr);
-
-    if (!assetTasks.length) {
-        secWrap.innerHTML += `<div style="padding:40px; text-align:center; color:var(--text4); font-size:.85rem;">No asset tasks yet.</div>`;
-        container.appendChild(secWrap);
-        return;
-    }
-
-    // Grouping assets by Type (Character, Prop, etc.)
-    var byType = {};
-    assetTasks.forEach(t => {
-        var at = t.asset_type || "other", n = t.asset_name || "Unnamed";
-        if (!byType[at]) byType[at] = {};
-        if (!byType[at][n]) byType[at][n] = [];
-        byType[at][n].push(t);
-    });
-
-    var typeOrder = ["character", "prop", "environment", "vehicle", "fx", "other"];
-    var typeLabels = { character: "Characters", prop: "Props", environment: "Environments", vehicle: "Vehicles", fx: "FX Elements", other: "Other" };
-
-    typeOrder.forEach(at => {
-        if (!byType[at]) return;
-        var names = Object.keys(byType[at]);
-        var isTypeCollapsed = uiState.typeGroupCollapsed[at] === true;
-
-        var typeGroup = document.createElement("div");
-        typeGroup.className = "asset-group";
-
-        // Category Header
-        var typeRow = document.createElement("div");
-        typeRow.className = "asset-group-hdr";
-        typeRow.innerHTML = `
-            <span class="asset-group-arrow ${isTypeCollapsed ? '' : 'open'}">▶</span>
-            <span style="font-size:.9rem; margin-right:8px;">${assetTypeIcon(at)}</span>
-            <span class="asset-group-name">${typeLabels[at]}</span>
-            <span class="asset-progress-lbl" style="margin-right:10px">${names.length} assets</span>
-            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); openModal(null, 'asset', '${at}')">+ Add</button>
-        `;
-
-        var typeBody = document.createElement("div");
-        typeBody.style.display = isTypeCollapsed ? "none" : "block";
-
-        typeRow.onclick = function() {
-            var isHidden = typeBody.style.display === "none";
-            typeBody.style.display = isHidden ? "block" : "none";
-            this.querySelector(".asset-group-arrow").classList.toggle("open", isHidden);
-            uiState.typeGroupCollapsed[at] = !isHidden;
-            saveUIState();
-        };
-
-        // Render individual assets
-        names.forEach(name => {
-            var stageTasks = byType[at][name];
-            var total = stageTasks.length, done = stageTasks.filter(t => t.status === "done").length;
-            var pct = total ? Math.round(done / total * 100) : 0;
-            var anyLate = stageTasks.some(t => t.status !== "done" && t.due_date && daysUntil(t.due_date) < 0);
-            var isReady = done === total && total > 0;
-            
-            var key = at + "|" + name;
-            var isCollapsed = uiState.assetGroupCollapsed[key] !== false;
-
-            var card = document.createElement("div");
-            card.className = "asset-card";
-            card.innerHTML = `
-                <div class="asset-card-hdr" style="padding: 10px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid var(--border2);">
-                    <span class="shot-arrow ${isCollapsed ? '' : 'open'}" style="font-size:.6rem; color:var(--text4)">▶</span>
-                    <span class="asset-card-name" style="font-weight:700; flex:1;">${name}</span>
-                    <span class="badge ${isReady ? 'b-done' : anyLate ? 'b-todo' : 'b-inprogress'}" style="font-size:.65rem;">
-                        ${isReady ? "READY" : anyLate ? "BLOCKED" : "IN PROGRESS"}
-                    </span>
-                    <div class="asset-prog-bar" style="width:80px; height:6px;"><div class="asset-prog-fill" style="width:${pct}%"></div></div>
-                    <span style="font-size:.7rem; color:var(--text4); min-width:30px;">${pct}%</span>
-                    <button class="btn-remove" onclick="event.stopPropagation(); deleteAsset('${name}', '${at}')">&times;</button>
-                </div>
-            `;
-
-            var cardBody = document.createElement("div");
-            cardBody.style.display = isCollapsed ? "none" : "block";
-            
-            var tableHtml = `<table class="asset-tasks-table">
-                <thead><tr><th>Stage</th><th>Lead</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody>`;
-            
-            stageTasks.forEach(t => {
-                var d = t.due_date ? daysUntil(t.due_date) : null;
-                var dateClass = t.status === "done" ? "d-ok" : d < 0 ? "d-late" : d <= 2 ? "d-soon" : "d-ok";
-                
-                tableHtml += `
-                    <tr>
-                        <td><span class="pipeline-stage-badge">${t.pipeline_stage || t.name}</span></td>
-                        <td>${t.lead ? `<span class="chip">${t.lead}</span>` : '—'}</td>
-                        <td><span class="${dateClass}">${t.due_date ? fmtDate(t.due_date) : '—'}</span></td>
-                        <td>
-                            <select class="status-select ${t.status}" onchange="updateTaskStatus('${t.id}', this.value, '${t.status}')">
-                                <option value="todo" ${t.status==='todo'?'selected':''}>To Do</option>
-                                <option value="inprogress" ${t.status==='inprogress'?'selected':''}>In Progress</option>
-                                <option value="review" ${t.status==='review'?'selected':''}>Review</option>
-                                <option value="done" ${t.status==='done'?'selected':''}>Done</option>
-                            </select>
-                        </td>
-                        <td>
-                            <div style="display:flex; gap:4px;">
-                                <button class="tree-btn" onclick="editTask('${t.id}')">✎</button>
-                                <button class="tree-btn" onclick="deleteTask('${t.id}')">✕</button>
-                            </div>
-                        </td>
-                    </tr>`;
-            });
-            tableHtml += `</tbody></table>`;
-            cardBody.innerHTML = tableHtml;
-
-            card.querySelector(".asset-card-hdr").onclick = function(e) {
-                if(e.target.closest("button")) return;
-                var isHidden = cardBody.style.display === "none";
-                cardBody.style.display = isHidden ? "block" : "none";
-                this.querySelector(".shot-arrow").classList.toggle("open", isHidden);
-                uiState.assetGroupCollapsed[key] = !isHidden;
-                saveUIState();
-            };
-
-            card.appendChild(cardBody);
-            typeBody.appendChild(card);
-        });
-
-        typeGroup.appendChild(typeRow);
-        typeGroup.appendChild(typeBody);
-        secWrap.appendChild(typeGroup);
-    });
-
+  if (!assetTasks.length) {
+    secWrap.innerHTML += `<div style="padding:40px; text-align:center; color:var(--text4); font-size:.85rem;">No asset tasks yet.</div>`;
     container.appendChild(secWrap);
-}
+    return;
+  }
 
-    // Grouping Logic
-    var byType = {};
-    assetTasks.forEach(t => {
-        var at = t.asset_type || "other", n = t.asset_name || "Unnamed";
-        if (!byType[at]) byType[at] = {};
-        if (!byType[at][n]) byType[at][n] = [];
-        byType[at][n].push(t);
-    });
+  var byType = {};
+  assetTasks.forEach(t => {
+    var at = t.asset_type || "other", n = t.asset_name || "Unnamed";
+    if (!byType[at]) byType[at] = {};
+    if (!byType[at][n]) byType[at][n] = [];
+    byType[at][n].push(t);
+  });
 
-    var typeOrder = ["character", "prop", "environment", "vehicle", "fx", "other"];
-    var typeLabels = { character: "Characters", prop: "Props", environment: "Environments", vehicle: "Vehicles", fx: "FX Elements", other: "Other" };
+  var typeOrder = ["character", "prop", "environment", "vehicle", "fx", "other"];
+  var typeLabels = { character: "Characters", prop: "Props", environment: "Environments", vehicle: "Vehicles", fx: "FX Elements", other: "Other" };
 
-    typeOrder.forEach(at => {
-        if (!byType[at]) return;
-        var names = Object.keys(byType[at]);
-        var isTypeCollapsed = uiState.typeGroupCollapsed[at] === true;
+  typeOrder.forEach(at => {
+    if (!byType[at]) return;
+    var names = Object.keys(byType[at]);
+    var isTypeCollapsed = uiState.typeGroupCollapsed[at] === true;
 
-        var typeGroup = document.createElement("div");
-        typeGroup.className = "asset-group";
-
-        // Category Header (Characters, Props, etc.)
-        var typeRow = document.createElement("div");
-        typeRow.className = "asset-group-hdr";
-        typeRow.innerHTML = `
-            <span class="asset-group-arrow ${isTypeCollapsed ? '' : 'open'}">▶</span>
-            <span style="font-size:.9rem; margin-right:8px;">${assetTypeIcon(at)}</span>
-            <span class="asset-group-name">${typeLabels[at]}</span>
-            <span class="asset-progress-lbl" style="margin-right:10px">${names.length} assets</span>
-            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); openModal(null, 'asset', '${at}')">+ Add</button>
-        `;
-
-        var typeBody = document.createElement("div");
-        typeBody.style.display = isTypeCollapsed ? "none" : "block";
-
-        typeRow.onclick = function() {
-            var isHidden = typeBody.style.display === "none";
-            typeBody.style.display = isHidden ? "block" : "none";
-            this.querySelector(".asset-group-arrow").classList.toggle("open", isHidden);
-            uiState.typeGroupCollapsed[at] = !isHidden;
-            saveUIState();
-        };
-
-        // Render individual assets (Characters, Props, etc.)
-        names.forEach(name => {
-            var stageTasks = byType[at][name];
-            var total = stageTasks.length, done = stageTasks.filter(t => t.status === "done").length;
-            var pct = total ? Math.round(done / total * 100) : 0;
-            var anyLate = stageTasks.some(t => t.status !== "done" && t.due_date && daysUntil(t.due_date) < 0);
-            var isReady = done === total && total > 0;
-            
-            var key = at + "|" + name;
-            var isCollapsed = uiState.assetGroupCollapsed[key] !== false;
-
-            var card = document.createElement("div");
-            card.className = "asset-card";
-            card.innerHTML = `
-                <div class="asset-card-hdr" style="padding: 10px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid var(--border2);">
-                    <span class="shot-arrow ${isCollapsed ? '' : 'open'}" style="font-size:.6rem; color:var(--text4)">▶</span>
-                    <span class="asset-card-name" style="font-weight:700; flex:1;">${name}</span>
-                    <span class="badge ${isReady ? 'b-done' : anyLate ? 'b-todo' : 'b-inprogress'}" style="font-size:.65rem;">
-                        ${isReady ? "READY" : anyLate ? "BLOCKED" : "IN PROGRESS"}
-                    </span>
-                    <div class="asset-prog-bar" style="width:80px; height:6px;"><div class="asset-prog-fill" style="width:${pct}%"></div></div>
-                    <span style="font-size:.7rem; color:var(--text4); min-width:30px;">${pct}%</span>
-                    <button class="btn-remove" onclick="event.stopPropagation(); deleteAsset('${name}', '${at}')">&times;</button>
-                </div>
-            `;
-
-            var cardBody = document.createElement("div");
-            cardBody.style.display = isCollapsed ? "none" : "block";
-            
-            // Task Table for the Asset
-            var tableHtml = `<table class="asset-tasks-table">
-                <thead><tr><th>Stage</th><th>Lead</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody>`;
-            
-            stageTasks.forEach(t => {
-                var d = t.due_date ? daysUntil(t.due_date) : null;
-                var dateClass = t.status === "done" ? "d-ok" : d < 0 ? "d-late" : d <= 2 ? "d-soon" : "d-ok";
-                
-                tableHtml += `
-                    <tr>
-                        <td><span class="pipeline-stage-badge">${t.pipeline_stage || t.name}</span></td>
-                        <td>${t.lead ? `<span class="chip">${t.lead}</span>` : '—'}</td>
-                        <td><span class="${dateClass}">${t.due_date ? fmtDate(t.due_date) : '—'}</span></td>
-                        <td>
-                            <select class="status-select ${t.status}" onchange="updateTaskStatus('${t.id}', this.value, '${t.status}')">
-                                <option value="todo" ${t.status==='todo'?'selected':''}>To Do</option>
-                                <option value="inprogress" ${t.status==='inprogress'?'selected':''}>In Progress</option>
-                                <option value="review" ${t.status==='review'?'selected':''}>Review</option>
-                                <option value="done" ${t.status==='done'?'selected':''}>Done</option>
-                            </select>
-                        </td>
-                        <td>
-                            <div style="display:flex; gap:4px;">
-                                <button class="tree-btn" onclick="editTask('${t.id}')">✎</button>
-                                <button class="tree-btn" onclick="deleteTask('${t.id}')">✕</button>
-                            </div>
-                        </td>
-                    </tr>`;
-            });
-            tableHtml += `</tbody></table>`;
-            cardBody.innerHTML = tableHtml;
-
-            card.querySelector(".asset-card-hdr").onclick = function(e) {
-                if(e.target.closest("button")) return;
-                var isHidden = cardBody.style.display === "none";
-                cardBody.style.display = isHidden ? "block" : "none";
-                this.querySelector(".shot-arrow").classList.toggle("open", isHidden);
-                uiState.assetGroupCollapsed[key] = !isHidden;
-                saveUIState();
-            };
-
-            card.appendChild(cardBody);
-            typeBody.appendChild(card);
-        });
-
-        typeGroup.appendChild(typeRow);
-        typeGroup.appendChild(typeBody);
-        secWrap.appendChild(typeGroup);
-    });
-
-    container.appendChild(secWrap);
-}
-
-// Separate function for status updates to keep the render clean
-async function updateTaskStatus(tid, nv, oldStat) {
-    var tk = tasks.find(x => x.id === tid);
-    var revCount = tk ? (tk.revision_count || 0) : 0;
-    if ((oldStat === "review" || oldStat === "done") && (nv === "inprogress" || nv === "todo")) revCount++;
+    var typeGroup = document.createElement("div");
+    typeGroup.className = "asset-group";
     
-    if(tk) { tk.status = nv; tk.revision_count = revCount; }
-    await sb.from("tasks").update({status: nv, revision_count: revCount}).eq("id", tid);
-    
-    showToast("Updated!");
-    updateStats();
-    renderAssetSections(tasks.filter(t => t.category === "asset"));
-}
+    var typeRow = document.createElement("div");
+    typeRow.className = "asset-group-hdr";
+    typeRow.innerHTML = `<span class="asset-group-arrow ${isTypeCollapsed ? '' : 'open'}">▶</span><span class="asset-group-name">${typeLabels[at]}</span><span class="asset-progress-lbl">${names.length} assets</span>`;
 
-function renderShotSection() {
-    var container = document.getElementById("shot-schedule-section");
-    if (!container) return;
-    container.innerHTML = "";
-    if (!activeProject) return;
-
-    var projShots = shots.filter(s => s.project_id === activeProject.id);
-    var projSeqs = sequences.filter(s => s.project_id === activeProject.id);
-
-    // Main Wrapper
-    var wrap = document.createElement("div");
-    wrap.className = "asset-section";
-
-    // Header
-    var sh2 = document.createElement("div");
-    sh2.className = "asset-section-hdr";
-    sh2.innerHTML = `
-        <h2><span class="asset-type-icon">🎬</span> Shot Progression</h2>
-        <button class="btn btn-primary btn-sm" onclick="openSeqModal(null, '${activeProject.id}')">+ Add Sequence</button>
-    `;
-    wrap.appendChild(sh2);
-
-    if (!projShots.length && !projSeqs.length) {
-        wrap.innerHTML += `<div style="padding:40px; text-align:center; color:var(--text4); font-size:.85rem;">
-            No sequences or shots yet. Start by adding a sequence.
-        </div>`;
-        container.appendChild(wrap);
-        return;
-    }
-
-    projSeqs.forEach(seq => {
-        var seqShots = projShots.filter(s => s.sequence_id === seq.id);
-        var isSeqCollapsed = uiState.seqShotCollapsed[seq.id] === true;
-
-        var seqSection = document.createElement("div");
-        seqSection.className = "asset-group";
-
-        // Sequence Header
-        var seqRow = document.createElement("div");
-        seqRow.className = "asset-group-hdr";
-        seqRow.innerHTML = `
-            <span class="asset-group-arrow ${isSeqCollapsed ? '' : 'open'}">▶</span>
-            <span class="asset-group-name">${seq.code} ${seq.name ? '— ' + seq.name : ''}</span>
-            <span class="asset-progress-lbl" style="margin-right:10px">${seqShots.length} shots</span>
-            <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); openShotModal('${seq.id}')">+ Add Shot</button>
-            <button class="btn-remove" onclick="event.stopPropagation(); deleteSequence('${seq.id}')">&times;</button>
-        `;
-
-        var seqBody = document.createElement("div");
-        seqBody.className = "asset-group-body";
-        seqBody.style.display = isSeqCollapsed ? "none" : "block";
-
-        // Toggle Logic
-        seqRow.onclick = function() {
-            var isHidden = seqBody.style.display === "none";
-            seqBody.style.display = isHidden ? "block" : "none";
-            seqRow.querySelector(".asset-group-arrow").classList.toggle("open", isHidden);
-            uiState.seqShotCollapsed[seq.id] = !isHidden;
-            saveUIState();
-        };
-
-        // Render individual shots
-        seqShots.forEach(sh => {
-            var shTasks = (shotTasks || []).filter(t => t.shot_id === sh.id);
-            var total = shTasks.length, 
-                done = shTasks.filter(t => ["approved", "final"].includes(t.status)).length;
-            var pct = total ? Math.round((done / total) * 100) : 0;
-            var isCollapsed = uiState.shotSectionCollapsed[sh.id] !== false;
-
-            var shotCard = document.createElement("div");
-            shotCard.className = "asset-card";
-            shotCard.style.borderBottom = "1px solid var(--border2)";
-
-            shotCard.innerHTML = `
-                <div class="asset-card-hdr" style="padding: 10px 16px; display: flex; align-items: center; gap: 10px; cursor: pointer;">
-                    <span class="shot-arrow ${isCollapsed ? '' : 'open'}" style="font-size:.6rem; color:var(--text4)">▶</span>
-                    <div style="width:8px; height:8px; border-radius:50%; background:${shotStatusColor(sh.status)}"></div>
-                    <span style="font-size:.85rem; font-weight:800; color:var(--purple); min-width:60px;">${sh.code}</span>
-                    <span style="font-size:.75rem; color:var(--text3); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${sh.description || ''}</span>
-                    <div class="asset-prog-bar" style="width:80px; height:6px;"><div class="asset-prog-fill" style="width:${pct}%"></div></div>
-                    <span style="font-size:.7rem; color:var(--text4); min-width:30px;">${pct}%</span>
-                    <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation(); openShot('${sh.id}')">Open</button>
-                    <button class="btn-remove" onclick="event.stopPropagation(); deleteShot('${sh.id}')">&times;</button>
-                </div>
-            `;
-
-            var shotBody = document.createElement("div");
-            shotBody.style.display = isCollapsed ? "none" : "block";
-            shotBody.style.background = "var(--bg4)";
-
-            // Build Task Table
-            if (shTasks.length) {
-                var tableHtml = `<table class="asset-tasks-table">
-                    <thead>
-                        <tr><th>Task</th><th>Assignee</th><th>Due</th><th>Status</th></tr>
-                    </thead>
-                    <tbody>`;
-                
-                shTasks.forEach(t => {
-                    tableHtml += `
-                        <tr>
-                            <td><span class="pipeline-stage-badge">${t.task_type}</span></td>
-                            <td>${t.assignee ? `<span class="chip">${t.assignee}</span>` : '—'}</td>
-                            <td>${t.due_date ? fmtDate(t.due_date) : '—'}</td>
-                            <td><span class="badge ${getStatusClass(t.status)}">${t.status.toUpperCase()}</span></td>
-                        </tr>`;
-                });
-                tableHtml += `</tbody></table>`;
-                shotBody.innerHTML = tableHtml;
-            } else {
-                shotBody.innerHTML = `<div style="padding:10px 45px; font-size:.75rem; color:var(--text4); font-style:italic;">No tasks assigned to this shot.</div>`;
-            }
-
-            // Shot Toggle Click
-            shotCard.querySelector(".asset-card-hdr").onclick = function(e) {
-                if(e.target.tagName === "BUTTON") return;
-                var isHidden = shotBody.style.display === "none";
-                shotBody.style.display = isHidden ? "block" : "none";
-                this.querySelector(".shot-arrow").classList.toggle("open", isHidden);
-                uiState.shotSectionCollapsed[sh.id] = !isHidden;
-                saveUIState();
-            };
-
-            shotCard.appendChild(shotBody);
-            seqBody.appendChild(shotCard);
-        });
-
-        if (!seqShots.length) {
-            seqBody.innerHTML += `<div style="padding:15px 45px; font-size:.75rem; color:var(--text4);">No shots in this sequence.</div>`;
-        }
-
-        seqSection.appendChild(seqRow);
-        seqSection.appendChild(seqBody);
-        wrap.appendChild(seqSection);
-    });
-
-    container.appendChild(wrap);
-}
-
-// Helper to match your CSS badge classes
-function getStatusClass(status) {
-    const map = {
-        'todo': 'b-todo',
-        'inprogress': 'b-inprogress',
-        'review': 'b-review',
-        'approved': 'b-done',
-        'final': 'b-done'
+    var typeBody = document.createElement("div");
+    typeBody.style.display = isTypeCollapsed ? "none" : "block";
+    typeRow.onclick = function() {
+      var isHidden = typeBody.style.display === "none";
+      typeBody.style.display = isHidden ? "block" : "none";
+      this.querySelector(".asset-group-arrow").classList.toggle("open", isHidden);
+      uiState.typeGroupCollapsed[at] = !isHidden;
+      saveUIState();
     };
-    return map[status.toLowerCase()] || 'b-todo';
+
+    names.forEach(name => {
+      var stageTasks = byType[at][name];
+      var total = stageTasks.length, done = stageTasks.filter(t => t.status === "done").length;
+      var pct = total ? Math.round(done / total * 100) : 0;
+      var anyLate = stageTasks.some(t => t.status !== "done" && t.due_date && daysUntil(t.due_date) < 0);
+      var isReady = done === total && total > 0;
+      var key = at + "|" + name;
+      var isCollapsed = uiState.assetGroupCollapsed[key] !== false;
+
+      var card = document.createElement("div");
+      card.className = "asset-card";
+      card.innerHTML = `
+        <div class="asset-card-hdr">
+          <span class="shot-arrow ${isCollapsed ? '' : 'open'}">▶</span>
+          <span class="asset-card-name" style="flex:1">${name}</span>
+          <span class="badge ${isReady ? 'b-done' : anyLate ? 'b-todo' : 'b-inprogress'}">${isReady ? "READY" : anyLate ? "BLOCKED" : "IN PROGRESS"}</span>
+          <div class="asset-prog-bar" style="width:60px;"><div class="asset-prog-fill" style="width:${pct}%"></div></div>
+          <button class="btn-remove" onclick="event.stopPropagation(); deleteAsset('${name}', '${at}')">&times;</button>
+        </div>`;
+
+      var cardBody = document.createElement("div");
+      cardBody.style.display = isCollapsed ? "none" : "block";
+      cardBody.innerHTML = `<table class="asset-tasks-table"><thead><tr><th>Stage</th><th>Lead</th><th>Due</th><th>Status</th><th></th></tr></thead><tbody>` +
+        stageTasks.map(t => {
+          var d = t.due_date ? daysUntil(t.due_date) : null;
+          var dCls = t.status === "done" ? "d-ok" : d < 0 ? "d-late" : d <= 2 ? "d-soon" : "d-ok";
+          return `<tr>
+            <td><span class="pipeline-stage-badge">${t.pipeline_stage || t.name}</span></td>
+            <td>${t.lead ? `<span class="chip">${t.lead}</span>` : '—'}</td>
+            <td><span class="${dCls}">${t.due_date ? fmtDate(t.due_date) : '—'}</span></td>
+            <td>
+              <select class="status-select ${t.status}" onchange="updateTaskStatus('${t.id}', this.value, '${t.status}')">
+                <option value="todo" ${t.status==='todo'?'selected':''}>To Do</option>
+                <option value="inprogress" ${t.status==='inprogress'?'selected':''}>In Progress</option>
+                <option value="review" ${t.status==='review'?'selected':''}>Review</option>
+                <option value="done" ${t.status==='done'?'selected':''}>Done</option>
+              </select>
+            </td>
+            <td><button class="tree-btn" onclick="deleteTask('${t.id}')">✕</button></td>
+          </tr>`;
+        }).join("") + `</tbody></table>`;
+
+      card.querySelector(".asset-card-hdr").onclick = function(e) {
+        if(e.target.closest("button")) return;
+        var isHidden = cardBody.style.display === "none";
+        cardBody.style.display = isHidden ? "block" : "none";
+        this.querySelector(".shot-arrow").classList.toggle("open", isHidden);
+        uiState.assetGroupCollapsed[key] = !isHidden;
+        saveUIState();
+      };
+      card.appendChild(cardBody);
+      typeBody.appendChild(card);
+    });
+    typeGroup.appendChild(typeRow); typeGroup.appendChild(typeBody); secWrap.appendChild(typeGroup);
+  });
+  container.appendChild(secWrap);
 }
 
-function updateStats(){
-  var total=tasks.length,done=tasks.filter(function(t){return t.status==="done";}).length;
-  var inprog=tasks.filter(function(t){return t.status==="inprogress"||t.status==="review";}).length;
-  var late=tasks.filter(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;}).length;
-  var revs=tasks.reduce(function(sum,t){return sum+(t.revision_count||0);},0);
-  document.getElementById("s-total").textContent=total;
-  document.getElementById("s-done").textContent=done;
-  document.getElementById("s-prog").textContent=inprog;
-  document.getElementById("s-late").textContent=late;
-  if(document.getElementById("s-revisions")) document.getElementById("s-revisions").textContent=revs;
-  var pct=total?Math.round(done/total*100):0;
-  if(document.getElementById("prog-pct")) document.getElementById("prog-pct").textContent=pct+"%";
-  if(document.getElementById("prog-fill")) document.getElementById("prog-fill").style.width=pct+"%";
+/* --- Task Handlers --- */
+async function updateTaskStatus(tid, nv, oldStat) {
+  var tk = tasks.find(x => x.id === tid);
+  var revCount = tk ? (tk.revision_count || 0) : 0;
+  if ((oldStat === "review" || oldStat === "done") && (nv === "inprogress" || nv === "todo")) {
+    revCount++;
+  }
+  if(tk) { tk.status = nv; tk.revision_count = revCount; }
+  const { error } = await sb.from("tasks").update({status: nv, revision_count: revCount}).eq("id", tid);
+  if (error) { showToast("Sync Error", "error"); return; }
+  showToast("Updated!");
+  renderSchedule();
 }
 
-function renderHandoffs(){var h=tasks.filter(function(t){return t.handoff_to;});var el=document.getElementById("handoff-list");if(!h.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No handoffs configured.</div>';return;}var html="";h.forEach(function(t){var conf=t.status==="done";html+='<div class="hitem"><div class="hrow"><span class="chip">'+t.lead+'</span><span style="color:#7c3aed;margin:0 5px;font-weight:700">&#8594;</span><span class="chip" style="color:#3b82f6">'+t.handoff_to+'</span><span style="margin-left:auto" class="'+(conf?"conf":"pend")+'">'+(conf?"Done":"Pending")+'</span></div><div class="htask">'+t.name+"</div></div>";});el.innerHTML=html;}
-function renderAssetDeliverables(){var a=tasks.filter(function(t){return t.asset&&t.category==="general";});var el=document.getElementById("asset-list");if(!a.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No deliverables tracked.</div>';return;}var html="";a.forEach(function(t){var ready=t.status==="done",missing=t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;var cls=ready?"a-ready":missing?"a-late":"a-pend",lbl=ready?"Ready":missing?"Late":"Pending";var nm=t.asset_url?'<a href="'+t.asset_url+'" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-weight:600">'+t.asset+' &#8599;</a>':'<span style="font-weight:600">'+t.asset+"</span>";html+='<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+t.lead+" &middot; "+fmtDate(t.due_date)+'</div></div><div class="'+cls+'">'+lbl+"</div></div>";});el.innerHTML=html;}
+async function deleteAsset(name, type) {
+  if (!confirm(`Delete asset "${name}"?`)) return;
+  await sb.from("tasks").delete().eq("asset_name", name).eq("asset_type", type).eq("project_id", activeProject.id);
+  tasks = tasks.filter(t => !(t.asset_name === name && t.asset_type === type));
+  renderSchedule();
+}
 
-function mkStatusCell(t){var cls={todo:"b-todo",inprogress:"b-inprogress",review:"b-review",done:"b-done"};var lbl={todo:"To Do",inprogress:"In Progress",review:"In Review",done:"Done"};var opts=[{v:"todo",l:"To Do",d:"dot-todo"},{v:"inprogress",l:"In Progress",d:"dot-inprogress"},{v:"review",l:"In Review",d:"dot-review"},{v:"done",l:"Done",d:"dot-done"}];var oh=opts.map(function(o){return'<div class="status-option" onclick="setStatus(\''+t.id+'\',\''+o.v+'\',event)"><span class="dot '+o.d+'"></span>'+o.l+"</div>";}).join("");return'<td><div class="status-cell"><button class="status-badge-btn" onclick="toggleStatusDrop(\''+t.id+'\',event)"><span class="badge '+(cls[t.status]||"b-todo")+'">'+(lbl[t.status]||t.status)+'</span><span class="arr">&#9660;</span></button><div class="status-dropdown" id="sdrop-'+t.id+'">'+oh+"</div></div></td>";}
-window.toggleStatusDrop=function(id,e){e.stopPropagation();var d=document.getElementById("sdrop-"+id);document.querySelectorAll(".status-dropdown.open").forEach(function(x){if(x!==d)x.classList.remove("open");});d.classList.toggle("open");};
-window.setStatus=async function(id,status,e){e.stopPropagation();document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});await sb.from("tasks").update({status:status}).eq("id",id);showToast("Status updated!");loadTasks();};
-document.addEventListener("click",function(){document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});});
-
-window.toggleAdv = function() {
-  var el = document.getElementById("general-extra-fields");
-  var tog = document.getElementById("adv-toggle");
-  if (el.style.display === "none") { el.style.display = "block"; tog.innerHTML = "&#9660; Hide Advanced Options"; } 
-  else { el.style.display = "none"; tog.innerHTML = "&#9658; Show Advanced Options"; }
-};
-
-window.selectCat=function(cat,el){
-  selectedCat=cat;
-  document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.remove("active");});
-  el.classList.add("active");
-  document.getElementById("asset-fields").style.display=cat==="asset"?"block":"none";
-  if (cat === "asset") { document.getElementById("adv-toggle").style.display = "none"; document.getElementById("general-extra-fields").style.display = "none"; } 
-  else { document.getElementById("adv-toggle").style.display = "inline-block"; document.getElementById("general-extra-fields").style.display = "none"; document.getElementById("adv-toggle").innerHTML = "&#9658; Show Advanced Options"; }
-  if(cat==="asset")updatePipelineStages();
-};
-
-window.updatePipelineStages=function(){
-  var at=document.getElementById("f-asset-type").value;
-  var stages=PIPELINE_STAGES[at]||["Design","Modelling","Texturing"];
-  var grid=document.getElementById("pipeline-stages-grid");
-  selectedPipelineStage=null;
-  grid.innerHTML=stages.map(function(s){return'<button class="stage-pill" onclick="selectStage(\''+s+'\',this)">'+s+'</button>';}).join("");
-};
-
-window.selectStage=function(s,el){
-  selectedPipelineStage=s;
-  document.querySelectorAll("#pipeline-stages-grid .stage-pill").forEach(function(p){p.classList.remove("active");});
-  el.classList.add("active");
-  var nameEl=document.getElementById("f-name");
-  var assetName=document.getElementById("f-asset-name").value.trim();
-  if(assetName)nameEl.value=assetName+" — "+s; else nameEl.value=s;
-};
-
-window.openModal=function(id,forceCat,forceAssetType){
-  editTaskId=id;
-  document.getElementById("modal-title").textContent=id?"Edit Task":"Add Task";
+window.openModal = function(id, forceCat, forceAssetType){
+  editTaskId = id;
+  document.getElementById("modal-title").textContent = id ? "Edit Task" : "Add Task";
   if(id){
-    var t=tasks.find(function(x){return x.id===id;});
+    var t = tasks.find(x => x.id === id);
     if(t){
-      var cat=t.category||"general";
-      selectedCat=cat;
-      document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.toggle("active",p.dataset.cat===cat);});
-      document.getElementById("asset-fields").style.display=cat==="asset"?"block":"none";
-      var hasAdv = t.handoff_to || t.asset || t.asset_url;
-      if (cat !== "asset") {
-         document.getElementById("adv-toggle").style.display = "inline-block";
-         document.getElementById("general-extra-fields").style.display = hasAdv ? "block" : "none";
-         document.getElementById("adv-toggle").innerHTML = hasAdv ? "&#9660; Hide Advanced Options" : "&#9658; Show Advanced Options";
-      } else { document.getElementById("adv-toggle").style.display = "none"; document.getElementById("general-extra-fields").style.display = "none"; }
-      document.getElementById("f-name").value=t.name;
-      var ld = document.getElementById("f-lead");
-      if(t.lead && !Array.from(ld.options).some(o => o.value === t.lead)){ ld.innerHTML += '<option value="'+t.lead+'">'+t.lead+' (Legacy)</option>'; }
-      ld.value=t.lead||"";
-      document.getElementById("f-start").value=t.start_date||"";document.getElementById("f-due").value=t.due_date||"";
-      document.getElementById("f-time").value=t.due_time||"";document.getElementById("f-priority").value=t.priority;
-      document.getElementById("f-status").value=t.status;
-      var hf = document.getElementById("f-handoff");
-      if(t.handoff_to && !Array.from(hf.options).some(o => o.value === t.handoff_to)){ hf.innerHTML += '<option value="'+t.handoff_to+'">'+t.handoff_to+' (Legacy)</option>'; }
-      hf.value=t.handoff_to||"";
-      document.getElementById("f-deliverable").value=t.asset||"";document.getElementById("f-deliverable-url").value=t.asset_url||"";
-      if(cat==="asset"){document.getElementById("f-asset-type").value=t.asset_type||"character";document.getElementById("f-asset-name").value=t.asset_name||"";updatePipelineStages();selectedPipelineStage=t.pipeline_stage;if(t.pipeline_stage){document.querySelectorAll("#pipeline-stages-grid .stage-pill").forEach(function(p){if(p.textContent===t.pipeline_stage)p.classList.add("active");});}}
+      selectedCat = t.category || "general";
+      document.querySelectorAll(".cat-pill").forEach(p => p.classList.toggle("active", p.dataset.cat === selectedCat));
+      document.getElementById("asset-fields").style.display = selectedCat === "asset" ? "block" : "none";
+      document.getElementById("f-name").value = t.name;
+      document.getElementById("f-status").value = t.status;
+      document.getElementById("f-due").value = t.due_date || "";
+      if(selectedCat === "asset"){
+        document.getElementById("f-asset-name").value = t.asset_name || "";
+        document.getElementById("f-asset-type").value = t.asset_type || "character";
+        updatePipelineStages();
+      }
     }
   } else {
-    selectedCat=forceCat||"general";
-    document.querySelectorAll(".cat-pill").forEach(function(p){p.classList.toggle("active",p.dataset.cat===selectedCat);});
-    document.getElementById("asset-fields").style.display=selectedCat==="asset"?"block":"none";
-    if (selectedCat !== "asset") {
-       document.getElementById("adv-toggle").style.display = "inline-block";
-       document.getElementById("general-extra-fields").style.display = "none";
-       document.getElementById("adv-toggle").innerHTML = "&#9658; Show Advanced Options";
-    } else { document.getElementById("adv-toggle").style.display = "none"; document.getElementById("general-extra-fields").style.display = "none"; }
-    document.getElementById("f-name").value="";
-    document.getElementById("f-lead").value="";
-    document.getElementById("f-start").value="";
-    document.getElementById("f-due").value="";
-    document.getElementById("f-time").value="";
-    document.getElementById("f-handoff").value="";
-    document.getElementById("f-deliverable").value="";
-    document.getElementById("f-deliverable-url").value="";
-    document.getElementById("f-asset-name").value="";
-    document.getElementById("f-priority").value="med";document.getElementById("f-status").value="todo";
-    if(forceAssetType)document.getElementById("f-asset-type").value=forceAssetType;
-    selectedPipelineStage=null;
-    if(selectedCat==="asset")updatePipelineStages();
+    selectedCat = forceCat || "general";
+    document.getElementById("f-name").value = "";
+    document.getElementById("f-status").value = "todo";
+    document.getElementById("asset-fields").style.display = selectedCat === "asset" ? "block" : "none";
+    if(forceAssetType) document.getElementById("f-asset-type").value = forceAssetType;
   }
   document.getElementById("modal").classList.add("open");
 };
-
-window.closeModal=function(){document.getElementById("modal").classList.remove("open");};
 
 window.saveTask = async function(){
   var name = document.getElementById("f-name").value.trim();
   var lead = document.getElementById("f-lead").value.trim() || null; 
   if(!name){showToast("Please fill in Task Name.", "error");return;}
   if(selectedCat === "asset" && !selectedPipelineStage){showToast("Please select a pipeline stage.", "error");return;}
-  var payload = {name:name, lead:lead, start_date:document.getElementById("f-start").value || null, due_date:document.getElementById("f-due").value || null, due_time:document.getElementById("f-time").value || null, priority:document.getElementById("f-priority").value, status:document.getElementById("f-status").value, category:selectedCat, user_id:currentUser.id, project_id:activeProject.id};
-  if(selectedCat === "asset"){payload.asset_type=document.getElementById("f-asset-type").value; payload.asset_name=document.getElementById("f-asset-name").value.trim(); payload.pipeline_stage=selectedPipelineStage; payload.handoff_to=null; payload.asset=null; payload.asset_url=null;} 
-  else {payload.handoff_to=document.getElementById("f-handoff").value.trim() || null; payload.asset=document.getElementById("f-deliverable").value.trim() || null; payload.asset_url=document.getElementById("f-deliverable-url").value.trim() || null; payload.asset_type=null; payload.asset_name=null; payload.pipeline_stage=null;}
+  
+  var payload = {
+    name:name, lead:lead, 
+    start_date:document.getElementById("f-start").value || null, 
+    due_date:document.getElementById("f-due").value || null, 
+    due_time:document.getElementById("f-time").value || null, 
+    priority:document.getElementById("f-priority").value, 
+    status:document.getElementById("f-status").value, 
+    category:selectedCat, 
+    user_id:currentUser.id, 
+    project_id:activeProject.id
+  };
+  
+  if(selectedCat === "asset"){
+    payload.asset_type=document.getElementById("f-asset-type").value; 
+    payload.asset_name=document.getElementById("f-asset-name").value.trim(); 
+    payload.pipeline_stage=selectedPipelineStage;
+  } else {
+    payload.handoff_to=document.getElementById("f-handoff").value.trim() || null; 
+    payload.asset=document.getElementById("f-deliverable").value.trim() || null; 
+    payload.asset_url=document.getElementById("f-deliverable-url").value.trim() || null;
+  }
   
   var result;
   if (editTaskId) { result = await sb.from("tasks").update(payload).eq("id", editTaskId).select(); } 
   else { result = await sb.from("tasks").insert(payload).select(); }
 
-  if (result.error) { showToast("Error saving task: " + result.error.message, "error"); return; }
-  if (editTaskId) { var idx = tasks.findIndex(function(t) { return t.id === editTaskId; }); if (idx >= 0 && result.data && result.data[0]) { tasks[idx] = result.data[0]; } } 
-  else { if (result.data && result.data[0]) tasks.push(result.data[0]); }
+  if (result.error) { showToast("Error: " + result.error.message, "error"); return; }
+  
+  if (editTaskId) { 
+    tasks = tasks.map(t => t.id === editTaskId ? result.data[0] : t); 
+  } else { 
+    tasks.push(result.data[0]); 
+  }
+  
   closeModal();
   showToast("Task saved!");
-  var active = document.querySelector(".tab-content.active");
-  var tabName = active ? active.id.replace("tab-","") : "schedule";
-  if(tabName === "schedule") renderSchedule(); else if(tabName === "calendar") renderCalendar(); else if(tabName === "gantt") renderGantt(); else if(tabName === "milestones") renderMilestones();
+  renderSchedule();
 };
 
-window.deleteTask=async function(id){if(!confirm("Remove this task?"))return;await sb.from("tasks").delete().eq("id",id);showToast("Removed.");loadTasks();};
-window.editTask=function(id){openModal(id);};
+window.deleteTask=async function(id){
+  if(!confirm("Remove this task?"))return;
+  await sb.from("tasks").delete().eq("id",id);
+  showToast("Removed.");
+  loadTasks();
+};
 
-function renderCalendar(){var months=["January","February","March","April","May","June","July","August","September","October","November","December"];document.getElementById("cal-month-label").textContent=months[calMonth]+" "+calYear;var grid=document.getElementById("cal-grid");grid.querySelectorAll(".cal-day").forEach(function(c){c.remove();});var first=new Date(calYear,calMonth,1),sd=first.getDay(),dim=new Date(calYear,calMonth+1,0).getDate(),dip=new Date(calYear,calMonth,0).getDate();for(var i=sd-1;i>=0;i--)grid.appendChild(mkCalCell(calYear,calMonth-1,dip-i,true));for(var d=1;d<=dim;d++)grid.appendChild(mkCalCell(calYear,calMonth,d,false));var rem=(7-(sd+dim)%7)%7;for(var d=1;d<=rem;d++)grid.appendChild(mkCalCell(calYear,calMonth+1,d,true));}
+/* --- Calendar Logic --- */
+function renderCalendar(){
+  var months=["January","February","March","April","May","June","July","August","September","October","November","December"];
+  document.getElementById("cal-month-label").textContent=months[calMonth]+" "+calYear;
+  var grid=document.getElementById("cal-grid");
+  grid.querySelectorAll(".cal-day").forEach(function(c){c.remove();});
+  var first=new Date(calYear,calMonth,1),sd=first.getDay(),dim=new Date(calYear,calMonth+1,0).getDate(),dip=new Date(calYear,calMonth,0).getDate();
+  for(var i=sd-1;i>=0;i--)grid.appendChild(mkCalCell(calYear,calMonth-1,dip-i,true));
+  for(var d=1;d<=dim;d++)grid.appendChild(mkCalCell(calYear,calMonth,d,false));
+  var rem=(7-(sd+dim)%7)%7;
+  for(var d=1;d<=rem;d++)grid.appendChild(mkCalCell(calYear,calMonth+1,d,true));
+}
+
 function mkCalCell(year,month,day,other){
   var dt=new Date(year,month,day),ymd=fmtYMD(dt);
   var cell=document.createElement("div");cell.className="cal-day"+(other?" other-month":"");
@@ -3210,3 +2900,4 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
+
