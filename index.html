@@ -549,6 +549,9 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
   .stats{grid-template-columns:1fr;}
   .gantt-labels{min-width:90px;max-width:90px;}
 }
+
+.month-start-col { border-left: 1px solid var(--border) !important; }
+.gantt-date-cell.month-start-col { border-left: 1px solid var(--border); }
 </style>
 </head>
 <body>
@@ -979,7 +982,7 @@ var sb=supabase.createClient(SB_URL,SB_KEY);
 var currentUser=null,tasks=[],projects=[],sequences=[],shots=[],shotTasks=[],shotAssetLinks=[],activeShotTasks=[];
 var activeProject=null,activeShot=null;
 var editTaskId=null,editProjId=null,editSeqId=null,currentSeqId=null;
-var calYear,calMonth,ganttStart;
+var calYear,calMonth,ganttStart=-7;
 var today=new Date();today.setHours(0,0,0,0);
 var COL_W=34,selectedColor="#7c3aed",selectedCat="general",selectedPipelineStage=null,selectedShotTaskType=null;
 var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16","#f97316","#8b5cf6","#64748b","#0ea5e9"];
@@ -1951,28 +1954,52 @@ window.calToday=function(){calYear=today.getFullYear();calMonth=today.getMonth()
 
 
 function renderGantt() {
-  var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  var numDays = new Date(ganttStart.getFullYear(), ganttStart.getMonth()+1, 0).getDate();
-  document.getElementById("gantt-label").textContent = months[ganttStart.getMonth()] + " " + ganttStart.getFullYear();
+  var DAYS = 60;
+  // Build date array: ganttStart days relative to today
+  var viewStart = new Date(today); viewStart.setDate(today.getDate() + ganttStart);
+  viewStart.setHours(0,0,0,0);
+  var dates = [];
+  for (var i = 0; i < DAYS; i++) {
+    var d = new Date(viewStart); d.setDate(viewStart.getDate() + i);
+    dates.push(d);
+  }
+  var viewEnd = dates[dates.length - 1];
+
+  // Label: "15 Mar – 13 May 2026"
+  function fmtShort(d) {
+    return d.getDate() + ' ' + ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()];
+  }
+  var labelStr = fmtShort(viewStart) + ' \u2013 ' + fmtShort(viewEnd) + ' ' + viewEnd.getFullYear();
+  document.getElementById("gantt-label").textContent = labelStr;
+
   var inner = document.getElementById("gantt-inner");
-  var som = new Date(ganttStart.getFullYear(), ganttStart.getMonth(), 1);
   var assetTasks = tasks.filter(function(t) { return t.due_date; });
   var projShots = activeProject ? shots.filter(function(s) { return s.project_id === activeProject.id && (s.due_date || s.start_date); }) : [];
   var projSeqs  = activeProject ? sequences.filter(function(s) { return s.project_id === activeProject.id; }) : [];
+
   if (!assetTasks.length && !projShots.length) {
     inner.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">No tasks or shots with dates yet.</div>';
     return;
   }
-  var dates = [];
-  for (var i = 0; i < numDays; i++) dates.push(new Date(ganttStart.getFullYear(), ganttStart.getMonth(), i+1));
+
   if (!window.ganttCollapsed) window.ganttCollapsed = { tasks: false, shots: {} };
+
+  // Convert a date to column index (can be negative / > DAYS — clip when drawing)
+  function dateToCol(dateStr) {
+    var d = new Date(dateStr + "T00:00:00"); d.setHours(0,0,0,0);
+    return Math.round((d - viewStart) / 86400000);
+  }
 
   function mkRow(labelEl, barFn, visible) {
     var lr = document.createElement("div"); lr.className = "gantt-label-row"; lr.appendChild(labelEl);
     var row = document.createElement("div"); row.className = "gantt-row";
     dates.forEach(function(d) {
       var cell = document.createElement("div");
-      cell.className = "gantt-cell" + (d.getTime() === today.getTime() ? " today-col" : "");
+      var cls = "gantt-cell";
+      if (d.getTime() === today.getTime()) cls += " today-col";
+      // Light month-boundary shading without hard breaks
+      if (d.getDate() === 1) cls += " month-start-col";
+      cell.className = cls;
       row.appendChild(cell);
     });
     if (barFn) barFn(row);
@@ -1993,28 +2020,31 @@ function renderGantt() {
     return { lbl: lbl, chartHdr: chartHdr, arrow: arr };
   }
 
-  function mkDraggable(el, row, task, origStart, origEnd, nDays, startOM, mode) {
+  function mkDraggable(el, row, task, origSi, origEi, mode) {
     el.addEventListener("mousedown", function(e) {
       if (mode === "move" && (e.target.classList.contains("gantt-resize-handle") || e.target.classList.contains("gantt-resize-handle-left"))) return;
       e.preventDefault();
       var bar = row.querySelector(".gantt-bar"); if (bar) bar.classList.add("dragging");
-      var startX = e.clientX, cs = origStart, ce = origEnd;
+      var startX = e.clientX, cs = origSi, ce = origEi;
       function onMove(ev) {
         var dd = Math.round((ev.clientX - startX) / COL_W), ns = cs, ne = ce;
-        if (mode === "move") { var sp = ce - cs; ns = Math.max(0, Math.min(nDays-1-sp, cs+dd)); ne = ns + sp; }
-        else if (mode === "left") ns = Math.max(0, Math.min(ce, cs+dd));
-        else ne = Math.max(cs, Math.min(nDays-1, ce+dd));
-        if (bar) { bar.style.left = (ns * COL_W) + "px"; bar.style.width = ((ne-ns+1) * COL_W - 4) + "px"; }
+        if (mode === "move") { var sp = ce - cs; ns = cs + dd; ne = ns + sp; }
+        else if (mode === "left") ns = Math.min(ce, cs + dd);
+        else ne = Math.max(cs, ce + dd);
+        var vs = Math.max(0, ns), ve = Math.min(DAYS-1, ne);
+        if (bar && ve >= vs) { bar.style.left = (vs * COL_W) + "px"; bar.style.width = ((ve-vs+1) * COL_W - 4) + "px"; }
       }
       async function onUp(ev) {
         document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp);
         if (bar) bar.classList.remove("dragging");
         var dd = Math.round((ev.clientX - startX) / COL_W); if (dd === 0) return;
         var ns = cs, ne = ce;
-        if (mode === "move") { var sp2 = ce - cs; ns = Math.max(0, Math.min(nDays-1-sp2, cs+dd)); ne = ns + sp2; }
-        else if (mode === "left") ns = Math.max(0, Math.min(ce, cs+dd));
-        else ne = Math.max(cs, Math.min(nDays-1, ce+dd));
-        var nsd = new Date(startOM.getTime() + ns*86400000), ned = new Date(startOM.getTime() + ne*86400000);
+        if (mode === "move") { var sp2 = ce - cs; ns = cs + dd; ne = ns + sp2; }
+        else if (mode === "left") ns = Math.min(ce, cs + dd);
+        else ne = Math.max(cs, ce + dd);
+        // Convert column indices back to real dates (can cross month boundary freely)
+        var nsd = new Date(viewStart.getTime() + ns * 86400000);
+        var ned = new Date(viewStart.getTime() + ne * 86400000);
         var payload = { due_date: fmtYMD(ned) };
         if (task.start_date || mode !== "right") payload.start_date = fmtYMD(nsd);
         await sb.from("tasks").update(payload).eq("id", task.id);
@@ -2024,18 +2054,29 @@ function renderGantt() {
     });
   }
 
+  // ── Build DOM ──
   var labelsDiv = document.createElement("div"); labelsDiv.className = "gantt-labels";
   var lhd = document.createElement("div"); lhd.className = "gantt-label-header"; lhd.textContent = "Task / Shot"; labelsDiv.appendChild(lhd);
   var chartDiv = document.createElement("div"); chartDiv.className = "gantt-chart";
+
+  // Date header with month labels
   var datesRow = document.createElement("div"); datesRow.className = "gantt-dates";
   dates.forEach(function(d) {
     var dc = document.createElement("div");
-    dc.className = "gantt-date-cell" + (d.getTime() === today.getTime() ? " today-col" : "");
-    dc.textContent = d.getDate(); datesRow.appendChild(dc);
+    var cls = "gantt-date-cell" + (d.getTime() === today.getTime() ? " today-col" : "");
+    if (d.getDate() === 1) cls += " month-start-col";
+    dc.className = cls;
+    // Show month name on 1st, date number otherwise
+    dc.textContent = d.getDate() === 1
+      ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()]
+      : d.getDate();
+    if (d.getDate() === 1) dc.style.cssText = "font-weight:700;font-size:.65rem;color:var(--text2);";
+    datesRow.appendChild(dc);
   });
   chartDiv.appendChild(datesRow);
   var rowsDiv = document.createElement("div"); rowsDiv.className = "gantt-rows";
 
+  // ── Section 1: Asset / Milestone tasks ──
   var taskRows = [];
   if (assetTasks.length) {
     var tCollapsed = ganttCollapsed.tasks;
@@ -2047,25 +2088,24 @@ function renderGantt() {
     labelsDiv.appendChild(tHdr.lbl); rowsDiv.appendChild(tHdr.chartHdr);
     assetTasks.forEach(function(t) {
       var labelEl = document.createElement("div");
-      var lbl = (t.category === "asset" && t.asset_name) ? (t.asset_name + " — " + (t.pipeline_stage || t.name)) : t.name;
+      var lbl = (t.category === "asset" && t.asset_name) ? (t.asset_name + " \u2014 " + (t.pipeline_stage || t.name)) : t.name;
       labelEl.innerHTML = '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px">'
         + '<div style="font-size:.78rem;font-weight:600">' + lbl + '</div>'
         + (t.category === "asset" ? '<div class="gantt-label-sub">' + assetTypeLabel(t.asset_type) + '</div>' : '')
         + '</div>';
       var rr = mkRow(labelEl, function(row) {
-        var bed = new Date(t.due_date + "T00:00:00"), bsd = t.start_date ? new Date(t.start_date + "T00:00:00") : bed;
-        bed.setHours(0,0,0,0); bsd.setHours(0,0,0,0);
-        var si = Math.round((bsd - som) / 86400000), ei = Math.round((bed - som) / 86400000);
-        var vs = Math.max(0, si), ve = Math.min(numDays-1, ei);
-        if (ve >= 0 && vs <= numDays-1) {
+        var ei = dateToCol(t.due_date);
+        var si = t.start_date ? dateToCol(t.start_date) : ei;
+        var vs = Math.max(0, si), ve = Math.min(DAYS-1, ei);
+        if (ve >= 0 && vs <= DAYS-1) {
           var bar = document.createElement("div"); bar.className = "gantt-bar " + ganttBarCls(t);
           bar.style.left = (vs * COL_W) + "px"; bar.style.width = ((ve-vs+1) * COL_W - 4) + "px";
           bar.textContent = lbl; bar.title = lbl + " | Due: " + fmtDate(t.due_date);
           var lh2 = document.createElement("div"); lh2.className = "gantt-resize-handle-left"; bar.appendChild(lh2);
-          var rh = document.createElement("div"); rh.className = "gantt-resize-handle"; bar.appendChild(rh);
-          mkDraggable(bar, row, t, si, ei, numDays, som, "move");
-          mkDraggable(lh2, row, t, si, ei, numDays, som, "left");
-          mkDraggable(rh, row, t, si, ei, numDays, som, "right");
+          var rh  = document.createElement("div"); rh.className  = "gantt-resize-handle";       bar.appendChild(rh);
+          mkDraggable(bar, row, t, si, ei, "move");
+          mkDraggable(lh2, row, t, si, ei, "left");
+          mkDraggable(rh,  row, t, si, ei, "right");
           row.appendChild(bar);
         }
       }, !tCollapsed);
@@ -2073,6 +2113,7 @@ function renderGantt() {
     });
   }
 
+  // ── Section 2: Shots grouped by sequence ──
   if (projShots.length) {
     var bySeq = {};
     projShots.forEach(function(sh) { var sid = sh.sequence_id || "__u__"; if (!bySeq[sid]) bySeq[sid] = []; bySeq[sid].push(sh); });
@@ -2082,7 +2123,7 @@ function renderGantt() {
       var seqShots = bySeq[seq.id] || []; if (!seqShots.length) return;
       var sCollapsed = ganttCollapsed.shots[seq.id] === true;
       var seqRows = [];
-      var sHdr = mkSecHdr(seq.code ? (seq.code + (seq.name ? " — " + seq.name : "")) : "Unassigned", "&#127916;", sCollapsed, function() {
+      var sHdr = mkSecHdr(seq.code ? (seq.code + (seq.name ? " \u2014 " + seq.name : "")) : "Unassigned", "&#127916;", sCollapsed, function() {
         ganttCollapsed.shots[seq.id] = !ganttCollapsed.shots[seq.id];
         var nc = ganttCollapsed.shots[seq.id];
         seqRows.forEach(function(rr) { rr.lr.style.display = nc ? "none" : ""; rr.row.style.display = nc ? "none" : ""; });
@@ -2096,17 +2137,16 @@ function renderGantt() {
           + '<div class="gantt-label-sub-shot">' + (sh.description || "") + '</div></div>';
         var rr = mkRow(labelEl, function(row) {
           if (!sh.due_date) return;
-          var bed2 = new Date(sh.due_date + "T00:00:00"), bsd2 = sh.start_date ? new Date(sh.start_date + "T00:00:00") : bed2;
-          bed2.setHours(0,0,0,0); bsd2.setHours(0,0,0,0);
-          var si2 = Math.round((bsd2 - som) / 86400000), ei2 = Math.round((bed2 - som) / 86400000);
-          var vs2 = Math.max(0, si2), ve2 = Math.min(numDays-1, ei2);
-          if (ve2 >= 0 && vs2 <= numDays-1) {
+          var ei2 = dateToCol(sh.due_date);
+          var si2 = sh.start_date ? dateToCol(sh.start_date) : ei2;
+          var vs2 = Math.max(0, si2), ve2 = Math.min(DAYS-1, ei2);
+          if (ve2 >= 0 && vs2 <= DAYS-1) {
             var isDone = sh.status === "approved" || sh.status === "final";
             var isLate = !isDone && daysUntil(sh.due_date) < 0;
             var barCls = isDone ? "gb-shot-done" : isLate ? "gb-shot-late" : "gb-shot";
             var bar2 = document.createElement("div"); bar2.className = "gantt-bar " + barCls;
             bar2.style.left = (vs2 * COL_W) + "px"; bar2.style.width = ((ve2-vs2+1) * COL_W - 4) + "px";
-            var lbl2 = sh.code + (sh.description ? " — " + sh.description : "");
+            var lbl2 = sh.code + (sh.description ? " \u2014 " + sh.description : "");
             bar2.textContent = lbl2; bar2.title = lbl2 + " | Due: " + fmtDate(sh.due_date);
             bar2.style.cursor = "grab";
             (function(shot, csi, cei) {
@@ -2115,14 +2155,16 @@ function renderGantt() {
                 var startX = e.clientX, sp = cei - csi;
                 function onMove(ev) {
                   var dd = Math.round((ev.clientX-startX)/COL_W);
-                  bar2.style.left = (Math.max(0, Math.min(numDays-1-sp, csi+dd)) * COL_W) + "px";
+                  var ns = csi + dd, vs = Math.max(0, Math.min(DAYS-1-sp, ns));
+                  bar2.style.left = (vs * COL_W) + "px";
                 }
                 async function onUp(ev) {
                   document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp);
                   bar2.style.cursor = "grab";
                   var dd = Math.round((ev.clientX - startX) / COL_W); if (dd === 0) return;
-                  var ns = Math.max(0, Math.min(numDays-1-sp, csi+dd)), ne = ns + sp;
-                  var nsd = new Date(som.getTime()+ns*86400000), ned = new Date(som.getTime()+ne*86400000);
+                  var ns = csi + dd, ne = ns + sp;
+                  var nsd = new Date(viewStart.getTime() + ns * 86400000);
+                  var ned = new Date(viewStart.getTime() + ne * 86400000);
                   await sb.from("shots").update({ start_date: fmtYMD(nsd), due_date: fmtYMD(ned) }).eq("id", shot.id);
                   shot.start_date = fmtYMD(nsd); shot.due_date = fmtYMD(ned);
                   showToast("Shot dates updated!"); renderGantt();
@@ -2141,10 +2183,10 @@ function renderGantt() {
   chartDiv.appendChild(rowsDiv);
   inner.innerHTML = ""; inner.appendChild(labelsDiv); inner.appendChild(chartDiv);
 }
-window.ganttPrev  = function() { ganttStart = new Date(ganttStart.getFullYear(), ganttStart.getMonth()-1, 1); renderGantt(); };
-window.ganttNext  = function() { ganttStart = new Date(ganttStart.getFullYear(), ganttStart.getMonth()+1, 1); renderGantt(); };
-window.ganttToday = function() { ganttStart = new Date(today.getFullYear(), today.getMonth(), 1); renderGantt(); };
 
+window.ganttPrev  = function() { ganttStart -= 14; renderGantt(); };
+window.ganttNext  = function() { ganttStart += 14; renderGantt(); };
+window.ganttToday = function() { ganttStart = -7;  renderGantt(); };
 window.isProjectOwner = function() {
   if(!activeProject || !currentUser) return false;
   var p=projects.find(function(x){return x.id===activeProject.id;});
