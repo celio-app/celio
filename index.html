@@ -1955,9 +1955,9 @@ function renderGantt() {
   var inner = document.getElementById("gantt-inner");
   if (!inner) return;
 
-  // FIX: Continuous 60-day range (No month-end gaps)
+  // 1. SET CONTINUOUS RANGE: 7 days ago to 53 days ahead (60 days total)
   var viewStart = new Date();
-  viewStart.setDate(viewStart.getDate() - 7); // Start 1 week ago
+  viewStart.setDate(viewStart.getDate() - 7);
   viewStart.setHours(0,0,0,0);
   
   var dates = [];
@@ -1969,11 +1969,14 @@ function renderGantt() {
 
   // Update header label with the date range
   var endRange = dates[59];
-  document.getElementById("gantt-label").textContent = 
-    viewStart.toLocaleDateString(undefined, {month:'short', day:'numeric'}) + " – " + 
-    endRange.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+  var labelEl = document.getElementById("gantt-label");
+  if (labelEl) {
+    labelEl.textContent = 
+      viewStart.toLocaleDateString(undefined, {month:'short', day:'numeric'}) + " – " + 
+      endRange.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
+  }
 
-  // Filter Tasks and Shots
+  // 2. FILTER DATA
   var assetTasks = tasks.filter(function(t) { 
     return t.project_id === (activeProject ? activeProject.id : null) && t.due_date && t.category !== "shot"; 
   });
@@ -1984,8 +1987,8 @@ function renderGantt() {
     return;
   }
 
-  // Header
-  var html = '<div class="g-header"><div class="g-name-col"></div><div class="g-days-row">';
+  // 3. BUILD GRID HTML
+  var html = '<div class="g-header"><div class="g-name-col">Task / Shot</div><div class="g-days-row">';
   dates.forEach(function(d) {
     var isToday = d.toDateString() === new Date().toDateString();
     var cls = "g-day-cell" + (isToday ? " g-today" : "") + (d.getDay() === 0 || d.getDay() === 6 ? " g-weekend" : "");
@@ -1993,7 +1996,7 @@ function renderGantt() {
   });
   html += '</div></div>';
 
-  // Rows for Tasks
+  // Task Rows
   assetTasks.forEach(function(t) {
     html += '<div class="g-row"><div class="g-name-col">' + (t.name || 'Task') + '</div><div class="g-days-row">';
     dates.forEach(function(d) {
@@ -2003,7 +2006,7 @@ function renderGantt() {
     html += '</div></div>';
   });
 
-  // Rows for Shots
+  // Shot Rows
   projShots.forEach(function(s) {
     html += '<div class="g-row"><div class="g-name-col">' + s.code + '</div><div class="g-days-row">';
     dates.forEach(function(d) {
@@ -2016,172 +2019,15 @@ function renderGantt() {
   inner.innerHTML = html;
 }
 
-// FIX: Unified Sidebar Toggle (Works for Desktop & Mobile)
+// FIX: Unified Sidebar Toggle
 window.toggleSidebar = function() {
   var sb = document.querySelector('.sidebar-nav');
   if (window.innerWidth <= 580) {
-    if (sb) sb.classList.toggle('mobile-open'); // Slide out on mobile
+    if (sb) sb.classList.toggle('mobile-open');
   } else {
-    document.body.classList.toggle('sb-collapsed'); // Shrink on desktop
+    document.body.classList.toggle('sb-collapsed');
   }
 };
-
-  function mkSectionHdr(title,icon,collapsed,toggleFn){
-    var lbl=document.createElement("div");lbl.style.cssText="display:flex;align-items:center;gap:6px;padding:4px 8px;";
-    var arr=document.createElement("span");arr.className="gantt-section-arrow"+(collapsed?"":" open");arr.innerHTML="&#9658;";
-    var ico=document.createElement("span");ico.style.cssText="font-size:.85rem;";ico.innerHTML=icon;
-    var ttl=document.createElement("span");ttl.className="gantt-section-title";ttl.textContent=title;
-    lbl.appendChild(arr);lbl.appendChild(ico);lbl.appendChild(ttl);
-    var chartHdr=document.createElement("div");chartHdr.style.cssText="height:32px;background:var(--bg3);border-bottom:2px solid var(--border);position:relative;";
-    var todayIdx=dates.findIndex(function(d){return d.getTime()===today.getTime();});
-    if(todayIdx>=0){var tl=document.createElement("div");tl.style.cssText="position:absolute;top:0;bottom:0;left:"+(todayIdx*COL_W+COL_W/2)+"px;width:2px;background:#7c3aed;opacity:.4;";chartHdr.appendChild(tl);}
-    lbl.style.cursor="pointer";lbl.style.background="var(--bg3)";lbl.style.borderBottom="2px solid var(--border)";
-    lbl.style.height="32px";
-    lbl.addEventListener("click",toggleFn);
-    chartHdr.addEventListener("click",toggleFn);
-    return{lbl:lbl,chartHdr:chartHdr,arrow:arr};
-  }
-
-  var labelsDiv=document.createElement("div");labelsDiv.className="gantt-labels";
-  var lhd=document.createElement("div");lhd.className="gantt-label-header";lhd.textContent="Task / Shot";
-  labelsDiv.appendChild(lhd);
-
-  var chartDiv=document.createElement("div");chartDiv.className="gantt-chart";
-  var datesRow=document.createElement("div");datesRow.className="gantt-dates";
-  dates.forEach(function(d){
-    var dc=document.createElement("div");
-    dc.className="gantt-date-cell"+(d.getTime()===today.getTime()?" today-col":"");
-    dc.textContent=d.getDate();datesRow.appendChild(dc);
-  });
-  chartDiv.appendChild(datesRow);
-  var rowsDiv=document.createElement("div");rowsDiv.className="gantt-rows";
-
-  var taskRows=[];
-  if(assetTasks.length){
-    var tasksCollapsed=uiState.ganttCollapsed.tasks;
-    var taskHdr=mkSectionHdr("Asset & Milestone Tasks","&#127912;",tasksCollapsed,function(){
-      uiState.ganttCollapsed.tasks=!uiState.ganttCollapsed.tasks; saveUIState();
-      taskRows.forEach(function(r){r.lr.style.display=uiState.ganttCollapsed.tasks?"none":"";r.row.style.display=uiState.ganttCollapsed.tasks?"none":"";});
-      taskHdr.arrow.classList.toggle("open",!uiState.ganttCollapsed.tasks);
-    });
-    labelsDiv.appendChild(taskHdr.lbl);rowsDiv.appendChild(taskHdr.chartHdr);
-
-    assetTasks.forEach(function(t){
-      var labelEl=document.createElement("div");
-      var lbl=t.category==="asset"&&t.asset_name?(t.asset_name+" \u2014 "+(t.pipeline_stage||t.name)):t.name;
-      labelEl.innerHTML='<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px"><div style="font-size:.78rem;font-weight:600">'+lbl+'</div>'+(t.category==="asset"?'<div class="gantt-label-sub">'+assetTypeLabel(t.asset_type)+'</div>':'')+'</div>';
-      var rr=mkRow(labelEl,function(row){
-        var bed=new Date(t.due_date+"T00:00:00");
-        var bsd=t.start_date?new Date(t.start_date+"T00:00:00"):bed;
-        bed.setHours(0,0,0,0);bsd.setHours(0,0,0,0);
-        var si=Math.round((bsd-som)/86400000),ei=Math.round((bed-som)/86400000);
-        var vs=Math.max(0,si),ve=Math.min(numDays-1,ei);
-        if(ve>=0&&vs<=numDays-1){
-          var bar=document.createElement("div");bar.className="gantt-bar "+ganttBarCls(t);
-          bar.style.left=(vs*COL_W)+"px";bar.style.width=((ve-vs+1)*COL_W-4)+"px";
-          bar.textContent=lbl;bar.title=lbl+" | Due: "+fmtDate(t.due_date);
-          var lh2=document.createElement("div");lh2.className="gantt-resize-handle-left";bar.appendChild(lh2);
-          var rh=document.createElement("div");rh.className="gantt-resize-handle";bar.appendChild(rh);
-          mkDraggable(bar,row,t,si,ei,numDays,som,"move");
-          mkDraggable(lh2,row,t,si,ei,numDays,som,"left");
-          mkDraggable(rh,row,t,si,ei,numDays,som,"right");
-          row.appendChild(bar);
-        }
-      },!tasksCollapsed);
-      taskRows.push(rr);
-      labelsDiv.appendChild(rr.lr);rowsDiv.appendChild(rr.row);
-    });
-  }
-
-  if(projShots.length){
-    var bySeq={};
-    projShots.forEach(function(sh){
-      var sid=sh.sequence_id||"__unassigned__";
-      if(!bySeq[sid])bySeq[sid]=[];
-      bySeq[sid].push(sh);
-    });
-
-    var seqOrder=projSeqs.filter(function(sq){return bySeq[sq.id]&&bySeq[sq.id].length;});
-    if(bySeq["__unassigned__"]&&bySeq["__unassigned__"].length)seqOrder.push({id:"__unassigned__",code:"",name:"Unassigned"});
-
-    seqOrder.forEach(function(seq){
-      var seqShots=bySeq[seq.id]||[];
-      if(!seqShots.length)return;
-      var seqCollapsed=uiState.ganttCollapsed.shots[seq.id]===true;
-      var seqRows=[];
-
-      var seqHdr=mkSectionHdr(
-        (seq.code?(seq.code+(seq.name?" \u2014 "+seq.name:"")):"Unassigned Shots"),
-        "&#127916;",seqCollapsed,
-        function(){
-          uiState.ganttCollapsed.shots[seq.id]=!uiState.ganttCollapsed.shots[seq.id]; saveUIState();
-          var nowCollapsed=uiState.ganttCollapsed.shots[seq.id];
-          seqRows.forEach(function(r){r.lr.style.display=nowCollapsed?"none":"";r.row.style.display=nowCollapsed?"none":"";});
-          seqHdr.arrow.classList.toggle("open",!nowCollapsed);
-        }
-      );
-      labelsDiv.appendChild(seqHdr.lbl);rowsDiv.appendChild(seqHdr.chartHdr);
-
-      seqShots.forEach(function(sh){
-        var labelEl=document.createElement("div");
-        labelEl.innerHTML='<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px"><div class="gantt-label-shot">'+sh.code+'</div><div class="gantt-label-sub-shot">'+(sh.description||"")+'</div></div>';
-        var rr=mkRow(labelEl,function(row){
-          var shTasks=(shotTasks||[]).filter(function(t){return t.shot_id===sh.id&&t.due_date;});
-          var effectiveDue=sh.due_date||(shTasks.length?shTasks.reduce(function(mx,t){return t.due_date>mx?t.due_date:mx;},""):null);
-          var effectiveStart=sh.start_date||(shTasks.length?shTasks.reduce(function(mn,t){return t.due_date<mn?t.due_date:mn;},"9999"):null);
-          if(!effectiveDue){
-            var noDateEl=document.createElement("div");
-            noDateEl.style.cssText="position:absolute;left:6px;top:9px;height:28px;display:flex;align-items:center;font-size:.68rem;color:var(--text4);font-style:italic;";
-            noDateEl.textContent="No tasks with dates yet";row.appendChild(noDateEl);return;
-          }
-          var bed=new Date(effectiveDue+"T00:00:00");
-          var bsd=new Date((effectiveStart||effectiveDue)+"T00:00:00");
-          bed.setHours(0,0,0,0);bsd.setHours(0,0,0,0);
-          var si=Math.round((bsd-som)/86400000),ei=Math.round((bed-som)/86400000);
-          var vs=Math.max(0,si),ve=Math.min(numDays-1,ei);
-          if(ve>=0&&vs<=numDays-1){
-            var isDone=sh.status==="approved"||sh.status==="final";
-            var isLate=!isDone&&sh.due_date&&daysUntil(sh.due_date)<0;
-            var barCls=isDone?"gb-shot-done":isLate?"gb-shot-late":"gb-shot";
-            var bar=document.createElement("div");bar.className="gantt-bar "+barCls;
-            bar.style.left=(vs*COL_W)+"px";bar.style.width=((ve-vs+1)*COL_W-4)+"px";
-            var lbl=sh.code+(sh.description?" \u2014 "+sh.description:"");
-            bar.textContent=lbl;bar.title=lbl+" | Due: "+fmtDate(sh.due_date);
-            bar.style.cursor="grab";
-            bar.addEventListener("mousedown",function(e){
-              if(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left"))return;
-              e.preventDefault();bar.style.cursor="grabbing";
-              var startX=e.clientX,cs=si,ce=ei,sp=ce-cs;
-              function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W);var ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));var ne=ns+sp;bar.style.left=(ns*COL_W)+"px";}
-              async function onUp(ev){
-                document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);
-                bar.style.cursor="grab";
-                var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;
-                var ns=Math.max(0,Math.min(numDays-1-sp,cs+dd)),ne=ns+sp;
-                var nsd=new Date(som.getTime()+ns*86400000),ned=new Date(som.getTime()+ne*86400000);
-                await sb.from("shots").update({start_date:fmtYMD(nsd),due_date:fmtYMD(ned)}).eq("id",sh.id);
-                sh.start_date=fmtYMD(nsd);sh.due_date=fmtYMD(ned);
-                showToast("Shot dates updated!");renderGantt();
-              }
-              document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);
-            });
-            row.appendChild(bar);
-          }
-        },!seqCollapsed);
-        seqRows.push(rr);
-        labelsDiv.appendChild(rr.lr);rowsDiv.appendChild(rr.row);
-      });
-    });
-  }
-
-  chartDiv.appendChild(rowsDiv);
-  inner.innerHTML="";inner.appendChild(labelsDiv);inner.appendChild(chartDiv);
-}
-
-function mkDraggable(el,row,task,origStart,origEnd,numDays,startOfMonth,mode){el.addEventListener("mousedown",function(e){if(mode==="move"&&(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left")))return;e.preventDefault();var bar=row.querySelector(".gantt-bar");bar.classList.add("dragging");var startX=e.clientX,cs=origStart,ce=origEnd;function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W),ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));bar.style.left=(ns*COL_W)+"px";bar.style.width=((ne-ns+1)*COL_W-4)+"px";}async function onUp(ev){document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);bar.classList.remove("dragging");var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;var ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));var nsd=new Date(startOfMonth.getTime()+ns*86400000),ned=new Date(startOfMonth.getTime()+ne*86400000);var payload={due_date:fmtYMD(ned)};if(task.start_date||mode!=="right")payload.start_date=fmtYMD(nsd);await sb.from("tasks").update(payload).eq("id",task.id);showToast("Dates updated!");loadTasks();}document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);});}
-window.ganttPrev=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()-1,1);renderGantt();};
-window.ganttNext=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,1);renderGantt();};
-window.ganttToday=function(){ganttStart=new Date(today.getFullYear(),today.getMonth(),1);renderGantt();};
 
 window.isProjectOwner = function() {
   if(!activeProject || !currentUser) return false;
@@ -2541,6 +2387,38 @@ window.openAdminModal=function(cat,editId){
 
 window.closeAdminModal=function(){document.getElementById("admin-modal").classList.remove("open");};
 
+window.saveAdminEntry = async function() {
+  var title = document.getElementById("af-title").value.trim();
+  if(!title) { showToast("Please enter a title.", "error"); return; }
+  
+  var payload = {
+    name: title,
+    lead: document.getElementById("af-assignee").value.trim() || null,
+    due_date: document.getElementById("af-date").value || null,
+    priority: document.getElementById("af-priority").value,
+    status: document.getElementById("af-status").value,
+    asset: document.getElementById("af-notes").value.trim() || null, // Using 'asset' field for notes
+    category: adminCat,
+    user_id: currentUser.id,
+    project_id: activeProject.id
+  };
+
+  var res;
+  if(adminEditId) {
+    res = await sb.from("tasks").update(payload).eq("id", adminEditId);
+  } else {
+    res = await sb.from("tasks").insert(payload);
+  }
+
+  if(res.error) {
+    showToast("Error: " + res.error.message, "error");
+  } else {
+    showToast("Saved successfully!");
+    closeAdminModal();
+    loadTasks(); // Refresh data and UI
+  }
+};
+
 window.submitInviteCode = async function(codeOverride) {
   var inputEl = document.getElementById("invite-code-input");
   var code = "";
@@ -2815,16 +2693,6 @@ window.filterCmd = function(q) {
 };
 
 // --- MISSING UI TOGGLE FUNCTIONS ---
-window.toggleSidebar = function() {
-  var sb = document.querySelector('.sidebar-nav');
-  if (window.innerWidth <= 580) {
-    // Mobile: Slide out
-    if (sb) sb.classList.toggle('mobile-open');
-  } else {
-    // Desktop: Collapse width
-    document.body.classList.toggle('sb-collapsed');
-  }
-};
 
 window.showConfirm = function(title,msg,okLabel,cb){
   document.getElementById("confirm-title").textContent=title;
@@ -3004,5 +2872,6 @@ window.addEventListener("DOMContentLoaded", function () {
     >
 </body>
 </html>
+
 
 
