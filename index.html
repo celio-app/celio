@@ -1951,242 +1951,199 @@ window.calToday=function(){calYear=today.getFullYear();calMonth=today.getMonth()
 
 
 function renderGantt() {
-  var monthsShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  var numDays = new Date(ganttStart.getFullYear(), ganttStart.getMonth()+1, 0).getDate();
+  document.getElementById("gantt-label").textContent = months[ganttStart.getMonth()] + " " + ganttStart.getFullYear();
   var inner = document.getElementById("gantt-inner");
-  if (!inner) return;
-
-  // 1. SET THE CONTINUOUS RANGE (7 days ago to 53 days in future = 60 days total)
-  var viewStart = new Date();
-  viewStart.setDate(viewStart.getDate() - 7);
-  viewStart.setHours(0,0,0,0);
-  
-  var totalDays = 60; 
-  var dates = [];
-  for (var i = 0; i < totalDays; i++) {
-    var d = new Date(viewStart);
-    d.setDate(d.getDate() + i);
-    dates.push(d);
-  }
-
-  // Update label to show the current rolling range
-  var endRange = dates[dates.length - 1];
-  document.getElementById("gantt-label").textContent = 
-    viewStart.toLocaleDateString(undefined, {month:'short', day:'numeric'}) + " – " + 
-    endRange.toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'});
-
-  // 2. FILTER DATA (Asset Tasks and Shots)
-  var assetTasks = tasks.filter(function(t) { 
-    return t.project_id === (activeProject ? activeProject.id : null) && t.due_date && t.category !== "shot"; 
-  });
-  var projShots = activeProject ? shots.filter(function(s) { return s.project_id === activeProject.id; }) : [];
-  
+  var som = new Date(ganttStart.getFullYear(), ganttStart.getMonth(), 1);
+  var assetTasks = tasks.filter(function(t) { return t.due_date; });
+  var projShots = activeProject ? shots.filter(function(s) { return s.project_id === activeProject.id && (s.due_date || s.start_date); }) : [];
+  var projSeqs  = activeProject ? sequences.filter(function(s) { return s.project_id === activeProject.id; }) : [];
   if (!assetTasks.length && !projShots.length) {
     inner.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text3)">No tasks or shots with dates yet.</div>';
     return;
   }
+  var dates = [];
+  for (var i = 0; i < numDays; i++) dates.push(new Date(ganttStart.getFullYear(), ganttStart.getMonth(), i+1));
+  if (!window.ganttCollapsed) window.ganttCollapsed = { tasks: false, shots: {} };
 
-  // 3. RENDER HEADER (The scrollable day row)
-  var html = '<div class="g-header"><div class="g-name-col"></div><div class="g-days-row">';
-  dates.forEach(function(d) {
-    var isToday = d.toDateString() === new Date().toDateString();
-    var isWeekend = d.getDay() === 0 || d.getDay() === 6;
-    var cls = "g-day-cell" + (isToday ? " g-today" : "") + (isWeekend ? " g-weekend" : "");
-    html += '<div class="' + cls + '"><div>' + d.getDate() + '</div><div style="font-size:10px;opacity:0.6">' + monthsShort[d.getMonth()] + '</div></div>';
-  });
-  html += '</div></div>';
-
-  // 4. RENDER ROWS (Tasks)
-  assetTasks.forEach(function(t) {
-    html += '<div class="g-row"><div class="g-name-col">' + (t.name || 'Task') + '</div><div class="g-days-row">';
+  function mkRow(labelEl, barFn, visible) {
+    var lr = document.createElement("div"); lr.className = "gantt-label-row"; lr.appendChild(labelEl);
+    var row = document.createElement("div"); row.className = "gantt-row";
     dates.forEach(function(d) {
-      var isDue = new Date(t.due_date).toDateString() === d.toDateString();
-      html += '<div class="g-day-cell">' + (isDue ? '<div class="g-bar g-bar-task"></div>' : '') + '</div>';
-    });
-    html += '</div></div>';
-  });
-
-  // 5. RENDER ROWS (Shots)
-  projShots.forEach(function(s) {
-    html += '<div class="g-row"><div class="g-name-col">' + s.code + '</div><div class="g-days-row">';
-    dates.forEach(function(d) {
-      var isDue = s.due_date && new Date(s.due_date).toDateString() === d.toDateString();
-      html += '<div class="g-day-cell">' + (isDue ? '<div class="g-bar g-bar-shot"></div>' : '') + '</div>';
-    });
-    html += '</div></div>';
-  });
-
-  inner.innerHTML = html;
-}
-
-  function mkRow(labelEl,barFn,visible){
-    var lr=document.createElement("div");lr.className="gantt-label-row";lr.appendChild(labelEl);
-    var row=document.createElement("div");row.className="gantt-row";
-    dates.forEach(function(d){
-      var cell=document.createElement("div");
-      cell.className="gantt-cell"+(d.getTime()===today.getTime()?" today-col":"");
+      var cell = document.createElement("div");
+      cell.className = "gantt-cell" + (d.getTime() === today.getTime() ? " today-col" : "");
       row.appendChild(cell);
     });
-    if(barFn)barFn(row);
-    if(!visible){lr.style.display="none";row.style.display="none";}
-    return{lr:lr,row:row};
+    if (barFn) barFn(row);
+    if (!visible) { lr.style.display = "none"; row.style.display = "none"; }
+    return { lr: lr, row: row };
   }
 
-  function mkSectionHdr(title,icon,collapsed,toggleFn){
-    var lbl=document.createElement("div");lbl.style.cssText="display:flex;align-items:center;gap:6px;padding:4px 8px;";
-    var arr=document.createElement("span");arr.className="gantt-section-arrow"+(collapsed?"":" open");arr.innerHTML="&#9658;";
-    var ico=document.createElement("span");ico.style.cssText="font-size:.85rem;";ico.innerHTML=icon;
-    var ttl=document.createElement("span");ttl.className="gantt-section-title";ttl.textContent=title;
-    lbl.appendChild(arr);lbl.appendChild(ico);lbl.appendChild(ttl);
-    var chartHdr=document.createElement("div");chartHdr.style.cssText="height:32px;background:var(--bg3);border-bottom:2px solid var(--border);position:relative;";
-    var todayIdx=dates.findIndex(function(d){return d.getTime()===today.getTime();});
-    if(todayIdx>=0){var tl=document.createElement("div");tl.style.cssText="position:absolute;top:0;bottom:0;left:"+(todayIdx*COL_W+COL_W/2)+"px;width:2px;background:#7c3aed;opacity:.4;";chartHdr.appendChild(tl);}
-    lbl.style.cursor="pointer";lbl.style.background="var(--bg3)";lbl.style.borderBottom="2px solid var(--border)";
-    lbl.style.height="32px";
-    lbl.addEventListener("click",toggleFn);
-    chartHdr.addEventListener("click",toggleFn);
-    return{lbl:lbl,chartHdr:chartHdr,arrow:arr};
+  function mkSecHdr(title, icon, collapsed, toggleFn) {
+    var lbl = document.createElement("div");
+    lbl.style.cssText = "display:flex;align-items:center;gap:6px;padding:4px 8px;height:32px;background:var(--bg3);border-bottom:2px solid var(--border);cursor:pointer;";
+    var arr = document.createElement("span"); arr.className = "gantt-section-arrow" + (collapsed ? "" : " open"); arr.innerHTML = "&#9658;";
+    var ico = document.createElement("span"); ico.style.fontSize = ".85rem"; ico.innerHTML = icon;
+    var ttl = document.createElement("span"); ttl.className = "gantt-section-title"; ttl.textContent = title;
+    lbl.appendChild(arr); lbl.appendChild(ico); lbl.appendChild(ttl);
+    var chartHdr = document.createElement("div");
+    chartHdr.style.cssText = "height:32px;background:var(--bg3);border-bottom:2px solid var(--border);";
+    lbl.addEventListener("click", toggleFn); chartHdr.addEventListener("click", toggleFn);
+    return { lbl: lbl, chartHdr: chartHdr, arrow: arr };
   }
 
-  var labelsDiv=document.createElement("div");labelsDiv.className="gantt-labels";
-  var lhd=document.createElement("div");lhd.className="gantt-label-header";lhd.textContent="Task / Shot";
-  labelsDiv.appendChild(lhd);
+  function mkDraggable(el, row, task, origStart, origEnd, nDays, startOM, mode) {
+    el.addEventListener("mousedown", function(e) {
+      if (mode === "move" && (e.target.classList.contains("gantt-resize-handle") || e.target.classList.contains("gantt-resize-handle-left"))) return;
+      e.preventDefault();
+      var bar = row.querySelector(".gantt-bar"); if (bar) bar.classList.add("dragging");
+      var startX = e.clientX, cs = origStart, ce = origEnd;
+      function onMove(ev) {
+        var dd = Math.round((ev.clientX - startX) / COL_W), ns = cs, ne = ce;
+        if (mode === "move") { var sp = ce - cs; ns = Math.max(0, Math.min(nDays-1-sp, cs+dd)); ne = ns + sp; }
+        else if (mode === "left") ns = Math.max(0, Math.min(ce, cs+dd));
+        else ne = Math.max(cs, Math.min(nDays-1, ce+dd));
+        if (bar) { bar.style.left = (ns * COL_W) + "px"; bar.style.width = ((ne-ns+1) * COL_W - 4) + "px"; }
+      }
+      async function onUp(ev) {
+        document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp);
+        if (bar) bar.classList.remove("dragging");
+        var dd = Math.round((ev.clientX - startX) / COL_W); if (dd === 0) return;
+        var ns = cs, ne = ce;
+        if (mode === "move") { var sp2 = ce - cs; ns = Math.max(0, Math.min(nDays-1-sp2, cs+dd)); ne = ns + sp2; }
+        else if (mode === "left") ns = Math.max(0, Math.min(ce, cs+dd));
+        else ne = Math.max(cs, Math.min(nDays-1, ce+dd));
+        var nsd = new Date(startOM.getTime() + ns*86400000), ned = new Date(startOM.getTime() + ne*86400000);
+        var payload = { due_date: fmtYMD(ned) };
+        if (task.start_date || mode !== "right") payload.start_date = fmtYMD(nsd);
+        await sb.from("tasks").update(payload).eq("id", task.id);
+        showToast("Dates updated!"); loadTasks();
+      }
+      document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp);
+    });
+  }
 
-  var chartDiv=document.createElement("div");chartDiv.className="gantt-chart";
-  var datesRow=document.createElement("div");datesRow.className="gantt-dates";
-  dates.forEach(function(d){
-    var dc=document.createElement("div");
-    dc.className="gantt-date-cell"+(d.getTime()===today.getTime()?" today-col":"");
-    dc.textContent=d.getDate();datesRow.appendChild(dc);
+  var labelsDiv = document.createElement("div"); labelsDiv.className = "gantt-labels";
+  var lhd = document.createElement("div"); lhd.className = "gantt-label-header"; lhd.textContent = "Task / Shot"; labelsDiv.appendChild(lhd);
+  var chartDiv = document.createElement("div"); chartDiv.className = "gantt-chart";
+  var datesRow = document.createElement("div"); datesRow.className = "gantt-dates";
+  dates.forEach(function(d) {
+    var dc = document.createElement("div");
+    dc.className = "gantt-date-cell" + (d.getTime() === today.getTime() ? " today-col" : "");
+    dc.textContent = d.getDate(); datesRow.appendChild(dc);
   });
   chartDiv.appendChild(datesRow);
-  var rowsDiv=document.createElement("div");rowsDiv.className="gantt-rows";
+  var rowsDiv = document.createElement("div"); rowsDiv.className = "gantt-rows";
 
-  var taskRows=[];
-  if(assetTasks.length){
-    var tasksCollapsed=uiState.ganttCollapsed.tasks;
-    var taskHdr=mkSectionHdr("Asset & Milestone Tasks","&#127912;",tasksCollapsed,function(){
-      uiState.ganttCollapsed.tasks=!uiState.ganttCollapsed.tasks; saveUIState();
-      taskRows.forEach(function(r){r.lr.style.display=uiState.ganttCollapsed.tasks?"none":"";r.row.style.display=uiState.ganttCollapsed.tasks?"none":"";});
-      taskHdr.arrow.classList.toggle("open",!uiState.ganttCollapsed.tasks);
+  var taskRows = [];
+  if (assetTasks.length) {
+    var tCollapsed = ganttCollapsed.tasks;
+    var tHdr = mkSecHdr("Asset & Milestone Tasks", "&#127912;", tCollapsed, function() {
+      ganttCollapsed.tasks = !ganttCollapsed.tasks;
+      taskRows.forEach(function(rr) { rr.lr.style.display = ganttCollapsed.tasks ? "none" : ""; rr.row.style.display = ganttCollapsed.tasks ? "none" : ""; });
+      tHdr.arrow.classList.toggle("open", !ganttCollapsed.tasks);
     });
-    labelsDiv.appendChild(taskHdr.lbl);rowsDiv.appendChild(taskHdr.chartHdr);
-
-    assetTasks.forEach(function(t){
-      var labelEl=document.createElement("div");
-      var lbl=t.category==="asset"&&t.asset_name?(t.asset_name+" \u2014 "+(t.pipeline_stage||t.name)):t.name;
-      labelEl.innerHTML='<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px"><div style="font-size:.78rem;font-weight:600">'+lbl+'</div>'+(t.category==="asset"?'<div class="gantt-label-sub">'+assetTypeLabel(t.asset_type)+'</div>':'')+'</div>';
-      var rr=mkRow(labelEl,function(row){
-        var bed=new Date(t.due_date+"T00:00:00");
-        var bsd=t.start_date?new Date(t.start_date+"T00:00:00"):bed;
-        bed.setHours(0,0,0,0);bsd.setHours(0,0,0,0);
-        var si=Math.round((bsd-som)/86400000),ei=Math.round((bed-som)/86400000);
-        var vs=Math.max(0,si),ve=Math.min(numDays-1,ei);
-        if(ve>=0&&vs<=numDays-1){
-          var bar=document.createElement("div");bar.className="gantt-bar "+ganttBarCls(t);
-          bar.style.left=(vs*COL_W)+"px";bar.style.width=((ve-vs+1)*COL_W-4)+"px";
-          bar.textContent=lbl;bar.title=lbl+" | Due: "+fmtDate(t.due_date);
-          var lh2=document.createElement("div");lh2.className="gantt-resize-handle-left";bar.appendChild(lh2);
-          var rh=document.createElement("div");rh.className="gantt-resize-handle";bar.appendChild(rh);
-          mkDraggable(bar,row,t,si,ei,numDays,som,"move");
-          mkDraggable(lh2,row,t,si,ei,numDays,som,"left");
-          mkDraggable(rh,row,t,si,ei,numDays,som,"right");
+    labelsDiv.appendChild(tHdr.lbl); rowsDiv.appendChild(tHdr.chartHdr);
+    assetTasks.forEach(function(t) {
+      var labelEl = document.createElement("div");
+      var lbl = (t.category === "asset" && t.asset_name) ? (t.asset_name + " — " + (t.pipeline_stage || t.name)) : t.name;
+      labelEl.innerHTML = '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px">'
+        + '<div style="font-size:.78rem;font-weight:600">' + lbl + '</div>'
+        + (t.category === "asset" ? '<div class="gantt-label-sub">' + assetTypeLabel(t.asset_type) + '</div>' : '')
+        + '</div>';
+      var rr = mkRow(labelEl, function(row) {
+        var bed = new Date(t.due_date + "T00:00:00"), bsd = t.start_date ? new Date(t.start_date + "T00:00:00") : bed;
+        bed.setHours(0,0,0,0); bsd.setHours(0,0,0,0);
+        var si = Math.round((bsd - som) / 86400000), ei = Math.round((bed - som) / 86400000);
+        var vs = Math.max(0, si), ve = Math.min(numDays-1, ei);
+        if (ve >= 0 && vs <= numDays-1) {
+          var bar = document.createElement("div"); bar.className = "gantt-bar " + ganttBarCls(t);
+          bar.style.left = (vs * COL_W) + "px"; bar.style.width = ((ve-vs+1) * COL_W - 4) + "px";
+          bar.textContent = lbl; bar.title = lbl + " | Due: " + fmtDate(t.due_date);
+          var lh2 = document.createElement("div"); lh2.className = "gantt-resize-handle-left"; bar.appendChild(lh2);
+          var rh = document.createElement("div"); rh.className = "gantt-resize-handle"; bar.appendChild(rh);
+          mkDraggable(bar, row, t, si, ei, numDays, som, "move");
+          mkDraggable(lh2, row, t, si, ei, numDays, som, "left");
+          mkDraggable(rh, row, t, si, ei, numDays, som, "right");
           row.appendChild(bar);
         }
-      },!tasksCollapsed);
-      taskRows.push(rr);
-      labelsDiv.appendChild(rr.lr);rowsDiv.appendChild(rr.row);
+      }, !tCollapsed);
+      taskRows.push(rr); labelsDiv.appendChild(rr.lr); rowsDiv.appendChild(rr.row);
     });
   }
 
-  if(projShots.length){
-    var bySeq={};
-    projShots.forEach(function(sh){
-      var sid=sh.sequence_id||"__unassigned__";
-      if(!bySeq[sid])bySeq[sid]=[];
-      bySeq[sid].push(sh);
-    });
-
-    var seqOrder=projSeqs.filter(function(sq){return bySeq[sq.id]&&bySeq[sq.id].length;});
-    if(bySeq["__unassigned__"]&&bySeq["__unassigned__"].length)seqOrder.push({id:"__unassigned__",code:"",name:"Unassigned"});
-
-    seqOrder.forEach(function(seq){
-      var seqShots=bySeq[seq.id]||[];
-      if(!seqShots.length)return;
-      var seqCollapsed=uiState.ganttCollapsed.shots[seq.id]===true;
-      var seqRows=[];
-
-      var seqHdr=mkSectionHdr(
-        (seq.code?(seq.code+(seq.name?" \u2014 "+seq.name:"")):"Unassigned Shots"),
-        "&#127916;",seqCollapsed,
-        function(){
-          uiState.ganttCollapsed.shots[seq.id]=!uiState.ganttCollapsed.shots[seq.id]; saveUIState();
-          var nowCollapsed=uiState.ganttCollapsed.shots[seq.id];
-          seqRows.forEach(function(r){r.lr.style.display=nowCollapsed?"none":"";r.row.style.display=nowCollapsed?"none":"";});
-          seqHdr.arrow.classList.toggle("open",!nowCollapsed);
-        }
-      );
-      labelsDiv.appendChild(seqHdr.lbl);rowsDiv.appendChild(seqHdr.chartHdr);
-
-      seqShots.forEach(function(sh){
-        var labelEl=document.createElement("div");
-        labelEl.innerHTML='<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px"><div class="gantt-label-shot">'+sh.code+'</div><div class="gantt-label-sub-shot">'+(sh.description||"")+'</div></div>';
-        var rr=mkRow(labelEl,function(row){
-          var shTasks=(shotTasks||[]).filter(function(t){return t.shot_id===sh.id&&t.due_date;});
-          var effectiveDue=sh.due_date||(shTasks.length?shTasks.reduce(function(mx,t){return t.due_date>mx?t.due_date:mx;},""):null);
-          var effectiveStart=sh.start_date||(shTasks.length?shTasks.reduce(function(mn,t){return t.due_date<mn?t.due_date:mn;},"9999"):null);
-          if(!effectiveDue){
-            var noDateEl=document.createElement("div");
-            noDateEl.style.cssText="position:absolute;left:6px;top:9px;height:28px;display:flex;align-items:center;font-size:.68rem;color:var(--text4);font-style:italic;";
-            noDateEl.textContent="No tasks with dates yet";row.appendChild(noDateEl);return;
+  if (projShots.length) {
+    var bySeq = {};
+    projShots.forEach(function(sh) { var sid = sh.sequence_id || "__u__"; if (!bySeq[sid]) bySeq[sid] = []; bySeq[sid].push(sh); });
+    var seqOrder = projSeqs.filter(function(sq) { return bySeq[sq.id] && bySeq[sq.id].length; });
+    if (bySeq["__u__"] && bySeq["__u__"].length) seqOrder.push({ id: "__u__", code: "", name: "Unassigned" });
+    seqOrder.forEach(function(seq) {
+      var seqShots = bySeq[seq.id] || []; if (!seqShots.length) return;
+      var sCollapsed = ganttCollapsed.shots[seq.id] === true;
+      var seqRows = [];
+      var sHdr = mkSecHdr(seq.code ? (seq.code + (seq.name ? " — " + seq.name : "")) : "Unassigned", "&#127916;", sCollapsed, function() {
+        ganttCollapsed.shots[seq.id] = !ganttCollapsed.shots[seq.id];
+        var nc = ganttCollapsed.shots[seq.id];
+        seqRows.forEach(function(rr) { rr.lr.style.display = nc ? "none" : ""; rr.row.style.display = nc ? "none" : ""; });
+        sHdr.arrow.classList.toggle("open", !nc);
+      });
+      labelsDiv.appendChild(sHdr.lbl); rowsDiv.appendChild(sHdr.chartHdr);
+      seqShots.forEach(function(sh) {
+        var labelEl = document.createElement("div");
+        labelEl.innerHTML = '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px">'
+          + '<div class="gantt-label-shot">' + sh.code + '</div>'
+          + '<div class="gantt-label-sub-shot">' + (sh.description || "") + '</div></div>';
+        var rr = mkRow(labelEl, function(row) {
+          if (!sh.due_date) return;
+          var bed2 = new Date(sh.due_date + "T00:00:00"), bsd2 = sh.start_date ? new Date(sh.start_date + "T00:00:00") : bed2;
+          bed2.setHours(0,0,0,0); bsd2.setHours(0,0,0,0);
+          var si2 = Math.round((bsd2 - som) / 86400000), ei2 = Math.round((bed2 - som) / 86400000);
+          var vs2 = Math.max(0, si2), ve2 = Math.min(numDays-1, ei2);
+          if (ve2 >= 0 && vs2 <= numDays-1) {
+            var isDone = sh.status === "approved" || sh.status === "final";
+            var isLate = !isDone && daysUntil(sh.due_date) < 0;
+            var barCls = isDone ? "gb-shot-done" : isLate ? "gb-shot-late" : "gb-shot";
+            var bar2 = document.createElement("div"); bar2.className = "gantt-bar " + barCls;
+            bar2.style.left = (vs2 * COL_W) + "px"; bar2.style.width = ((ve2-vs2+1) * COL_W - 4) + "px";
+            var lbl2 = sh.code + (sh.description ? " — " + sh.description : "");
+            bar2.textContent = lbl2; bar2.title = lbl2 + " | Due: " + fmtDate(sh.due_date);
+            bar2.style.cursor = "grab";
+            (function(shot, csi, cei) {
+              bar2.addEventListener("mousedown", function(e) {
+                e.preventDefault(); bar2.style.cursor = "grabbing";
+                var startX = e.clientX, sp = cei - csi;
+                function onMove(ev) {
+                  var dd = Math.round((ev.clientX-startX)/COL_W);
+                  bar2.style.left = (Math.max(0, Math.min(numDays-1-sp, csi+dd)) * COL_W) + "px";
+                }
+                async function onUp(ev) {
+                  document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp);
+                  bar2.style.cursor = "grab";
+                  var dd = Math.round((ev.clientX - startX) / COL_W); if (dd === 0) return;
+                  var ns = Math.max(0, Math.min(numDays-1-sp, csi+dd)), ne = ns + sp;
+                  var nsd = new Date(som.getTime()+ns*86400000), ned = new Date(som.getTime()+ne*86400000);
+                  await sb.from("shots").update({ start_date: fmtYMD(nsd), due_date: fmtYMD(ned) }).eq("id", shot.id);
+                  shot.start_date = fmtYMD(nsd); shot.due_date = fmtYMD(ned);
+                  showToast("Shot dates updated!"); renderGantt();
+                }
+                document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp);
+              });
+            })(sh, si2, ei2);
+            row.appendChild(bar2);
           }
-          var bed=new Date(effectiveDue+"T00:00:00");
-          var bsd=new Date((effectiveStart||effectiveDue)+"T00:00:00");
-          bed.setHours(0,0,0,0);bsd.setHours(0,0,0,0);
-          var si=Math.round((bsd-som)/86400000),ei=Math.round((bed-som)/86400000);
-          var vs=Math.max(0,si),ve=Math.min(numDays-1,ei);
-          if(ve>=0&&vs<=numDays-1){
-            var isDone=sh.status==="approved"||sh.status==="final";
-            var isLate=!isDone&&sh.due_date&&daysUntil(sh.due_date)<0;
-            var barCls=isDone?"gb-shot-done":isLate?"gb-shot-late":"gb-shot";
-            var bar=document.createElement("div");bar.className="gantt-bar "+barCls;
-            bar.style.left=(vs*COL_W)+"px";bar.style.width=((ve-vs+1)*COL_W-4)+"px";
-            var lbl=sh.code+(sh.description?" \u2014 "+sh.description:"");
-            bar.textContent=lbl;bar.title=lbl+" | Due: "+fmtDate(sh.due_date);
-            bar.style.cursor="grab";
-            bar.addEventListener("mousedown",function(e){
-              if(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left"))return;
-              e.preventDefault();bar.style.cursor="grabbing";
-              var startX=e.clientX,cs=si,ce=ei,sp=ce-cs;
-              function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W);var ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));var ne=ns+sp;bar.style.left=(ns*COL_W)+"px";}
-              async function onUp(ev){
-                document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);
-                bar.style.cursor="grab";
-                var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;
-                var ns=Math.max(0,Math.min(numDays-1-sp,cs+dd)),ne=ns+sp;
-                var nsd=new Date(som.getTime()+ns*86400000),ned=new Date(som.getTime()+ne*86400000);
-                await sb.from("shots").update({start_date:fmtYMD(nsd),due_date:fmtYMD(ned)}).eq("id",sh.id);
-                sh.start_date=fmtYMD(nsd);sh.due_date=fmtYMD(ned);
-                showToast("Shot dates updated!");renderGantt();
-              }
-              document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);
-            });
-            row.appendChild(bar);
-          }
-        },!seqCollapsed);
-        seqRows.push(rr);
-        labelsDiv.appendChild(rr.lr);rowsDiv.appendChild(rr.row);
+        }, !sCollapsed);
+        seqRows.push(rr); labelsDiv.appendChild(rr.lr); rowsDiv.appendChild(rr.row);
       });
     });
   }
 
   chartDiv.appendChild(rowsDiv);
-  inner.innerHTML="";inner.appendChild(labelsDiv);inner.appendChild(chartDiv);
+  inner.innerHTML = ""; inner.appendChild(labelsDiv); inner.appendChild(chartDiv);
 }
-
-function mkDraggable(el,row,task,origStart,origEnd,numDays,startOfMonth,mode){el.addEventListener("mousedown",function(e){if(mode==="move"&&(e.target.classList.contains("gantt-resize-handle")||e.target.classList.contains("gantt-resize-handle-left")))return;e.preventDefault();var bar=row.querySelector(".gantt-bar");bar.classList.add("dragging");var startX=e.clientX,cs=origStart,ce=origEnd;function onMove(ev){var dd=Math.round((ev.clientX-startX)/COL_W),ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));bar.style.left=(ns*COL_W)+"px";bar.style.width=((ne-ns+1)*COL_W-4)+"px";}async function onUp(ev){document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);bar.classList.remove("dragging");var dd=Math.round((ev.clientX-startX)/COL_W);if(dd===0)return;var ns=cs,ne=ce;if(mode==="move"){var sp=ce-cs;ns=Math.max(0,Math.min(numDays-1-sp,cs+dd));ne=ns+sp;}else if(mode==="left")ns=Math.max(0,Math.min(ce,cs+dd));else ne=Math.max(cs,Math.min(numDays-1,ce+dd));var nsd=new Date(startOfMonth.getTime()+ns*86400000),ned=new Date(startOfMonth.getTime()+ne*86400000);var payload={due_date:fmtYMD(ned)};if(task.start_date||mode!=="right")payload.start_date=fmtYMD(nsd);await sb.from("tasks").update(payload).eq("id",task.id);showToast("Dates updated!");loadTasks();}document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);});}
-window.ganttPrev=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()-1,1);renderGantt();};
-window.ganttNext=function(){ganttStart=new Date(ganttStart.getFullYear(),ganttStart.getMonth()+1,1);renderGantt();};
-window.ganttToday=function(){ganttStart=new Date(today.getFullYear(),today.getMonth(),1);renderGantt();};
+window.ganttPrev  = function() { ganttStart = new Date(ganttStart.getFullYear(), ganttStart.getMonth()-1, 1); renderGantt(); };
+window.ganttNext  = function() { ganttStart = new Date(ganttStart.getFullYear(), ganttStart.getMonth()+1, 1); renderGantt(); };
+window.ganttToday = function() { ganttStart = new Date(today.getFullYear(), today.getMonth(), 1); renderGantt(); };
 
 window.isProjectOwner = function() {
   if(!activeProject || !currentUser) return false;
