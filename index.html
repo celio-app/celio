@@ -2291,7 +2291,14 @@ function renderGantt() {
           mkDraggable(bar, row, t, si, ei, "move");
           mkDraggable(lh2, row, t, si, ei, "left");
           mkDraggable(rh,  row, t, si, ei, "right");
-          (function(tid){bar.addEventListener("click",function(){if(!bar.dataset.ganttDragged)openModal(tid);});})(t.id);
+          (function(tid){
+            var _mx,_my;
+            bar.addEventListener("mousedown",function(e){_mx=e.clientX;_my=e.clientY;});
+            bar.addEventListener("mouseup",function(e){
+              var dx=e.clientX-_mx, dy=e.clientY-_my;
+              if(Math.sqrt(dx*dx+dy*dy)<5) openModal(tid);
+            });
+          })(t.id);
           row.appendChild(bar);
         }
       }, !tCollapsed);
@@ -2358,7 +2365,14 @@ function renderGantt() {
                 document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp);
               });
             })(sh, si2, ei2);
-            (function(sid){bar2.addEventListener("click",function(){if(!bar2.dataset.ganttDragged)openShot(sid);});})(sh.id);
+            (function(sid){
+              var _mx2,_my2;
+              bar2.addEventListener("mousedown",function(e){_mx2=e.clientX;_my2=e.clientY;});
+              bar2.addEventListener("mouseup",function(e){
+                var dx=e.clientX-_mx2, dy=e.clientY-_my2;
+                if(Math.sqrt(dx*dx+dy*dy)<5) openShot(sid);
+              });
+            })(sh.id);
             row.appendChild(bar2);
           }
         }, !sCollapsed);
