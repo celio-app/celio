@@ -2746,6 +2746,36 @@ window.openAdminModal=function(cat,editId){
 
 window.closeAdminModal=function(){document.getElementById("admin-modal").classList.remove("open");};
 
+window.saveAdminEntry = async function() {
+  var title = document.getElementById("af-title").value.trim();
+  if (!title) { showToast("Please enter a title.", "error"); return; }
+  var dueDate = document.getElementById("af-date").value || null;
+  if (adminCat === "team" && !dueDate) { dueDate = "2099-12-31"; }
+  var payload = {
+    name: title, lead: document.getElementById("af-assignee").value.trim() || null,
+    due_date: dueDate, priority: document.getElementById("af-priority").value,
+    status: document.getElementById("af-status").value, category: adminCat,
+    asset: document.getElementById("af-notes").value.trim() || null,
+    user_id: currentUser.id, project_id: activeProject.id
+  };
+  var r;
+  if (adminEditId) r = await sb.from("tasks").update(payload).eq("id", adminEditId).select();
+  else r = await sb.from("tasks").insert(payload).select();
+  if (r.error) { showToast("Database Error: " + r.error.message, "error"); return; }
+  if (adminEditId) {
+    var idx = tasks.findIndex(function(t) { return t.id === adminEditId; });
+    if (idx >= 0 && r.data && r.data[0]) tasks[idx] = r.data[0];
+  } else {
+    if (r.data && r.data[0]) tasks.push(r.data[0]);
+  }
+  closeAdminModal();
+  showToast("Saved!");
+  populateTeamDropdowns();
+  renderMilestones();
+  updateStats();
+};
+
+
 window.submitInviteCode = async function(codeOverride) {
   var inputEl = document.getElementById("invite-code-input");
   var code = "";
