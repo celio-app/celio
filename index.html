@@ -2291,6 +2291,7 @@ function renderGantt() {
           mkDraggable(bar, row, t, si, ei, "move");
           mkDraggable(lh2, row, t, si, ei, "left");
           mkDraggable(rh,  row, t, si, ei, "right");
+          (function(tid){bar.addEventListener("click",function(){if(!bar.dataset.ganttDragged)openModal(tid);});})(t.id);
           row.appendChild(bar);
         }
       }, !tCollapsed);
@@ -2357,6 +2358,7 @@ function renderGantt() {
                 document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp);
               });
             })(sh, si2, ei2);
+            (function(sid){bar2.addEventListener("click",function(){if(!bar2.dataset.ganttDragged)openShot(sid);});})(sh.id);
             row.appendChild(bar2);
           }
         }, !sCollapsed);
