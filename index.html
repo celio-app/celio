@@ -3131,17 +3131,23 @@ window.addEventListener("DOMContentLoaded", function () {
 var _celebLastPct = 0;
 window.triggerCelebration = function() {
   var modal = document.getElementById("celebration-modal");
+  if (!modal) { console.warn("celebration-modal not found"); return; }
   var nameEl = document.getElementById("celebration-proj-name");
   if (nameEl && typeof activeProject !== "undefined" && activeProject) nameEl.textContent = activeProject.name;
-  // Cycle through fun emoji combos
   var combos = ["🎉🥳🎊","🏆🌟💫","🎬🎥✨","🚀🎯🔥","🥂🎶🎁"];
   var chars = document.getElementById("celebration-chars");
   if (chars) chars.textContent = combos[Math.floor(Math.random()*combos.length)];
   var emojis = ["🎉","🥳","🏆","🎊","🌟","🚀"];
   var em = document.getElementById("celebration-emoji");
   if (em) em.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+  // Force show
   modal.style.display = "block";
-  setTimeout(function(){ modal.classList.add("open"); }, 10);
+  modal.style.opacity = "1";
+  var box = document.getElementById("celebration-box");
+  var backdrop = document.getElementById("celebration-backdrop");
+  if (backdrop) { backdrop.style.opacity = "1"; }
+  if (box) { box.style.transform = "translate(-50%,-50%) scale(1)"; box.style.opacity = "1"; }
+  modal.classList.add("open");
 };
 window.closeCelebration = function() {
   var modal = document.getElementById("celebration-modal");
