@@ -2208,7 +2208,9 @@ function renderGantt() {
       e.preventDefault();
       var bar = row.querySelector(".gantt-bar"); if (bar) bar.classList.add("dragging");
       var startX = e.clientX, cs = origSi, ce = origEi;
+      var _moved = false;
       function onMove(ev) {
+        _moved = true;
         var dd = Math.round((ev.clientX - startX) / COL_W), ns = cs, ne = ce;
         if (mode === "move") { var sp = ce - cs; ns = cs + dd; ne = ns + sp; }
         else if (mode === "left") ns = Math.min(ce, cs + dd);
@@ -2219,6 +2221,7 @@ function renderGantt() {
       async function onUp(ev) {
         document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp);
         if (bar) bar.classList.remove("dragging");
+        if (_moved) { el.dataset.ganttDragged = "1"; setTimeout(function(){ el.dataset.ganttDragged = ""; }, 300); }
         var dd = Math.round((ev.clientX - startX) / COL_W); if (dd === 0) return;
         var ns = cs, ne = ce;
         if (mode === "move") { var sp2 = ce - cs; ns = cs + dd; ne = ns + sp2; }
