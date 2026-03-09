@@ -1916,7 +1916,7 @@ function updateStats(){
   var pct=total?Math.round(done/total*100):0;
   if(document.getElementById("prog-pct")) document.getElementById("prog-pct").textContent=pct+"%";
   if(document.getElementById("prog-fill")) document.getElementById("prog-fill").style.width=pct+"%";
-  if(total>0 && pct===100 && _celebLastPct!==100){triggerCelebration();}
+  if(total>0 && pct===100 && _celebLastPct!==100 && typeof activeProject!=="undefined" && activeProject){triggerCelebration();}
   _celebLastPct=pct;
 }
 
@@ -3132,7 +3132,7 @@ var _celebLastPct = 0;
 window.triggerCelebration = function() {
   var modal = document.getElementById("celebration-modal");
   var nameEl = document.getElementById("celebration-proj-name");
-  if (nameEl && activeProject) nameEl.textContent = activeProject.name;
+  if (nameEl && typeof activeProject !== "undefined" && activeProject) nameEl.textContent = activeProject.name;
   // Cycle through fun emoji combos
   var combos = ["🎉🥳🎊","🏆🌟💫","🎬🎥✨","🚀🎯🔥","🥂🎶🎁"];
   var chars = document.getElementById("celebration-chars");
