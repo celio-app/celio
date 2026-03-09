@@ -1902,7 +1902,8 @@ function updateStats(){
   function isDone(t){return t.status==="done"||t.status==="approved"||t.status==="final";}
   function isInProg(t){return t.status==="inprogress"||t.status==="review";}
   function isLate(t){return !isDone(t)&&t.due_date&&daysUntil(t.due_date)<0;}
-  var allT=(tasks||[]).concat(shotTasks||[]);
+  var _adminCats={team:1,meetings:1,client:1,marketing:1};
+  var allT=(tasks||[]).filter(function(t){return !_adminCats[t.category];}).concat(shotTasks||[]);
   var total=allT.length,done=allT.filter(isDone).length;
   var inprog=allT.filter(isInProg).length;
   var late=allT.filter(isLate).length;
