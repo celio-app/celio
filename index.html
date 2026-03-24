@@ -822,6 +822,8 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
                 <div class="sif"><label>Sequence</label><input id="sp-seq-edit" disabled style="opacity:.5"></div>
                 <div class="sif"><label>Frame Count</label><input id="sp-frames" type="number" placeholder="e.g. 72" onblur="saveShotField('frame_count',this.value)"></div>
                 <div class="sif"><label>Camera</label><input id="sp-camera" placeholder="e.g. CAM_A" onblur="saveShotField('camera',this.value)"></div>
+                <div class="sif"><label>Proximity</label><select id="sp-proximity" onchange="saveShotField('camera_proximity',this.value)"><option value="">—</option><option value="ELS">Extreme Long (ELS)</option><option value="LS">Long Shot (LS)</option><option value="MLS">Medium Long (MLS)</option><option value="MS">Medium Shot (MS)</option><option value="MCU">Medium Close-Up (MCU)</option><option value="CU">Close-Up (CU)</option><option value="ECU">Extreme Close-Up (ECU)</option><option value="Insert">Insert Shot</option></select></div>
+                <div class="sif"><label>Angle</label><select id="sp-angle" onchange="saveShotField('camera_angle',this.value)"><option value="">—</option><option value="Birds Eye">Bird's Eye / Top Down</option><option value="High Angle">High Angle</option><option value="Eye Level">Eye Level</option><option value="Low Angle">Low Angle</option><option value="Worms Eye">Worm's Eye</option><option value="Dutch Tilt">Dutch Tilt / Canted</option><option value="OTS">Over the Shoulder (OTS)</option><option value="POV">Point of View (POV)</option></select></div>
               </div>
             </div>
           </div>
@@ -949,8 +951,8 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
       <div><label class="flbl">Start Date <span style="font-size:.7rem;color:var(--text4);font-weight:400">(optional)</span></label><input id="shf-start" type="date" class="inp"></div>
       <div><label class="flbl">Due Date <span style="font-size:.7rem;color:var(--text4);font-weight:400">(for Gantt)</span></label><input id="shf-due" type="date" class="inp"></div>
     </div>
-    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start;">
-      <div><label class="flbl" style="white-space:nowrap;">Camera Proximity <span style="font-size:.7rem;color:var(--text4);font-weight:400">(optional)</span></label>
+    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div><label class="flbl">Proximity <span style="font-size:.7rem;color:var(--text4);font-weight:400">(optional)</span></label>
         <select id="shf-proximity" class="inp">
           <option value="">— Select —</option>
           <option value="ELS">Extreme Long Shot (ELS)</option>
@@ -963,7 +965,7 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
           <option value="Insert">Insert Shot</option>
         </select>
       </div>
-      <div><label class="flbl">Camera Angle <span style="font-size:.7rem;color:var(--text4);font-weight:400">(optional)</span></label>
+      <div><label class="flbl">Angle <span style="font-size:.7rem;color:var(--text4);font-weight:400">(optional)</span></label>
         <select id="shf-angle" class="inp">
           <option value="">— Select —</option>
           <option value="Birds Eye">Bird's Eye / Top Down</option>
@@ -1398,6 +1400,8 @@ window.openShot=async function(id){
   if(document.getElementById("sp-start-date"))document.getElementById("sp-start-date").value=sh.start_date||"";
   if(document.getElementById("sp-due-date"))document.getElementById("sp-due-date").value=sh.due_date||"";
   document.getElementById("sp-camera").value=sh.camera||"";
+  if(document.getElementById("sp-proximity"))document.getElementById("sp-proximity").value=sh.camera_proximity||"";
+  if(document.getElementById("sp-angle"))document.getElementById("sp-angle").value=sh.camera_angle||"";
   document.getElementById("sp-storyboard").value=sh.storyboard_notes||"";
   showShotPage(true);
   await loadShotTasks();
