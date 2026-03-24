@@ -2799,7 +2799,6 @@ window.renderMilestones=function(){
       var title=document.createElement("div");title.className="admin-entry-title";title.textContent=t.name;
       var meta=document.createElement("div");meta.className="admin-entry-meta";
       if (cat === "team") {
-        // Initials avatar with cycling gradient
         var _teamGrads=[
           "linear-gradient(135deg,#7c3aed,#a855f7)",
           "linear-gradient(135deg,#14b8a6,#3b82f6)",
@@ -2808,30 +2807,26 @@ window.renderMilestones=function(){
           "linear-gradient(135deg,#22c55e,#14b8a6)",
           "linear-gradient(135deg,#3b82f6,#7c3aed)"
         ];
-        var _tidx=items.indexOf(t);
-        var _grad=_teamGrads[_tidx%_teamGrads.length];
+        var _grad=_teamGrads[items.indexOf(t)%_teamGrads.length];
         var _initials=(t.name||"?").split(" ").map(function(w){return w[0]||"";}).slice(0,2).join("").toUpperCase();
-        var avatar=document.createElement("div");
-        avatar.style.cssText="width:36px;height:36px;border-radius:50%;background:"+_grad+";display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;";
-        avatar.textContent=_initials;
-        // Text: name on top, role pill below
-        var textWrap=document.createElement("div");
-        textWrap.style.cssText="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px;";
-        title.style.cssText="font-size:.88rem;font-weight:600;";
-        textWrap.appendChild(title);
-        if(t.lead){
-          var rolePill=document.createElement("span");
-          rolePill.style.cssText="display:inline-flex;align-items:center;gap:4px;color:var(--text2);font-size:.75rem;";
-          rolePill.innerHTML='<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 9l2-2 2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/></svg>'+t.lead;
-          textWrap.appendChild(rolePill);
-        } else {
-          meta.textContent="Team Member";
-          textWrap.appendChild(meta);
-        }
-        // Outer row: circle + text side by side
+        // Build main as: [avatar] [textWrap: name / role]
+        main.innerHTML="";
         main.style.cssText="display:flex;align-items:center;gap:12px;flex:1;min-width:0;";
-        main.appendChild(avatar);
-        main.appendChild(textWrap);
+        var av=document.createElement("div");
+        av.style.cssText="width:36px;height:36px;border-radius:50%;background:"+_grad+";display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;";
+        av.textContent=_initials;
+        var tw=document.createElement("div");
+        tw.style.cssText="display:flex;flex-direction:column;gap:2px;min-width:0;";
+        var nm=document.createElement("div");
+        nm.style.cssText="font-size:.84rem;font-weight:600;";
+        nm.textContent=t.name;
+        var rl=document.createElement("div");
+        rl.style.cssText="font-size:.72rem;color:var(--text3);";
+        rl.textContent=t.lead||"Team Member";
+        tw.appendChild(nm);
+        tw.appendChild(rl);
+        main.appendChild(av);
+        main.appendChild(tw);
       } else {
         if(t.lead){var a=document.createElement("span");a.innerHTML='<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:3px"><circle cx="6" cy="4" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M1 11c0-2.5 2-4 5-4s5 1.5 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>'+t.lead;meta.appendChild(a);}
         if(t.due_date){var d=daysUntil(t.due_date);var dm=document.createElement("span");dm.style.color=t.status==="done"?"var(--text4)":d<0?"#ef4444":d<=3?"#f59e0b":"var(--text4)";dm.innerHTML='<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:3px"><rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1v2M8 1v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="1" y1="5" x2="11" y2="5" stroke="currentColor" stroke-width="1"/></svg>'+(d<0&&t.status!=="done"?Math.abs(d)+"d overdue":fmtDate(t.due_date));meta.appendChild(dm);}
