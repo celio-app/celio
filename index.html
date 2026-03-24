@@ -572,10 +572,11 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .admin-owner-only{display:none;}
 body.is-project-owner .admin-owner-only{display:inline-flex;}
 
-@keyframes celebBounce{from{transform:translateY(0) rotate(-5deg);}to{transform:translateY(-12px) rotate(5deg);}}
-@keyframes celebWiggle{0%,100%{transform:rotate(-8deg) scale(1);}50%{transform:rotate(8deg) scale(1.1);}}
 #celebration-modal.open #celebration-backdrop{opacity:1;}
 #celebration-modal.open #celebration-box{transform:translate(-50%,-50%) scale(1);opacity:1;}
+.celeb-stat{background:var(--bg3);border-radius:10px;padding:10px;}
+.celeb-stat-n{font-size:1.4rem;font-weight:700;color:#7c3aed;}
+.celeb-stat-l{font-size:.62rem;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-top:2px;}
 
 .stat-bar{height:3px;border-radius:2px;margin-top:8px;opacity:.7;}
 .stat-bar-purple{background:linear-gradient(90deg,#7c3aed,#a855f7);}
@@ -3270,13 +3271,18 @@ window.triggerCelebration = function() {
   if (!modal) { console.warn("celebration-modal not found"); return; }
   var nameEl = document.getElementById("celebration-proj-name");
   if (nameEl && typeof activeProject !== "undefined" && activeProject) nameEl.textContent = activeProject.name;
-  var combos = ["🎉🥳🎊","🏆🌟💫","🎬🎥✨","🚀🎯🔥","🥂🎶🎁"];
-  var chars = document.getElementById("celebration-chars");
-  if (chars) chars.textContent = combos[Math.floor(Math.random()*combos.length)];
-  var emojis = ["🎉","🥳","🏆","🎊","🌟","🚀"];
-  var em = document.getElementById("celebration-emoji");
-  if (em) em.textContent = emojis[Math.floor(Math.random()*emojis.length)];
-  // Force show
+  // Populate stats
+  var statsEl = document.getElementById("celebration-stats");
+  if (statsEl) {
+    function isDone(t){return t.status==="done"||t.status==="approved"||t.status==="final";}
+    var _adminCats2={team:1,meetings:1,client:1,marketing:1};
+    var allT=(tasks||[]).filter(function(t){return !_adminCats2[t.category];}).concat(shotTasks||[]);
+    var total=allT.length, done=allT.filter(isDone).length;
+    statsEl.innerHTML=
+      '<div class="celeb-stat"><div class="celeb-stat-n">'+total+'</div><div class="celeb-stat-l">Tasks</div></div>'+
+      '<div class="celeb-stat"><div class="celeb-stat-n">'+done+'</div><div class="celeb-stat-l">Done</div></div>'+
+      '<div class="celeb-stat"><div class="celeb-stat-n">100%</div><div class="celeb-stat-l">Progress</div></div>';
+  }
   modal.style.display = "block";
   modal.style.opacity = "1";
   var box = document.getElementById("celebration-box");
@@ -3394,14 +3400,16 @@ window.closeCelebration = function() {
 
 <!-- ═══ CELEBRATION MODAL ═══ -->
 <div id="celebration-modal" style="display:none;position:fixed;inset:0;z-index:9999;pointer-events:none;">
-  <div id="celebration-backdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.55);opacity:0;transition:opacity .4s;pointer-events:all;" onclick="closeCelebration()"></div>
-  <div id="celebration-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%) scale(.7);opacity:0;transition:transform .5s cubic-bezier(.34,1.56,.64,1),opacity .4s;background:var(--bg2);border:2px solid var(--border);border-radius:24px;padding:40px 48px;text-align:center;min-width:320px;max-width:420px;pointer-events:all;">
-    <div id="celebration-emoji" style="font-size:5rem;line-height:1;margin-bottom:8px;display:block;animation:celebBounce 1s ease infinite alternate;">🎉</div>
-    <div style="font-size:1.6rem;font-weight:800;color:#7c3aed;margin-bottom:8px;">Project Complete!</div>
-    <div id="celebration-proj-name" style="font-size:1rem;color:var(--text3);margin-bottom:6px;font-weight:600;"></div>
-    <div style="font-size:.85rem;color:var(--text4);margin-bottom:28px;">Every task is wrapped. Time to ship it. 🚀</div>
-    <div id="celebration-chars" style="font-size:2.8rem;letter-spacing:6px;margin-bottom:24px;animation:celebWiggle 1.5s ease infinite;">✨🏆✨</div>
-    <button class="btn btn-primary" style="padding:10px 32px;font-size:.95rem;" onclick="closeCelebration()">Hell yeah! 🎬</button>
+  <div id="celebration-backdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.6);opacity:0;transition:opacity .4s;pointer-events:all;" onclick="closeCelebration()"></div>
+  <div id="celebration-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%) scale(.7);opacity:0;transition:transform .5s cubic-bezier(.34,1.56,.64,1),opacity .4s;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px 36px;text-align:center;min-width:300px;max-width:400px;pointer-events:all;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#7c3aed,#a855f7,#ec4899);"></div>
+    <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#a855f7);display:flex;align-items:center;justify-content:center;margin:8px auto 16px;">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M5 14l7 7 11-11" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div style="font-size:1.4rem;font-weight:700;color:var(--text);margin-bottom:4px;">Project Complete!</div>
+    <div id="celebration-proj-name" style="font-size:.88rem;color:#7c3aed;font-weight:600;margin-bottom:20px;"></div>
+    <div id="celebration-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:22px;"></div>
+    <button class="btn btn-primary" style="padding:10px 28px;font-size:.88rem;width:100%;background:linear-gradient(135deg,#7c3aed,#a855f7);border:none;" onclick="closeCelebration()">That's a wrap! 🎬</button>
   </div>
 </div>
 </body>
