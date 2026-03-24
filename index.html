@@ -2234,8 +2234,8 @@ function renderGantt() {
   document.getElementById("gantt-label").textContent = labelStr;
 
   var inner = document.getElementById("gantt-inner");
-  var assetTasks = tasks.filter(function(t) { return t.due_date; });
-  var projShots = activeProject ? shots.filter(function(s) { return s.project_id === activeProject.id && (s.due_date || s.start_date); }) : [];
+  var assetTasks = tasks.filter(function(t) { return t.due_date && !{team:1,meetings:1,client:1,marketing:1}[t.category]; });
+  var projShots = activeProject ? shots.filter(function(s) { return s.project_id === activeProject.id; }) : [];
   var projSeqs  = activeProject ? sequences.filter(function(s) { return s.project_id === activeProject.id; }) : [];
 
   if (!assetTasks.length && !projShots.length) {
@@ -2392,6 +2392,14 @@ function renderGantt() {
   if (projShots.length) {
     var bySeq = {};
     projShots.forEach(function(sh) { var sid = sh.sequence_id || "__u__"; if (!bySeq[sid]) bySeq[sid] = []; bySeq[sid].push(sh); });
+    // Include any sequences referenced by shots even if not in projSeqs
+    var seqIds = projSeqs.map(function(s){return s.id;});
+    Object.keys(bySeq).forEach(function(sid){
+      if(sid!=="__u__" && seqIds.indexOf(sid)===-1){
+        var s=sequences.find(function(x){return x.id===sid;});
+        if(s) projSeqs.push(s);
+      }
+    });
     var seqOrder = projSeqs.filter(function(sq) { return bySeq[sq.id] && bySeq[sq.id].length; });
     if (bySeq["__u__"] && bySeq["__u__"].length) seqOrder.push({ id: "__u__", code: "", name: "Unassigned" });
     seqOrder.forEach(function(seq) {
