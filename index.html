@@ -199,7 +199,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .prog-wrap{padding:12px 16px;}
 .prog-lbl{display:flex;justify-content:space-between;font-size:.78rem;color:var(--text2);font-weight:600;}
 .pbar{height:5px;background:var(--border2);border-radius:99px;overflow:hidden;margin-top:7px;}
-.pfill{height:100%;border-radius:99px;background:linear-gradient(90deg,#7c3aed,#a78bfa);transition:width .4s;}
+.pfill{height:100%;background:linear-gradient(90deg,#7c3aed,#a855f7,#ec4899);border-radius:99px;transition:width .6s ease;}
 
 /* BADGES */
 .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:999px;font-size:.71rem;font-weight:700;}
@@ -576,6 +576,13 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
 @keyframes celebWiggle{0%,100%{transform:rotate(-8deg) scale(1);}50%{transform:rotate(8deg) scale(1.1);}}
 #celebration-modal.open #celebration-backdrop{opacity:1;}
 #celebration-modal.open #celebration-box{transform:translate(-50%,-50%) scale(1);opacity:1;}
+
+.stat-bar{height:3px;border-radius:2px;margin-top:8px;opacity:.7;}
+.stat-bar-purple{background:linear-gradient(90deg,#7c3aed,#a855f7);}
+.stat-bar-green{background:linear-gradient(90deg,#22c55e,#16a34a);}
+.stat-bar-blue{background:linear-gradient(90deg,#3b82f6,#7c3aed);}
+.stat-bar-red{background:linear-gradient(90deg,#f87171,#dc2626);}
+.stat-bar-pink{background:linear-gradient(90deg,#c084fc,#9333ea);}
 </style>
 </head>
 <body>
@@ -602,7 +609,7 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
     </div>
     <div class="auth-msg" id="auth-msg"></div>
     <div id="invite-banner" style="display:none;margin-top:16px;padding:12px 14px;border-radius:10px;background:var(--purple-dim,#2d1b69);border:1px solid var(--purple);text-align:center;">
-      <div style="font-size:.8rem;color:var(--text3);margin-bottom:4px;">&#127881; You've been invited to join a project</div>
+      <div style="font-size:.8rem;color:var(--text3);margin-bottom:4px;"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px"><path d="M7 1l1.5 3.5H12L9 6.5l1 3.5-3-2-3 2 1-3.5L2 4.5h3.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>You've been invited to join a project</div>
       <div id="invite-banner-code" style="font-size:.75rem;font-weight:700;color:var(--purple);letter-spacing:.5px;"></div>
       <div style="font-size:.75rem;color:var(--text3);margin-top:6px;">Sign in or create an account below to accept.</div>
     </div>
@@ -651,14 +658,14 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
       </header>
 
       <div class="nav-tabs" id="nav-tabs" style="display:none">
-        <div class="nav-tab active" onclick="showTab('schedule')">Schedule</div>
-        <div class="nav-tab" onclick="showTab('calendar')">Calendar</div>
-        <div class="nav-tab" onclick="showTab('gantt')">Gantt Chart</div>
-        <div class="nav-tab" id="nav-tab-admin" onclick="showTab('milestones')">&#128203; Admin</div>
+        <div class="nav-tab active" onclick="showTab('schedule')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><path d="M1 3h12M1 7h8M1 11h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Schedule</div>
+        <div class="nav-tab" onclick="showTab('calendar')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="2" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><line x1="4" y1="1" x2="4" y2="4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="1" y1="6" x2="13" y2="6" stroke="currentColor" stroke-width="1.2"/></svg>Calendar</div>
+        <div class="nav-tab" onclick="showTab('gantt')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="3" width="7" height="2" rx="1" fill="currentColor"/><rect x="1" y="3" width="3" height="2" rx="1" fill="currentColor" opacity=".35"/><rect x="3" y="7" width="8" height="2" rx="1" fill="currentColor"/><rect x="3" y="7" width="3" height="2" rx="1" fill="currentColor" opacity=".35"/><rect x="1" y="11" width="6" height="2" rx="1" fill="currentColor"/></svg>Gantt Chart</div>
+        <div class="nav-tab" id="nav-tab-admin" onclick="showTab('milestones')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Admin</div>
       </div>
 
       <div id="no-proj" class="no-project" style="display:flex">
-        <div style="font-size:2.5rem">&#128203;</div>
+        <div style="font-size:2.5rem;opacity:.3"><svg width="40" height="40" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="16" stroke="#7c3aed" stroke-width="2"/><path d="M20 12v9l5 4" stroke="#7c3aed" stroke-width="2" stroke-linecap="round"/></svg></div>
         <h3>No project selected</h3>
         <p>Create a project in the sidebar to get started.</p>
         <button class="btn btn-primary" onclick="openProjectModal()">+ New Project</button>
@@ -666,18 +673,18 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
 
       <div class="tab-content" id="tab-schedule" style="display:none">
         <div class="stats">
-          <div class="stat-card stat-clickable" id="sc-all" onclick="setSchedFilter('all')"><div class="sval c-blue" id="s-total">0</div><div class="slbl">Total Tasks</div></div>
-          <div class="stat-card stat-clickable" id="sc-done" onclick="setSchedFilter('done')"><div class="sval c-green" id="s-done">0</div><div class="slbl">Completed</div></div>
-          <div class="stat-card stat-clickable" id="sc-prog" onclick="setSchedFilter('inprogress')"><div class="sval c-yellow" id="s-prog">0</div><div class="slbl">In Progress</div></div>
-          <div class="stat-card stat-clickable" id="sc-late" onclick="setSchedFilter('overdue')"><div class="sval c-red" id="s-late">0</div><div class="slbl">Overdue</div></div>
-          <div class="stat-card stat-clickable" id="sc-revisions" onclick="setSchedFilter('revisions')"><div class="sval c-purple" id="s-revisions">0</div><div class="slbl">Revisions</div></div>
+          <div class="stat-card stat-clickable" id="sc-all" onclick="setSchedFilter('all')"><div class="sval c-blue" id="s-total">0</div><div class="slbl">Total Tasks</div><div class="stat-bar stat-bar-purple" style="width:100%"></div></div>
+          <div class="stat-card stat-clickable" id="sc-done" onclick="setSchedFilter('done')"><div class="sval c-green" id="s-done">0</div><div class="slbl">Completed</div><div class="stat-bar stat-bar-green" style="width:100%"></div></div>
+          <div class="stat-card stat-clickable" id="sc-prog" onclick="setSchedFilter('inprogress')"><div class="sval c-yellow" id="s-prog">0</div><div class="slbl">In Progress</div><div class="stat-bar stat-bar-blue" style="width:100%"></div></div>
+          <div class="stat-card stat-clickable" id="sc-late" onclick="setSchedFilter('overdue')"><div class="sval c-red" id="s-late">0</div><div class="slbl">Overdue</div><div class="stat-bar stat-bar-red" style="width:100%"></div></div>
+          <div class="stat-card stat-clickable" id="sc-revisions" onclick="setSchedFilter('revisions')"><div class="sval c-purple" id="s-revisions">0</div><div class="slbl">Revisions</div><div class="stat-bar stat-bar-pink" style="width:100%"></div></div>
         </div>
         <div class="stat-filter-bar" id="stat-filter-bar">Showing: <span class="stat-filter-label" id="stat-filter-label"></span> <button class="btn btn-ghost btn-sm" onclick="setSchedFilter('all')">&#x2715; Clear</button></div>
         <div class="schedule-body">
           <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
             <div class="sched-tabs">
               <button class="sched-tab active" onclick="setSchedView('all',this)">All Tasks</button>
-              <button class="sched-tab" onclick="setSchedView('assets',this)">&#127912; Assets</button>
+              <button class="sched-tab" onclick="setSchedView('assets',this)"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px"><path d="M2 10l2.5-2.5 2 2 4-4 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.2" opacity=".4"/></svg>Assets</button>
             </div>
             <button class="btn btn-primary btn-sm" onclick="openModal(null)">+ Add Task</button>
           </div>
@@ -740,26 +747,26 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
         <div class="admin-wrap">
           <div class="admin-section" id="admin-sec-projects">
             <div class="admin-sec-hdr" onclick="toggleAdminSection('projects')" style="cursor:pointer;">
-              <span style="font-size:1.1rem">&#128193;</span>
+              <span style="font-size:1.1rem"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="display:inline-block;vertical-align:middle"><rect x="1" y="3" width="13" height="10" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M1 7h13" stroke="currentColor" stroke-width="1.1" opacity=".4"/><path d="M5 3V1M10 3V1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span>
               <span class="admin-sec-title">Projects</span>
               <button class="btn btn-ghost btn-sm" onclick="promptProjectImport()">Import Archive</button>
             <span class="admin-collapse-arrow open" id="admin-arrow-projects">&#9660;</span></div>
             <div class="admin-list" id="admin-list-projects"></div>
           </div>
           <div class="admin-section" id="admin-sec-client">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('client')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128172;</span><span class="admin-sec-title">Client Feedback</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('client')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-client">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('client')" style="cursor:pointer;"><span style="font-size:1.1rem"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="display:inline-block;vertical-align:middle"><path d="M2 3h11v7H8l-3 3v-3H2z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M5 6.5h5M5 8.5h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".6"/></svg></span><span class="admin-sec-title">Client Feedback</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('client')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-client">&#9660;</span></div>
             <div class="admin-list" id="admin-list-client"></div>
           </div>
           <div class="admin-section" id="admin-sec-marketing">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('marketing')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128227;</span><span class="admin-sec-title">Marketing</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('marketing')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-marketing">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('marketing')" style="cursor:pointer;"><span style="font-size:1.1rem"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="display:inline-block;vertical-align:middle"><path d="M2 10V5l9-3v11L2 10z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M2 10l-1 3" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span><span class="admin-sec-title">Marketing</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('marketing')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-marketing">&#9660;</span></div>
             <div class="admin-list" id="admin-list-marketing"></div>
           </div>
           <div class="admin-section" id="admin-sec-meetings">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('meetings')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128197;</span><span class="admin-sec-title">Meetings</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('meetings')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-meetings">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('meetings')" style="cursor:pointer;"><span style="font-size:1.1rem"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="display:inline-block;vertical-align:middle"><circle cx="7.5" cy="7.5" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7.5 4.5v3.5l2.5 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span><span class="admin-sec-title">Meetings</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('meetings')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-meetings">&#9660;</span></div>
             <div class="admin-list" id="admin-list-meetings"></div>
           </div>
           <div class="admin-section" id="admin-sec-team">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('team')" style="cursor:pointer;"><span style="font-size:1.1rem">&#128101;</span><span class="admin-sec-title">Production Team</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('team')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-team">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('team')" style="cursor:pointer;"><span style="font-size:1.1rem"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="display:inline-block;vertical-align:middle"><circle cx="5.5" cy="5" r="2.2" stroke="currentColor" stroke-width="1.3"/><circle cx="10.5" cy="5" r="2.2" stroke="currentColor" stroke-width="1.3"/><path d="M1 13c0-2.5 2-4 4.5-4M7 13c0-2.5 1.5-4 5-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span><span class="admin-sec-title">Production Team</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('team')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-team">&#9660;</span></div>
             <div class="admin-list" id="admin-list-team"></div>
           </div>
         </div>
@@ -800,7 +807,7 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
         <div class="shot-body">
           <div class="shot-section">
             <div class="shot-section-hdr">
-              <h3>&#127916; Storyboard Notes</h3>
+              <h3><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="1" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 4.5h5M3 7h8M3 9.5h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".7"/></svg>Storyboard Notes</h3>
               <span style="font-size:.71rem;color:var(--text4)">Auto-saves on blur</span>
             </div>
             <div class="shot-section-body">
@@ -808,7 +815,7 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
             </div>
           </div>
           <div class="shot-section">
-            <div class="shot-section-hdr"><h3>&#128196; Shot Details</h3></div>
+            <div class="shot-section-hdr"><h3><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="1" width="9" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M10 4l3-1.5v9L10 10" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/><path d="M3 5h5M3 7.5h4M3 10h5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".6"/></svg>Shot Details</h3></div>
             <div class="shot-section-body">
               <div class="shot-info-grid">
                 <div class="sif"><label>Shot Code</label><input id="sp-code-edit" placeholder="e.g. SH010" onblur="saveShotField('code',this.value)"></div>
@@ -820,14 +827,14 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
           </div>
           <div class="shot-section">
             <div class="shot-section-hdr">
-              <h3>&#9997;&#65039; Shot Tasks</h3>
+              <h3><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="1" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3 5.5l2 2 4-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 9.5h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".5"/></svg>Shot Tasks</h3>
               <button class="btn btn-ghost btn-sm" onclick="openShotTaskModal()">+ Add Task</button>
             </div>
             <div id="shot-tasks-list"></div>
           </div>
           <div class="shot-section">
             <div class="shot-section-hdr">
-              <h3>&#127912; Asset Readiness</h3>
+              <h3><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><path d="M2 10l2.5-2.5 2 2 4-4 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.2" opacity=".35"/></svg>Asset Readiness</h3>
               <button class="btn btn-ghost btn-sm" onclick="openAssetLinkModal()">+ Link Asset</button>
             </div>
             <div id="shot-assets-list"></div>
@@ -844,8 +851,8 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
     <div class="form-row">
       <label class="flbl">Category</label>
       <div class="cat-pills">
-        <button class="cat-pill active" data-cat="general" onclick="selectCat('general',this)">&#128203; Milestone / Admin</button>
-        <button class="cat-pill" data-cat="asset" onclick="selectCat('asset',this)">&#127912; Asset Task</button>
+        <button class="cat-pill active" data-cat="general" onclick="selectCat('general',this)"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Milestone / Admin</button>
+        <button class="cat-pill" data-cat="asset" onclick="selectCat('asset',this)"><svg width="13" height="13" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:4px"><path d="M2 10l2.5-2.5 2 2 4-4 3 3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.2" opacity=".35"/></svg>Asset Task</button>
       </div>
     </div>
     <div id="asset-fields" style="display:none">
@@ -853,11 +860,11 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
         <div>
           <label class="flbl">Asset Type</label>
           <select id="f-asset-type" class="inp" onchange="updatePipelineStages()">
-            <option value="character">&#128100; Character</option>
-            <option value="prop">&#128218; Prop</option>
-            <option value="environment">&#127758; Environment</option>
-            <option value="vehicle">&#128663; Vehicle</option>
-            <option value="fx">&#10024; FX Element</option>
+            <option value="character">Character</option>
+            <option value="prop">Prop</option>
+            <option value="environment">Environment</option>
+            <option value="vehicle">Vehicle</option>
+            <option value="fx">FX Element</option>
           </select>
         </div>
         <div>
@@ -941,6 +948,34 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
     <div class="form-row-2" style="margin-top:8px">
       <div><label class="flbl">Start Date <span style="font-size:.7rem;color:var(--text4);font-weight:400">(optional)</span></label><input id="shf-start" type="date" class="inp"></div>
       <div><label class="flbl">Due Date <span style="font-size:.7rem;color:var(--text4);font-weight:400">(for Gantt)</span></label><input id="shf-due" type="date" class="inp"></div>
+    </div>
+    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+      <div><label class="flbl">Camera Proximity <span style="font-size:.7rem;color:var(--text4);font-weight:400">(optional)</span></label>
+        <select id="shf-proximity" class="inp">
+          <option value="">— Select —</option>
+          <option value="ELS">Extreme Long Shot (ELS)</option>
+          <option value="LS">Long Shot (LS)</option>
+          <option value="MLS">Medium Long Shot (MLS)</option>
+          <option value="MS">Medium Shot (MS)</option>
+          <option value="MCU">Medium Close-Up (MCU)</option>
+          <option value="CU">Close-Up (CU)</option>
+          <option value="ECU">Extreme Close-Up (ECU)</option>
+          <option value="Insert">Insert Shot</option>
+        </select>
+      </div>
+      <div><label class="flbl">Camera Angle <span style="font-size:.7rem;color:var(--text4);font-weight:400">(optional)</span></label>
+        <select id="shf-angle" class="inp">
+          <option value="">— Select —</option>
+          <option value="Birds Eye">Bird's Eye / Top Down</option>
+          <option value="High Angle">High Angle</option>
+          <option value="Eye Level">Eye Level</option>
+          <option value="Low Angle">Low Angle</option>
+          <option value="Worms Eye">Worm's Eye</option>
+          <option value="Dutch Tilt">Dutch Tilt / Canted</option>
+          <option value="OTS">Over the Shoulder (OTS)</option>
+          <option value="POV">Point of View (POV)</option>
+        </select>
+      </div>
     </div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeShotModal()">Cancel</button>
@@ -1096,7 +1131,7 @@ function dueClass(t){if(t.status==="done")return"d-ok";var d=daysUntil(t.due_dat
 function calChipCls(t){if(t.status==="done")return"ct-done";if(t.status!=="done"&&daysUntil(t.due_date)<0)return"ct-late";return{todo:"ct-todo",inprogress:"ct-inprogress",review:"ct-review"}[t.status]||"ct-todo";}
 function ganttBarCls(t){if(t.status==="done")return"gb-done";if(t.status!=="done"&&daysUntil(t.due_date)<0)return"gb-late";return{todo:"gb-todo",inprogress:"gb-inprogress",review:"gb-review"}[t.status]||"gb-todo";}
 function shotStatusColor(s){return{pending:"#64748b",inprogress:"#3b82f6",review:"#f59e0b",approved:"#10b981",final:"#7c3aed"}[s]||"#64748b";}
-function assetTypeIcon(t){return{character:"&#128100;",prop:"&#128218;",environment:"&#127758;",vehicle:"&#128663;",fx:"&#10024;"}[t]||"&#127912;";}
+
 function assetTypeLabel(t){return{character:"Character",prop:"Prop",environment:"Environment",vehicle:"Vehicle",fx:"FX Element"}[t]||t;}
 
 function showToast(m, type) {
@@ -1316,9 +1351,9 @@ window.deleteSeq = async function(id) {
   renderSidebar(); renderSchedule(); showToast("Deleted.");
 };
 
-window.openShotModal=function(seqId){currentSeqId=seqId;document.getElementById("shf-code").value="";if(document.getElementById("shf-start"))document.getElementById("shf-start").value="";if(document.getElementById("shf-due"))document.getElementById("shf-due").value="";document.getElementById("shf-desc").value="";document.getElementById("shot-modal").classList.add("open");};
+window.openShotModal=function(seqId){currentSeqId=seqId;document.getElementById("shf-code").value="";if(document.getElementById("shf-start"))document.getElementById("shf-start").value="";if(document.getElementById("shf-due"))document.getElementById("shf-due").value="";document.getElementById("shf-desc").value="";if(document.getElementById("shf-proximity"))document.getElementById("shf-proximity").value="";if(document.getElementById("shf-angle"))document.getElementById("shf-angle").value="";document.getElementById("shot-modal").classList.add("open");};
 window.closeShotModal=function(){document.getElementById("shot-modal").classList.remove("open");};
-window.saveShot=async function(){var code=document.getElementById("shf-code").value.trim().toUpperCase();if(!code){showToast("Please enter a shot code.", "error");return;}var seq=sequences.find(function(s){return s.id===currentSeqId;});var pid=seq?seq.project_id:activeProject.id;var payload={code:code,description:document.getElementById("shf-desc").value.trim(),sequence_id:currentSeqId,project_id:pid,user_id:currentUser.id,status:"pending",start_date:document.getElementById("shf-start")?document.getElementById("shf-start").value||null:null,due_date:document.getElementById("shf-due")?document.getElementById("shf-due").value||null:null};var r=await sb.from("shots").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}shots=shots.concat(r.data);closeShotModal();renderSidebar();renderSchedule();showToast("Shot added!");};
+window.saveShot=async function(){var code=document.getElementById("shf-code").value.trim().toUpperCase();if(!code){showToast("Please enter a shot code.", "error");return;}var seq=sequences.find(function(s){return s.id===currentSeqId;});var pid=seq?seq.project_id:activeProject.id;var payload={code:code,description:document.getElementById("shf-desc").value.trim(),sequence_id:currentSeqId,project_id:pid,user_id:currentUser.id,status:"pending",start_date:document.getElementById("shf-start")?document.getElementById("shf-start").value||null:null,due_date:document.getElementById("shf-due")?document.getElementById("shf-due").value||null:null,camera_proximity:document.getElementById("shf-proximity")?document.getElementById("shf-proximity").value||null:null,camera_angle:document.getElementById("shf-angle")?document.getElementById("shf-angle").value||null:null};var r=await sb.from("shots").insert(payload).select();if(r.error){showToast("Error: "+r.error.message, "error");return;}shots=shots.concat(r.data);closeShotModal();renderSidebar();renderSchedule();showToast("Shot added!");};
 window.deleteShot = async function(id) {
   if (!confirm("Delete this shot?")) return;
   if (activeShot && activeShot.id === id) backToProject();
@@ -1669,7 +1704,7 @@ function renderAssetSections(assetTasks){
   var secWrap=document.createElement("div");secWrap.className="asset-section";
   var _assetCollapsed=uiState.schedSectionCollapsed["assets"]===true;
   var secHdr=document.createElement("div");secHdr.className="asset-section-hdr";secHdr.style.cursor="pointer";
-  var h2=document.createElement("h2");h2.innerHTML="&#127912; Asset Pipeline";
+  var h2=document.createElement("h2");h2.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:inline-block;vertical-align:middle;margin-right:6px"><path d="M2 11l3-3 2 2 5-5 3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="1" y="1" width="14" height="14" rx="2" stroke="currentColor" stroke-width="1.3" opacity=".3"/></svg>Asset Pipeline';
   var addBtn=document.createElement("button");addBtn.className="btn btn-primary btn-sm";
   addBtn.textContent="+ New Asset";addBtn.onclick=function(e){e.stopPropagation();openModal(null,"asset");};
   var assetArrow=document.createElement("span");assetArrow.className="admin-collapse-arrow";assetArrow.innerHTML=_assetCollapsed?"&#9650;":"&#9660;";
@@ -1787,7 +1822,7 @@ function renderShotSection(){
   var wrap=document.createElement("div");wrap.className="asset-section";
   var _shotCollapsed=uiState.schedSectionCollapsed["shots"]===true;
   var sh2=document.createElement("div");sh2.className="asset-section-hdr";sh2.style.cursor="pointer";
-  var shTitle=document.createElement("h2");shTitle.innerHTML="&#127916; Shot Progression";
+  var shTitle=document.createElement("h2");shTitle.innerHTML='<svg width="16" height="16" viewBox="0 0 16 16" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="2" width="9" height="12" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M10 5.5l4.5-2v9L10 10.5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M4 7h4M4 9.5h2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity=".6"/></svg>Shot Progression';
   var addSeqBtn=document.createElement("button");addSeqBtn.className="btn btn-ghost btn-sm";addSeqBtn.textContent="+ Add Sequence";
   addSeqBtn.onclick=function(e){e.stopPropagation();openSeqModal(null,activeProject?activeProject.id:null);};
   var shotArrow=document.createElement("span");shotArrow.className="admin-collapse-arrow";shotArrow.innerHTML=_shotCollapsed?"&#9650;":"&#9660;";
@@ -1908,10 +1943,10 @@ function updateStats(){
   var inprog=allT.filter(isInProg).length;
   var late=allT.filter(isLate).length;
   var revs=allT.reduce(function(sum,t){return sum+(t.revision_count||0);},0);
-  document.getElementById("s-total").textContent=total;
-  document.getElementById("s-done").textContent=done;
-  document.getElementById("s-prog").textContent=inprog;
-  document.getElementById("s-late").textContent=late;
+  var _sc=document.getElementById("s-total");if(_sc){_sc.textContent=total;_sc.style.color="#7c3aed";}
+  var _sd=document.getElementById("s-done");if(_sd){_sd.textContent=done;_sd.style.color="#16a34a";}
+  var _sp=document.getElementById("s-prog");if(_sp){_sp.textContent=inprog;_sp.style.color="#2563eb";}
+  var _sl=document.getElementById("s-late");if(_sl){_sl.textContent=late;_sl.style.color="#dc2626";}
   if(document.getElementById("s-revisions")) document.getElementById("s-revisions").textContent=revs;
   var pct=total?Math.round(done/total*100):0;
   if(document.getElementById("prog-pct")) document.getElementById("prog-pct").textContent=pct+"%";
@@ -2265,7 +2300,7 @@ function renderGantt() {
   var taskRows = [];
   if (assetTasks.length) {
     var tCollapsed = ganttCollapsed.tasks;
-    var tHdr = mkSecHdr("Asset & Milestone Tasks", "&#127912;", tCollapsed, function() {
+    var tHdr = mkSecHdr("Asset & Milestone Tasks", "asset", tCollapsed, function() {
       ganttCollapsed.tasks = !ganttCollapsed.tasks;
       taskRows.forEach(function(rr) { rr.lr.style.display = ganttCollapsed.tasks ? "none" : ""; rr.row.style.display = ganttCollapsed.tasks ? "none" : ""; });
       tHdr.arrow.classList.toggle("open", !ganttCollapsed.tasks);
@@ -2316,7 +2351,7 @@ function renderGantt() {
       var seqShots = bySeq[seq.id] || []; if (!seqShots.length) return;
       var sCollapsed = ganttCollapsed.shots[seq.id] === true;
       var seqRows = [];
-      var sHdr = mkSecHdr(seq.code ? (seq.code + (seq.name ? " \u2014 " + seq.name : "")) : "Unassigned", "&#127916;", sCollapsed, function() {
+      var sHdr = mkSecHdr(seq.code ? (seq.code + (seq.name ? " \u2014 " + seq.name : "")) : "Unassigned", "shot", sCollapsed, function() {
         ganttCollapsed.shots[seq.id] = !ganttCollapsed.shots[seq.id];
         var nc = ganttCollapsed.shots[seq.id];
         seqRows.forEach(function(rr) { rr.lr.style.display = nc ? "none" : ""; rr.row.style.display = nc ? "none" : ""; });
@@ -3057,12 +3092,12 @@ window.filterCmd = function(q) {
   
   var projShots = shots.filter(function(s){ return s.project_id === activeProject.id && (!q || s.code.toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q)); });
   projShots.forEach(function(s){
-    html += '<div class="cmd-item" onclick="closeCmd(); openShot(\''+s.id+'\')"><span class="cmd-icon">&#127916;</span><div><div style="font-weight:700">'+s.code+'</div><div style="font-size:.7rem;color:var(--text4)">'+(s.description||'Shot')+'</div></div></div>';
+    html += '<div class="cmd-item" onclick="closeCmd(); openShot(\''+s.id+'\')"><span class="cmd-icon" style="opacity:.55;font-size:.8rem;">&#9654;</span><div><div style="font-weight:700">'+s.code+'</div><div style="font-size:.7rem;color:var(--text4)">'+(s.description||'Shot')+'</div></div></div>';
   });
   
   var projTasks = tasks.filter(function(t){ return t.project_id === activeProject.id && (!q || t.name.toLowerCase().includes(q) || (t.asset_name||'').toLowerCase().includes(q)); });
   projTasks.forEach(function(t){
-    html += '<div class="cmd-item" onclick="closeCmd(); editTask(\''+t.id+'\')"><span class="cmd-icon">&#127912;</span><div><div style="font-weight:700">'+t.name+'</div><div style="font-size:.7rem;color:var(--text4)">'+(t.asset_name||t.category)+'</div></div></div>';
+    html += '<div class="cmd-item" onclick="closeCmd(); editTask(\''+t.id+'\')"><span class="cmd-icon" style="opacity:.55;font-size:.8rem;">&#9711;</span><div><div style="font-weight:700">'+t.name+'</div><div style="font-size:.7rem;color:var(--text4)">'+(t.asset_name||t.category)+'</div></div></div>';
   });
 
   if(!html) html = '<div style="padding:14px;color:var(--text4)">No results found.</div>';
