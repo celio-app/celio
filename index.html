@@ -2831,7 +2831,7 @@ window.renderMilestones=function(){
         if(t.lead){var a=document.createElement("span");a.innerHTML='<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:3px"><circle cx="6" cy="4" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M1 11c0-2.5 2-4 5-4s5 1.5 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>'+t.lead;meta.appendChild(a);}
         if(t.due_date){var d=daysUntil(t.due_date);var dm=document.createElement("span");dm.style.color=t.status==="done"?"var(--text4)":d<0?"#ef4444":d<=3?"#f59e0b":"var(--text4)";dm.innerHTML='<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:3px"><rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1v2M8 1v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="1" y1="5" x2="11" y2="5" stroke="currentColor" stroke-width="1"/></svg>'+(d<0&&t.status!=="done"?Math.abs(d)+"d overdue":fmtDate(t.due_date));meta.appendChild(dm);}
       }
-      main.appendChild(title);main.appendChild(meta);
+      if(cat!=="team"){main.appendChild(title);main.appendChild(meta);}
       var priCls={high:"admin-pri-high",med:"admin-pri-med",low:"admin-pri-low"};
       var pri=document.createElement("span");pri.className="admin-pri "+(priCls[t.priority]||"admin-pri-low");pri.textContent={high:"High",med:"Med",low:"Low"}[t.priority]||"";
       if (cat === "team") pri.style.display = "none";
