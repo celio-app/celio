@@ -1973,7 +1973,29 @@ function updateStats(){
 }
 
 function renderHandoffs(){var h=tasks.filter(function(t){return t.handoff_to;});var el=document.getElementById("handoff-list");if(!h.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No handoffs configured.</div>';return;}var html="";h.forEach(function(t){var conf=t.status==="done";html+='<div class="hitem"><div class="hrow"><span class="chip">'+t.lead+'</span><span style="color:#7c3aed;margin:0 5px;font-weight:700">&#8594;</span><span class="chip" style="color:#3b82f6">'+t.handoff_to+'</span><span style="margin-left:auto" class="'+(conf?"conf":"pend")+'">'+(conf?"Done":"Pending")+'</span></div><div class="htask">'+t.name+"</div></div>";});el.innerHTML=html;}
-function renderAssetDeliverables(){var a=tasks.filter(function(t){return t.asset&&t.category==="general";});var el=document.getElementById("asset-list");if(!a.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No deliverables tracked.</div>';return;}var html="";a.forEach(function(t){var ready=t.status==="done",missing=t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;var cls=ready?"a-ready":missing?"a-late":"a-pend",lbl=ready?"Ready":missing?"Late":"Pending";var nm=t.asset_url?'<a href="'+t.asset_url+'" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-weight:600">'+t.asset+' &#8599;</a>':'<span style="font-weight:600">'+t.asset+"</span>";html+='<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+t.lead+" &middot; "+fmtDate(t.due_date)+'</div></div><div class="'+cls+'">'+lbl+"</div></div>";});el.innerHTML=html;}
+function renderAssetDeliverables(){
+  // Show asset pipeline tasks that are done, plus general tasks with asset field
+  var done=tasks.filter(function(t){
+    return t.category==="asset" && t.status==="done";
+  });
+  var general=tasks.filter(function(t){return t.asset&&t.category==="general";});
+  var all=done.concat(general);
+  var el=document.getElementById("asset-list");
+  if(!all.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No completed assets yet.</div>';return;}
+  var html="";
+  done.forEach(function(t){
+    var nm=t.asset_url?'<a href="'+t.asset_url+'" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-weight:600">'+(t.name)+' &#8599;</a>':'<span style="font-weight:600">'+(t.name)+'</span>';
+    var typeLbl=assetTypeLabel(t.asset_type)||t.asset_type||'Asset';
+    html+='<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+typeLbl+(t.lead?' &middot; '+t.lead:'')+'</div></div><div class="a-ready">Ready</div></div>';
+  });
+  general.forEach(function(t){
+    var ready=t.status==="done",missing=t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;
+    var cls=ready?"a-ready":missing?"a-late":"a-pend",lbl=ready?"Ready":missing?"Late":"Pending";
+    var nm=t.asset_url?'<a href="'+t.asset_url+'" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-weight:600">'+t.asset+' &#8599;</a>':'<span style="font-weight:600">'+t.asset+'</span>';
+    html+='<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+t.lead+' &middot; '+fmtDate(t.due_date)+'</div></div><div class="'+cls+'">'+lbl+'</div></div>';
+  });
+  el.innerHTML=html;
+}
 
 function mkStatusCell(t){var cls={todo:"b-todo",inprogress:"b-inprogress",review:"b-review",done:"b-done"};var lbl={todo:"To Do",inprogress:"In Progress",review:"In Review",done:"Done"};var opts=[{v:"todo",l:"To Do",d:"dot-todo"},{v:"inprogress",l:"In Progress",d:"dot-inprogress"},{v:"review",l:"In Review",d:"dot-review"},{v:"done",l:"Done",d:"dot-done"}];var oh=opts.map(function(o){return'<div class="status-option" onclick="setStatus(\''+t.id+'\',\''+o.v+'\',event)"><span class="dot '+o.d+'"></span>'+o.l+"</div>";}).join("");return'<td><div class="status-cell"><button class="status-badge-btn" onclick="toggleStatusDrop(\''+t.id+'\',event)"><span class="badge '+(cls[t.status]||"b-todo")+'">'+(lbl[t.status]||t.status)+'</span><span class="arr">&#9660;</span></button><div class="status-dropdown" id="sdrop-'+t.id+'">'+oh+"</div></div></td>";}
 window.toggleStatusDrop=function(id,e){e.stopPropagation();var d=document.getElementById("sdrop-"+id);document.querySelectorAll(".status-dropdown.open").forEach(function(x){if(x!==d)x.classList.remove("open");});d.classList.toggle("open");};
