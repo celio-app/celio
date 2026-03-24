@@ -256,8 +256,8 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .gantt-label-row{height:46px;border-bottom:1px solid var(--border2);display:flex;align-items:center;padding:0 12px;font-size:.78rem;font-weight:600;}
 .gantt-label-row:last-child{border-bottom:none;}
 .gantt-label-sub{font-size:.68rem;color:var(--text3);font-weight:400;}
-.gantt-chart{flex:1;overflow-x:auto;}
-.gantt-dates{height:38px;display:flex;border-bottom:1px solid var(--border);background:var(--bg3);}
+.gantt-chart{flex:1;overflow-x:auto;overflow-y:visible;}
+.gantt-dates{height:38px;display:flex;border-bottom:1px solid var(--border);background:var(--bg3);position:sticky;top:0;z-index:10;}
 .gantt-date-cell{flex-shrink:0;width:34px;display:flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--text4);border-right:1px solid var(--border2);font-weight:600;}
 .gantt-date-cell.today-col{background:rgba(124,58,237,.15);color:#7c3aed;font-weight:800;}
 .gantt-rows{position:relative;}
@@ -583,6 +583,11 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
 .stat-bar-blue{background:linear-gradient(90deg,#3b82f6,#7c3aed);}
 .stat-bar-red{background:linear-gradient(90deg,#f87171,#dc2626);}
 .stat-bar-pink{background:linear-gradient(90deg,#c084fc,#9333ea);}
+
+.gantt-cell.weekend-col{background:rgba(0,0,0,.04);}
+[data-theme="dark"] .gantt-cell.weekend-col{background:rgba(255,255,255,.03);}
+.gantt-date-cell.weekend-col{background:rgba(0,0,0,.04);}
+[data-theme="dark"] .gantt-date-cell.weekend-col{background:rgba(255,255,255,.03);}
 </style>
 </head>
 <body>
@@ -2251,8 +2256,10 @@ function renderGantt() {
     var row = document.createElement("div"); row.className = "gantt-row";
     dates.forEach(function(d) {
       var cell = document.createElement("div");
+      var _rd=d.getDay();
       var cls = "gantt-cell";
       if (d.getTime() === today.getTime()) cls += " today-col";
+      else if (_rd===0||_rd===6) cls += " weekend-col";
       // Light month-boundary shading without hard breaks
       if (d.getDate() === 1) cls += " month-start-col";
       cell.className = cls;
@@ -2322,7 +2329,8 @@ function renderGantt() {
   var datesRow = document.createElement("div"); datesRow.className = "gantt-dates";
   dates.forEach(function(d) {
     var dc = document.createElement("div");
-    var cls = "gantt-date-cell" + (d.getTime() === today.getTime() ? " today-col" : "");
+    var _day=d.getDay();
+    var cls = "gantt-date-cell" + (d.getTime() === today.getTime() ? " today-col" : (_day===0||_day===6 ? " weekend-col" : ""));
     if (d.getDate() === 1) cls += " month-start-col";
     dc.className = cls;
     // Show month name on 1st, date number otherwise
