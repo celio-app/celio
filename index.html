@@ -1288,7 +1288,7 @@ async function loadAll(){
   if(activeProject){
     var membership=projectMembers.find(function(m){return m.project_id===activeProject.id&&m.user_id===currentUser.id;});
     userRole=membership?membership.role:null;
-    _celebLastPct=-1;setHeaderProject(activeProject);showTab("schedule");loadTasks();
+    setHeaderProject(activeProject);showTab("schedule");loadTasks();
   }
   else showNoProject();
 }
@@ -1974,7 +1974,7 @@ function updateStats(){
   var pct=total?Math.round(done/total*100):0;
   if(document.getElementById("prog-pct")) document.getElementById("prog-pct").textContent=pct+"%";
   if(document.getElementById("prog-fill")) document.getElementById("prog-fill").style.width=pct+"%";
-  if(total>0 && pct===100 && _celebLastPct!==100 && typeof activeProject!=="undefined" && activeProject){triggerCelebration();}
+  if(total>0 && pct===100 && _celebLastPct!==100 && typeof activeProject!=="undefined" && activeProject){setTimeout(triggerCelebration,200);}
   _celebLastPct=pct;
 }
 
@@ -3265,7 +3265,7 @@ window.addEventListener("DOMContentLoaded", function () {
 
 })();
 
-var _celebLastPct = -1;
+var _celebLastPct = 0;
 window.triggerCelebration = function() {
   var modal = document.getElementById("celebration-modal");
   if (!modal) { console.warn("celebration-modal not found"); return; }
