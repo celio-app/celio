@@ -1288,7 +1288,7 @@ async function loadAll(){
   if(activeProject){
     var membership=projectMembers.find(function(m){return m.project_id===activeProject.id&&m.user_id===currentUser.id;});
     userRole=membership?membership.role:null;
-    setHeaderProject(activeProject);showTab("schedule");loadTasks();
+    _celebLastPct=0;_celebReady=false;setHeaderProject(activeProject);showTab("schedule");loadTasks();
   }
   else showNoProject();
 }
@@ -1974,8 +1974,9 @@ function updateStats(){
   var pct=total?Math.round(done/total*100):0;
   if(document.getElementById("prog-pct")) document.getElementById("prog-pct").textContent=pct+"%";
   if(document.getElementById("prog-fill")) document.getElementById("prog-fill").style.width=pct+"%";
-  if(total>0 && pct===100 && _celebLastPct!==100 && typeof activeProject!=="undefined" && activeProject){setTimeout(triggerCelebration,200);}
+  if(_celebReady && total>0 && pct===100 && _celebLastPct!==100 && typeof activeProject!=="undefined" && activeProject){setTimeout(triggerCelebration,200);}
   _celebLastPct=pct;
+  _celebReady=true;
 }
 
 function renderHandoffs(){var h=tasks.filter(function(t){return t.handoff_to;});var el=document.getElementById("handoff-list");if(!h.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No handoffs configured.</div>';return;}var html="";h.forEach(function(t){var conf=t.status==="done";html+='<div class="hitem"><div class="hrow"><span class="chip">'+t.lead+'</span><span style="color:#7c3aed;margin:0 5px;font-weight:700">&#8594;</span><span class="chip" style="color:#3b82f6">'+t.handoff_to+'</span><span style="margin-left:auto" class="'+(conf?"conf":"pend")+'">'+(conf?"Done":"Pending")+'</span></div><div class="htask">'+t.name+"</div></div>";});el.innerHTML=html;}
@@ -3266,6 +3267,7 @@ window.addEventListener("DOMContentLoaded", function () {
 })();
 
 var _celebLastPct = 0;
+var _celebReady = false;
 window.triggerCelebration = function() {
   var modal = document.getElementById("celebration-modal");
   if (!modal) { console.warn("celebration-modal not found"); return; }
