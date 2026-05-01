@@ -1231,15 +1231,17 @@ window.doSignUp = async function() {
 
 window.doSignOut=async function(){await sb.auth.signOut();};
 
-sb.auth.onAuthStateChange(function(event,session){
+sb.auth.onAuthStateChange(async function(event,session){
   if(session){
     currentUser=session.user;
+    var freshUser=await sb.auth.getUser();
+    if(freshUser&&freshUser.data&&freshUser.data.user)currentUser=freshUser.data.user;
     loadUIState();
     document.getElementById("auth-screen").style.display="none";
     document.getElementById("app-screen").style.display="block";
     document.getElementById("sb-email").textContent=currentUser.email;
     document.getElementById("sb-avatar").textContent=currentUser.email.charAt(0).toUpperCase();
-    var t=(currentUser&&currentUser.user_metadata&&currentUser.user_metadata.theme)||localStorage.getItem("celio-theme")||"dark";
+    var t=(currentUser.user_metadata&&currentUser.user_metadata.theme)||localStorage.getItem("celio-theme")||"dark";
     document.documentElement.setAttribute("data-theme",t);localStorage.setItem("celio-theme",t);
     var btn=document.getElementById("theme-btn");
     if(btn)btn.innerHTML=t==="dark"?"&#9728; <span>Light</span>":"&#127769; <span>Dark</span>";
