@@ -1176,7 +1176,7 @@ window.toggleSidebar = function() {
 };
 window.openMobileSidebar=function(){document.getElementById("sidebar").classList.add("mobile-open");document.getElementById("sb-overlay").classList.add("show");};
 window.closeMobileSidebar=function(){document.getElementById("sidebar").classList.remove("mobile-open");document.getElementById("sb-overlay").classList.remove("show");};
-window.toggleTheme=function(){var html=document.documentElement,isDark=html.getAttribute("data-theme")==="dark";html.setAttribute("data-theme",isDark?"light":"dark");document.getElementById("theme-btn").innerHTML=isDark?"&#127769; <span>Dark</span>":"&#9728; <span>Light</span>";localStorage.setItem("celio-theme",isDark?"light":"dark");};
+window.toggleTheme=function(){var html=document.documentElement,isDark=html.getAttribute("data-theme")==="dark";var newTheme=isDark?"light":"dark";html.setAttribute("data-theme",newTheme);document.getElementById("theme-btn").innerHTML=isDark?"&#127769; <span>Dark</span>":"&#9728; <span>Light</span>";localStorage.setItem("celio-theme",newTheme);if(currentUser)sb.from("user_preferences").upsert({user_id:currentUser.id,theme:newTheme},{onConflict:"user_id"});};
 (function(){
   var t=localStorage.getItem("celio-theme")||"dark";
   document.documentElement.setAttribute("data-theme",t);
@@ -1231,7 +1231,7 @@ window.doSignUp = async function() {
 
 window.doSignOut=async function(){await sb.auth.signOut();};
 
-sb.auth.onAuthStateChange(function(event,session){
+sb.auth.onAuthStateChange(async function(event,session){
   if(session){
     currentUser=session.user;
     loadUIState();
@@ -1239,7 +1239,9 @@ sb.auth.onAuthStateChange(function(event,session){
     document.getElementById("app-screen").style.display="block";
     document.getElementById("sb-email").textContent=currentUser.email;
     document.getElementById("sb-avatar").textContent=currentUser.email.charAt(0).toUpperCase();
-    var t=localStorage.getItem("celio-theme")||"dark";
+    var prefRow=await sb.from("user_preferences").select("theme").eq("user_id",currentUser.id).single();
+    var t=(prefRow&&prefRow.data&&prefRow.data.theme)||localStorage.getItem("celio-theme")||"dark";
+    document.documentElement.setAttribute("data-theme",t);localStorage.setItem("celio-theme",t);
     var btn=document.getElementById("theme-btn");
     if(btn)btn.innerHTML=t==="dark"?"&#9728; <span>Light</span>":"&#127769; <span>Dark</span>";
     if (!isMobile()) {
