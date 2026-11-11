@@ -3414,61 +3414,20 @@ window.submitInviteCode = async function(codeOverride) {
 
   try {
     showToast("Verifying invite...");
-    var inviteRes = await sb.from("project_invites")
-      .select("*")
-      .eq("invite_code", code)
-      .gt("expires_at", new Date().toISOString())
-      .maybeSingle();
-
-    if (inviteRes.error) throw new Error("Invite check failed: " + inviteRes.error.message);
-    if (!inviteRes.data) {
-      clearPendingInviteCode();
-      throw new Error("This invite code is invalid or has expired.");
+    var rr = await sb.rpc("workprint_redeem_invite", { p_code: code, p_role: null });
+    if (rr.error) throw new Error("Could not join: " + rr.error.message);
+    var out = rr.data || {};
+    if (out.error === "invalid") { clearPendingInviteCode(); throw new Error("This invite code is invalid or has expired."); }
+    if (out.error === "full") { clearPendingInviteCode(); throw new Error("This invite link has reached its limit. Ask the owner for a new one."); }
+    if (out.needs_role) {
+      var role = prompt("What is your role on this project? (e.g. Animator, Treasurer, Social Media Lead)");
+      if (!role || !role.trim()) { clearPendingInviteCode(); showToast("Join cancelled."); return; }
+      rr = await sb.rpc("workprint_redeem_invite", { p_code: code, p_role: role.trim() });
+      if (rr.error) throw new Error("Could not join: " + rr.error.message);
+      out = rr.data || {};
+      if (out.error) { clearPendingInviteCode(); throw new Error("This invite code is invalid or has expired."); }
     }
-
-    var invite = inviteRes.data;
-
-    var existingRes = await sb.from("project_members")
-      .select("*")
-      .eq("project_id", invite.project_id)
-      .eq("user_id", currentUser.id)
-      .maybeSingle();
-
-    if (existingRes.error && existingRes.error.code !== "PGRST116") {
-      throw new Error("Membership check failed: " + existingRes.error.message);
-    }
-
-    if (!existingRes.data) {
-      var role = invite.role;
-      if (!role) {
-        role = prompt("What is your role on this project? (e.g. Animator, Treasurer, Social Media Lead)");
-        if (!role) {
-          clearPendingInviteCode();
-          showToast("Join cancelled.");
-          return;
-        }
-        if (role.trim().toLowerCase() === "owner") role = "Member";
-      }
-
-      var insertRes = await sb.from("project_members")
-        .insert({
-          project_id: invite.project_id,
-          user_id: currentUser.id,
-          role: role,
-          invited_by: invite.created_by,
-          accepted_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (insertRes.error) {
-        throw new Error("Could not join: " + insertRes.error.message);
-      }
-
-      await sb.from("project_invites")
-        .update({ uses: (invite.uses || 0) + 1 })
-        .eq("id", invite.id);
-    }
+    var invite = { project_id: out.project_id };
 
     clearPendingInviteCode();
     closeInviteCodeModal();
@@ -3921,3 +3880,4 @@ window.closeCelebration = function() {
 </div>
 </body>
 </html>
+
