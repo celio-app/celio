@@ -3420,6 +3420,487 @@ window.submitInviteCode = async function(codeOverride) {
     if (out.error === "invalid") { clearPendingInviteCode(); throw new Error("This invite code is invalid or has expired."); }
     if (out.error === "full") { clearPendingInviteCode(); throw new Error("This invite link has reached its limit. Ask the owner for a new one."); }
     if (out.needs_role) {
+      var role = prompt("What is your role on this project? (e.g. Animator, Treasurer, Social Media Lead)\n\nNot sure? Leave it blank. You'll join as Member and the project owner can set your role later.", "");
+      if (role === null) { clearPendingInviteCode(); showToast("Join cancelled."); return; }
+      role = role.trim() || "Member";
+      rr = await sb.rpc("workprint_redeem_invite", { p_code: code, p_role: role });
+      if (rr.error) throw new Error("Could not join: " + rr.error.message);
+      out = rr.data || {};
+      if (out.error) { clearPendingInviteCode(); throw new Error("This invite code is invalid or has expired."); }
+    }
+    var invite = { project_id: out.project_id };
+
+    clearPendingInviteCode();
+    closeInviteCodeModal();
+    await loadAll();
+
+    var invitedProject = projects.find(function(p) {
+      return p.id === invite.project_id;
+    });
+
+    if (!invitedProject) {
+      throw new Error("Joined successfully, but project data is hidden. Check RLS policies.");
+    }
+
+    activeProject = invitedProject;
+    uiState.projExpanded[invitedProject.id] = true;
+    saveUIState();
+    localStorage.setItem("celio-proj-" + currentUser.id, invitedProject.id);
+
+    setHeaderProject(invitedProject);
+    renderSidebar();
+    showShotPage(false);
+    showTab("schedule");
+    await loadTasks();
+
+    showToast("Successfully joined project!");
+  } catch (err) {
+    console.error("Invite Flow Error:", err);
+    showToast(err.message, "error");
+  }
+};
+
+window.openInviteModal = async function(projectId) {
+  var project = projects.find(function(p){ return p.id === projectId; });
+  if(!project) return;
+
+  var teamRoles = tasks.filter(function(t){
+    return t.category === "team" && t.project_id === projectId;
+  });
+
+  var roleSet = {};
+  teamRoles.forEach(function(t){
+    if(t.lead) roleSet[t.lead] = true;
+  });
+
+  var roleSelect = document.getElementById("invite-role");
+  roleSelect.innerHTML = '<option value="">Let them choose their role</option>';
+  Object.keys(roleSet).sort().forEach(function(role){
+    roleSelect.innerHTML += '<option value="' + escH(role) + '">' + escH(role) + '</option>';
+  });
+
+  var r = await sb.from("project_invites")
+    .select("*")
+    .eq("project_id", projectId)
+    .eq("created_by", currentUser.id)
+    .gt("expires_at", new Date().toISOString())
+    .limit(1);
+
+  var inviteCode;
+  var existingInvite = r.data && r.data[0];
+  if (existingInvite && existingInvite.role && roleSet[existingInvite.role]) roleSelect.value = existingInvite.role;
+  var selectedRole = roleSelect.value || null;
+
+  if(existingInvite) {
+    inviteCode = existingInvite.invite_code;
+  } else {
+    inviteCode = Math.random().toString(36).substring(2, 10);
+    var expires = new Date();
+    expires.setDate(expires.getDate() + 90);
+
+    var insertRes = await sb.from("project_invites").insert({
+      project_id: projectId,
+      invite_code: inviteCode,
+      role: selectedRole,
+      created_by: currentUser.id,
+      expires_at: expires.toISOString(),
+      max_uses: 999,
+      uses: 0
+    });
+
+    if (insertRes.error) {
+      showToast("Could not create invite: " + insertRes.error.message, "error");
+      return;
+    }
+  }
+
+  var inviteUrl = window.location.origin + window.location.pathname + "?invite=" + inviteCode;
+  document.getElementById("invite-link").value = inviteUrl;
+
+  roleSelect.onchange = async function() {
+    var newRole = this.value || null;
+    await sb.from("project_invites")
+      .update({ role: newRole })
+      .eq("project_id", projectId)
+      .eq("invite_code", inviteCode);
+  };
+
+  renderProjectMembers(projectId);
+  document.getElementById("invite-modal").classList.add("open");
+};
+
+window.closeInviteModal = function() {
+  document.getElementById("invite-modal").classList.remove("open");
+};
+
+window.copyInviteLink = function() {
+  var input = document.getElementById("invite-link");
+  input.select();
+  input.setSelectionRange(0, 99999);
+  document.execCommand("copy");
+  showToast("Invite link copied to clipboard!");
+};
+
+window.renderProjectMembers = async function(projectId) {
+  var r = await sb.from("project_members").select("*").eq("project_id", projectId);
+  var members = r.data || [];
+  var container = document.getElementById("members-list-container");
+  if(!members.length) {
+    container.innerHTML = '<div style="padding:14px;color:var(--text4);font-size:.82rem;text-align:center">No members yet — share the invite link to add team members</div>';
+    return;
+  }
+  // keep the global list in step so emails/roles are available elsewhere
+  projectMembers = projectMembers.filter(function(m){ return m.project_id !== projectId; }).concat(members);
+  await loadProfiles(members.map(function(m){ return m.user_id; }));
+  var proj = projects.find(function(p){ return p.id === projectId; }) || {};
+  var iAmOwner = proj.user_id === currentUser.id || members.some(function(m){ return m.user_id === currentUser.id && m.role === "Owner"; });
+  var roleSet = { Owner:1, Member:1 };
+  tasks.forEach(function(t){ if(t.category === "team" && t.project_id === projectId && t.lead) roleSet[t.lead] = 1; });
+  members.forEach(function(m){ if(m.role) roleSet[m.role] = 1; });
+  var roles = Object.keys(roleSet).sort(function(a,b){ return a === "Owner" ? -1 : b === "Owner" ? 1 : a.localeCompare(b); });
+
+  container.innerHTML = "";
+  members.sort(function(a,b){ return (a.user_id === proj.user_id ? -1 : 0) - (b.user_id === proj.user_id ? -1 : 0); });
+  members.forEach(function(m){
+    var isCreator = m.user_id === proj.user_id, isMe = m.user_id === currentUser.id;
+    var em = isMe ? currentUser.email : profileEmail(m.user_id);
+    var div = document.createElement("div");
+    div.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border2);gap:10px;flex-wrap:wrap";
+    var info = document.createElement("div"); info.style.cssText = "flex:1;min-width:160px";
+    var top = '<div style="font-size:.84rem;font-weight:600">' + escH(em || "Team Member") + (isMe ? ' <span style="font-size:.68rem;color:var(--text4);font-weight:400">(you)</span>' : '') + '</div>';
+    var sub = '<div style="font-size:.72rem;color:var(--text4);margin-top:2px;display:flex;gap:10px;flex-wrap:wrap">' + (isCreator ? 'Project creator' : escH(m.role || "Member"));
+    if (em && !isMe) sub += ' <a href="' + mailLink([em]) + '" style="color:#3b82f6;text-decoration:none">&#9993; Email</a><a href="' + teamsLink([em]) + '" target="_blank" rel="noopener" style="color:var(--purple);text-decoration:none">Teams chat</a>';
+    sub += '</div>';
+    info.innerHTML = top + sub;
+    div.appendChild(info);
+
+    if (iAmOwner && !isCreator) {
+      var sel = document.createElement("select"); sel.className = "inp"; sel.style.cssText = "width:auto;padding:4px 8px;font-size:.74rem";
+      roles.forEach(function(ro){ var o = document.createElement("option"); o.value = ro; o.textContent = ro === "Owner" ? "Owner (co-owner)" : ro; if (ro === m.role) o.selected = true; sel.appendChild(o); });
+      sel.onchange = async function(){
+        var nv = this.value, prev = m.role;
+        if (nv === "Owner" && !confirm("Make this person a co-owner? They'll get the Admin tab and can manage the team and invites.")) { this.value = prev; return; }
+        var res = await sb.rpc("celio_set_member_role", { pid: projectId, member: m.user_id, new_role: nv });
+        if (res.error) { showToast("Couldn't change role: " + res.error.message, "error"); this.value = prev; return; }
+        m.role = nv; showToast("Role updated"); renderProjectMembers(projectId);
+      };
+      div.appendChild(sel);
+      var removeBtn = document.createElement("button");
+      removeBtn.className = "btn btn-sm btn-del"; removeBtn.style.fontSize = ".68rem"; removeBtn.textContent = "Remove";
+      removeBtn.onclick = async function(){
+        if(!confirm("Remove this person from the project?")) return;
+        if(!dbOk(await sb.from("project_members").delete().eq("id", m.id))) return;
+        renderProjectMembers(projectId); showToast("Member removed");
+      };
+      div.appendChild(removeBtn);
+    }
+    container.appendChild(div);
+  });
+};
+
+window.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-bg.open').forEach(function(m){ m.classList.remove('open'); });
+    var smn = document.getElementById('scheme-menu'); if (smn) smn.classList.remove('open');
+    var co = document.getElementById('confirm-overlay');
+    if (co && co.style.display === 'flex') closeConfirm();
+    var cm = document.getElementById('celebration-modal');
+    if (cm && cm.classList.contains('open')) closeCelebration();
+    return;
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault();
+    if(currentUser) openCmd();
+  }
+});
+window.openCmd = function() {
+  document.getElementById('cmd-palette').classList.add('open');
+  document.getElementById('cmd-input').value = '';
+  filterCmd('');
+  setTimeout(function(){ document.getElementById('cmd-input').focus(); }, 50);
+};
+window.closeCmd = function() {
+  document.getElementById('cmd-palette').classList.remove('open');
+};
+window.filterCmd = function(q) {
+  q = q.toLowerCase().trim();
+  var list = document.getElementById('cmd-list');
+  var html = '';
+  if (!activeProject) { list.innerHTML = '<div style="padding:14px;color:var(--text4)">Select a project first.</div>'; return; }
+  
+  var projShots = shots.filter(function(s){ return s.project_id === activeProject.id && (!q || s.code.toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q)); });
+  projShots.forEach(function(s){
+    html += '<div class="cmd-item" onclick="closeCmd(); openShot(\''+s.id+'\')"><span class="cmd-icon" style="opacity:.55;font-size:.8rem;">&#9654;</span><div><div style="font-weight:700">'+escH(s.code)+'</div><div style="font-size:.7rem;color:var(--text4)">'+escH(s.description||'Shot')+'</div></div></div>';
+  });
+  
+  var projTasks = tasks.filter(function(t){ return t.project_id === activeProject.id && (!q || t.name.toLowerCase().includes(q) || (t.asset_name||'').toLowerCase().includes(q)); });
+  projTasks.forEach(function(t){
+    html += '<div class="cmd-item" onclick="closeCmd(); editTask(\''+t.id+'\')"><span class="cmd-icon" style="opacity:.55;font-size:.8rem;">&#9711;</span><div><div style="font-weight:700">'+escH(t.name)+'</div><div style="font-size:.7rem;color:var(--text4)">'+escH(t.asset_name||t.category)+'</div></div></div>';
+  });
+
+  if(!html) html = '<div style="padding:14px;color:var(--text4)">No results found.</div>';
+  list.innerHTML = html;
+};
+
+// --- MISSING UI TOGGLE FUNCTIONS ---
+
+window.showConfirm = function(title,msg,okLabel,cb){
+  document.getElementById("confirm-title").textContent=title;
+  document.getElementById("confirm-msg").textContent=msg;
+  document.getElementById("confirm-ok-btn").textContent=okLabel||"Delete";
+  window._confirmCb=cb;
+  document.getElementById("confirm-overlay").style.display="flex";
+};
+
+window.closeConfirm = function(){
+  document.getElementById("confirm-overlay").style.display="none";
+  window._confirmCb=null;
+};
+
+window.confirmOk = function(){
+  document.getElementById("confirm-overlay").style.display="none";
+  if(window._confirmCb) window._confirmCb();
+  window._confirmCb=null;
+};
+
+window.showInviteCodeInput = function() {
+  var msgEl = document.getElementById("invite-code-msg");
+  if (msgEl) { msgEl.textContent = ""; msgEl.className = "auth-msg"; }
+  document.getElementById("invite-code-modal").classList.add("open");
+};
+
+window.closeInviteCodeModal = function() {
+  var msgEl = document.getElementById("invite-code-msg");
+  if (msgEl) { msgEl.textContent = ""; msgEl.className = "auth-msg"; }
+  document.getElementById("invite-code-modal").classList.remove("open");
+};
+// -----------------------------------
+
+window.addEventListener("DOMContentLoaded", function () {
+  [
+    "modal",
+    "proj-modal",
+    "seq-modal",
+    "shot-modal",
+    "shot-task-modal",
+    "asset-link-modal",
+    "admin-modal",
+    "invite-code-modal",
+    "invite-modal",
+    "cmd-palette"
+  ].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+
+    var closeFnMap = {
+      "modal": closeModal,
+      "proj-modal": closeProjModal,
+      "seq-modal": closeSeqModal,
+      "shot-modal": closeShotModal,
+      "shot-task-modal": closeShotTaskModal,
+      "asset-link-modal": closeAssetLinkModal,
+      "admin-modal": closeAdminModal,
+      "invite-code-modal": closeInviteCodeModal,
+      "invite-modal": closeInviteModal,
+      "cmd-palette": closeCmd
+    };
+
+    el.addEventListener("click", function (e) {
+      if (e.target !== el) return;
+      var closeFn = closeFnMap[id];
+      if (closeFn) closeFn();
+    });
+  });
+
+  var overlay = document.getElementById("confirm-overlay");
+  if (overlay) {
+    overlay.addEventListener("click", function (e) {
+      if (e.target === this) closeConfirm();
+    });
+  }
+});
+
+var _celebLastPct = 0;
+window.triggerCelebration = function() {
+  var modal = document.getElementById("celebration-modal");
+  if (!modal) { console.warn("celebration-modal not found"); return; }
+  var nameEl = document.getElementById("celebration-proj-name");
+  if (nameEl && typeof activeProject !== "undefined" && activeProject) nameEl.textContent = activeProject.name;
+  // Populate stats
+  var statsEl = document.getElementById("celebration-stats");
+  if (statsEl) {
+    function isDone(t){return t.status==="done"||t.status==="approved"||t.status==="final";}
+    var _adminCats2={team:1,meetings:1,client:1,marketing:1};
+    var allT=(tasks||[]).filter(function(t){return !_adminCats2[t.category];}).concat(shotTasks||[]);
+    var total=allT.length, done=allT.filter(isDone).length;
+    statsEl.innerHTML=
+      '<div class="celeb-stat"><div class="celeb-stat-n">'+total+'</div><div class="celeb-stat-l">Tasks</div></div>'+
+      '<div class="celeb-stat"><div class="celeb-stat-n">'+done+'</div><div class="celeb-stat-l">Done</div></div>'+
+      '<div class="celeb-stat"><div class="celeb-stat-n">100%</div><div class="celeb-stat-l">Progress</div></div>';
+  }
+  var cb=document.getElementById("celeb-btn");if(cb)cb.textContent=isOrg()?"Mission accomplished! 🎉":"That's a wrap! 🎬";
+  modal.style.display = "block";
+  modal.style.opacity = "1";
+  var box = document.getElementById("celebration-box");
+  var backdrop = document.getElementById("celebration-backdrop");
+  if (backdrop) { backdrop.style.opacity = "1"; }
+  if (box) { box.style.transform = "translate(-50%,-50%) scale(1)"; box.style.opacity = "1"; }
+  modal.classList.add("open");
+};
+window.closeCelebration = function() {
+  var modal = document.getElementById("celebration-modal");
+  modal.classList.remove("open");
+  setTimeout(function(){ modal.style.display = "none"; }, 500);
+};
+})();
+</script>
+
+    <div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;">
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 28px 22px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5);">
+        <div style="font-size:2rem;text-align:center;margin-bottom:10px;">&#9888;&#65039;</div>
+        <h3 id="confirm-title" style="font-size:1rem;font-weight:800;margin:0 0 8px;text-align:center;"></h3>
+        <p id="confirm-msg" style="font-size:.82rem;color:var(--text3);text-align:center;margin:0 0 22px;line-height:1.5;"></p>
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <button class="btn btn-ghost" onclick="closeConfirm()" style="min-width:100px;">Cancel</button>
+          <button id="confirm-ok-btn" class="btn btn-del" onclick="confirmOk()" style="min-width:120px;padding:8px 16px;font-size:.82rem;font-weight:700;">Delete</button>
+        </div>
+      </div>
+    </div>
+    
+    <div class="modal-bg" id="admin-modal">
+      <div class="modal" style="width:92%;max-width:460px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 id="admin-modal-title" style="margin:0">New Entry</h3>
+          <button onclick="closeAdminModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">&#215;</button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div><label class="flbl" id="lbl-af-title">Title</label><input id="af-title" class="inp"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div><label class="flbl" id="lbl-af-assignee">Assignee</label><input id="af-assignee" class="inp"></div>
+            <div id="wrap-af-date"><label class="flbl">Date</label><input id="af-date" class="inp" type="date"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="wrap-af-status">
+            <div><label class="flbl">Priority</label>
+              <select id="af-priority" class="inp"><option value="low">Low</option><option value="med" selected>Medium</option><option value="high">High</option></select>
+            </div>
+            <div><label class="flbl">Status</label>
+              <select id="af-status" class="inp"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Done</option></select>
+            </div>
+          </div>
+          <div id="wrap-af-email" style="display:none">
+            <label class="flbl">Link to someone who has joined (optional)</label>
+            <select id="af-member-pick" class="inp" onchange="pickAdminMember(this.value)"></select>
+            <label class="flbl" style="margin-top:10px">Email (optional)</label>
+            <input id="af-email" class="inp" type="email" placeholder="name@example.com">
+          </div>
+          <div><label class="flbl">Notes</label><textarea id="af-notes" class="inp" rows="2" style="resize:vertical"></textarea></div>
+        </div>
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+          <button class="btn btn-ghost" onclick="closeAdminModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="saveAdminEntry()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="invite-code-modal">
+      <div class="modal" style="width:92%;max-width:420px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 style="margin:0">Enter Invite Code</h3>
+          <button onclick="closeInviteCodeModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">×</button>
+        </div>
+        <div style="margin-bottom:16px">
+          <input id="invite-code-input" class="inp" placeholder="e.g. abc123xyz" style="text-align:center;font-size:1.1rem;letter-spacing:2px">
+        </div>
+        <div id="invite-code-msg" class="auth-msg" style="margin-bottom:16px;"></div>
+        <div style="display:flex;justify-content:flex-end;gap:10px">
+          <button class="btn btn-ghost" onclick="closeInviteCodeModal()">Cancel</button>
+          <button class="btn btn-primary" onclick="submitInviteCode()">Join Project</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-bg" id="invite-modal">
+      <div class="modal" style="width:92%;max-width:540px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+          <h3 style="margin:0">Invite Team Members</h3>
+          <button onclick="closeInviteModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">×</button>
+        </div>
+        
+        <div style="margin-bottom:20px">
+          <label class="flbl">Pre-select Role (Optional)</label>
+          <select id="invite-role" class="inp">
+            <option value="">Let them choose their role</option>
+          </select>
+          <div style="font-size:.72rem;color:var(--text4);margin-top:4px">If you select a role, it will be pre-filled when they join</div>
+        </div>
+        
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:16px">
+          <div style="font-size:.75rem;color:var(--text4);margin-bottom:6px;font-weight:700">SHARE THIS LINK:</div>
+          <div style="display:flex;gap:8px">
+            <input id="invite-link" class="inp" readonly style="flex:1;font-size:.78rem;font-family:monospace">
+            <button class="btn btn-primary btn-sm" onclick="copyInviteLink()">📋 Copy</button>
+          </div>
+        </div>
+        
+        <div id="invite-members-section">
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px">
+            <button class="btn btn-ghost btn-sm" onclick="emailTeam()">&#9993; Email everyone</button>
+            <button class="btn btn-ghost btn-sm" onclick="teamsTeam()">Teams chat</button>
+          </div>
+          <h4 style="font-size:.88rem;margin-bottom:10px;font-weight:700">Current Members</h4>
+          <div id="members-list-container"></div>
+        </div>
+        
+        <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
+          <button class="btn btn-ghost" onclick="closeInviteModal()">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <input
+      type="file"
+      id="import-project-file"
+      accept=".json,application/json"
+      style="display:none"
+      onchange="handleProjectImport(event)"
+    >
+
+<!-- ═══ CELEBRATION MODAL ═══ -->
+<div id="celebration-modal" style="display:none;position:fixed;inset:0;z-index:9999;pointer-events:none;">
+  <div id="celebration-backdrop" style="position:absolute;inset:0;background:rgba(0,0,0,0.6);opacity:0;transition:opacity .4s;pointer-events:all;" onclick="closeCelebration()"></div>
+  <div id="celebration-box" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-60%) scale(.7);opacity:0;transition:transform .5s cubic-bezier(.34,1.56,.64,1),opacity .4s;background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:32px 36px;text-align:center;min-width:300px;max-width:400px;pointer-events:all;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--purple),var(--purple2),#ec4899);"></div>
+    <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--purple),var(--purple2));display:flex;align-items:center;justify-content:center;margin:8px auto 16px;">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M5 14l7 7 11-11" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div style="font-size:1.4rem;font-weight:700;color:var(--text);margin-bottom:4px;">Project Complete!</div>
+    <div id="celebration-proj-name" style="font-size:.88rem;color:var(--purple);font-weight:600;margin-bottom:20px;"></div>
+    <div id="celebration-stats" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:22px;"></div>
+    <button class="btn btn-primary" style="padding:10px 28px;font-size:.88rem;width:100%;background:linear-gradient(135deg,var(--purple),var(--purple2));border:none;" onclick="closeCelebration()" id="celeb-btn">That's a wrap! 🎬</button>
+  </div>
+</div>
+</body>
+</html>
+
+  localStorage.setItem("celio-pending-invite", code);
+
+  if (!currentUser) { 
+    var msgEl2 = document.getElementById("invite-code-msg");
+    if (msgEl2) {
+      msgEl2.textContent = "Code saved! Please close this, sign in or create an account, and your invite will process.";
+      msgEl2.className = "auth-msg success";
+    }
+    return; 
+  }
+
+  try {
+    showToast("Verifying invite...");
+    var rr = await sb.rpc("workprint_redeem_invite", { p_code: code, p_role: null });
+    if (rr.error) throw new Error("Could not join: " + rr.error.message);
+    var out = rr.data || {};
+    if (out.error === "invalid") { clearPendingInviteCode(); throw new Error("This invite code is invalid or has expired."); }
+    if (out.error === "full") { clearPendingInviteCode(); throw new Error("This invite link has reached its limit. Ask the owner for a new one."); }
+    if (out.needs_role) {
       var role = prompt("What is your role on this project? (e.g. Animator, Treasurer, Social Media Lead)");
       if (!role || !role.trim()) { clearPendingInviteCode(); showToast("Join cancelled."); return; }
       rr = await sb.rpc("workprint_redeem_invite", { p_code: code, p_role: role.trim() });
