@@ -3103,7 +3103,7 @@ window.deleteProject=async function(id){
   var p=projects.find(function(x){return x.id===id;});if(!p)return;
   
   if (p.user_id !== currentUser.id) {
-    showToast("Only the project owner can delete this.", "error");
+    showToast("Only the project creator can delete this project.", "error");
     return;
   }
 
