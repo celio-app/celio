@@ -607,6 +607,13 @@ body.is-project-owner .admin-owner-only{display:inline-flex;}
       <div class="form-row"><label>Email</label><input id="li-email" type="email" placeholder="you@example.com"></div>
       <div class="form-row"><label>Password</label><input id="li-pass" type="password" placeholder="password"></div>
       <button class="btn-auth" onclick="doSignIn()">Sign In</button>
+      <button type="button" class="btn-ghost" style="width:100%;margin-top:8px;padding:6px;font-size:.78rem;color:var(--text3);background:none;border:none;cursor:pointer" onclick="doForgotPassword()">Forgot password?</button>
+    </div>
+    <div id="recovery-form" style="display:none">
+      <div style="font-size:.85rem;font-weight:700;margin-bottom:10px;text-align:center">Set a new password</div>
+      <div class="form-row"><label>New password</label><input id="rp-pass" type="password" placeholder="Min 6 characters"></div>
+      <div class="form-row"><label>Confirm password</label><input id="rp-pass2" type="password" placeholder="Repeat password"></div>
+      <button class="btn-auth" onclick="doUpdatePassword()">Save New Password</button>
     </div>
     <div id="signup-form" style="display:none">
       <div class="form-row"><label>Email</label><input id="su-email" type="email" placeholder="you@example.com"></div>
@@ -1129,6 +1136,9 @@ var PIPELINE_STAGES={
 var SHOT_TASK_TYPES=["Layout","Animation","CFX","FX","Lighting","Rendering","Compositing","Custom..."];
 var DEPT_MAP={Layout:"Art",Animation:"Animation",CFX:"CFX",FX:"FX",Lighting:"Lighting",Rendering:"Render",Compositing:"Comp"};
 
+function escH(v){return String(v==null?"":v).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");}
+function safeUrl(u){u=String(u||"").trim();return /^https?:\/\//i.test(u)?escH(u):"#";}
+function dbOk(r){if(r&&r.error){showToast("Error: "+r.error.message,"error");return false;}return true;}
 function isMobile(){return window.innerWidth<=580;}
 function daysUntil(d){var dt=new Date(d+"T00:00:00");dt.setHours(0,0,0,0);return Math.round((dt-today)/86400000);}
 function fmtDate(d){if(!d)return"--";return new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric"});}
@@ -1211,9 +1221,6 @@ window.doSignIn=async function(){
   setMsg("Signing in...","");
   var r=await sb.auth.signInWithPassword({email:e,password:p});
   if(r.error){setMsg(r.error.message,"error");return;}
-  // Redeem pending invite automatically
-  var _inv = getPendingInviteCode();
-  if (_inv) { setTimeout(function(){ redeemInviteCode(_inv); }, 800); }
 };
 
 window.doSignUp = async function() {
@@ -1231,38 +1238,95 @@ window.doSignUp = async function() {
 
 window.doSignOut=async function(){await sb.auth.signOut();};
 
-sb.auth.onAuthStateChange(function(event,session){
-  if(session){
-    currentUser=session.user;
-    loadUIState();
-    document.getElementById("auth-screen").style.display="none";
-    document.getElementById("app-screen").style.display="block";
-    document.getElementById("sb-email").textContent=currentUser.email;
-    document.getElementById("sb-avatar").textContent=currentUser.email.charAt(0).toUpperCase();
-    var t=localStorage.getItem("celio-theme")||"dark";
-    var btn=document.getElementById("theme-btn");
-    if(btn)btn.innerHTML=t==="dark"?"&#9728; <span>Light</span>":"&#127769; <span>Dark</span>";
-    if (!isMobile()) {
-      var sb = document.getElementById("sidebar");
-      if (window.innerWidth > 860 && localStorage.getItem("celio-sb-col") === "1") sb.classList.add("collapsed");
-      else if (window.innerWidth <= 860 && localStorage.getItem("celio-sb-exp") === "1") sb.classList.add("expanded");
-    }
-    calYear=today.getFullYear();calMonth=today.getMonth();
-    ganttStart=new Date(today.getFullYear(),today.getMonth(),1);
-    
-    var inviteCode = getPendingInviteCode();
-    if (inviteCode) {
-      loadAll().then(function () {
-        submitInviteCode(inviteCode);
-      });
-    } else {
-      loadAll();
-    }
-  } else {
-    currentUser=null;
-    document.getElementById("auth-screen").style.display="flex";
-    document.getElementById("app-screen").style.display="none";
+var _bootedUserId=null;
+var _recoveryMode=/type=recovery/.test(window.location.hash);
+
+window.doForgotPassword=async function(){
+  var e=document.getElementById("li-email").value.trim();
+  if(!e){setMsg("Enter your email above, then click Forgot password.","error");return;}
+  setMsg("Sending reset link...","");
+  var r=await sb.auth.resetPasswordForEmail(e,{redirectTo:window.location.origin+window.location.pathname});
+  if(r.error){setMsg(r.error.message,"error");return;}
+  setMsg("Check your email for a password reset link.","success");
+};
+
+function showRecoveryForm(){
+  document.getElementById("app-screen").style.display="none";
+  document.getElementById("auth-screen").style.display="flex";
+  document.querySelector(".auth-tabs").style.display="none";
+  document.getElementById("login-form").style.display="none";
+  document.getElementById("signup-form").style.display="none";
+  document.getElementById("recovery-form").style.display="block";
+  setMsg("","");
+}
+
+window.doUpdatePassword=async function(){
+  var p=document.getElementById("rp-pass").value,p2=document.getElementById("rp-pass2").value;
+  if(!p||p.length<6){setMsg("Password must be at least 6 characters.","error");return;}
+  if(p!==p2){setMsg("Passwords don't match.","error");return;}
+  setMsg("Saving...","");
+  var r=await sb.auth.updateUser({password:p});
+  if(r.error){setMsg(r.error.message,"error");return;}
+  _recoveryMode=false;
+  document.getElementById("recovery-form").style.display="none";
+  document.querySelector(".auth-tabs").style.display="";
+  switchTab(0);
+  history.replaceState({},"",window.location.pathname+window.location.search);
+  showToast("Password updated!");
+  var sess=await sb.auth.getSession();
+  if(sess.data&&sess.data.session)bootApp(sess.data.session);
+};
+
+function resetAppState(){
+  currentUser=null;_bootedUserId=null;
+  tasks=[];projects=[];sequences=[];shots=[];shotTasks=[];activeShotTasks=[];projectMembers=[];
+  activeProject=null;activeShot=null;userRole=null;
+  var sp=document.getElementById("shot-page");if(sp)sp.classList.remove("active");
+  document.getElementById("proj-list").innerHTML="";
+  document.querySelectorAll(".tab-content").forEach(function(el){el.style.display="none";el.classList.remove("active");});
+  showNoProject();
+}
+
+function bootApp(session){
+  currentUser=session.user;
+  _bootedUserId=session.user.id;
+  loadUIState();
+  document.getElementById("auth-screen").style.display="none";
+  document.getElementById("app-screen").style.display="block";
+  document.getElementById("sb-email").textContent=currentUser.email;
+  document.getElementById("sb-avatar").textContent=currentUser.email.charAt(0).toUpperCase();
+  var t=localStorage.getItem("celio-theme")||"dark";
+  var btn=document.getElementById("theme-btn");
+  if(btn)btn.innerHTML=t==="dark"?"&#9728; <span>Light</span>":"&#127769; <span>Dark</span>";
+  if (!isMobile()) {
+    var sbEl = document.getElementById("sidebar");
+    if (window.innerWidth > 860 && localStorage.getItem("celio-sb-col") === "1") sbEl.classList.add("collapsed");
+    else if (window.innerWidth <= 860 && localStorage.getItem("celio-sb-exp") === "1") sbEl.classList.add("expanded");
   }
+  calYear=today.getFullYear();calMonth=today.getMonth();
+  ganttStart=-7;
+  var inviteCode = getPendingInviteCode();
+  if (inviteCode) {
+    loadAll().then(function () { submitInviteCode(inviteCode); });
+  } else {
+    loadAll();
+  }
+}
+
+sb.auth.onAuthStateChange(function(event,session){
+  // Defer so Supabase calls don't run inside the auth callback (can stall)
+  setTimeout(function(){
+    if(event==="PASSWORD_RECOVERY"){_recoveryMode=true;}
+    if(session){
+      if(_recoveryMode){currentUser=session.user;showRecoveryForm();return;}
+      if(_bootedUserId===session.user.id){currentUser=session.user;return;} // token refresh etc.
+      bootApp(session);
+    } else {
+      resetAppState();
+      document.getElementById("auth-screen").style.display="flex";
+      document.getElementById("app-screen").style.display="none";
+    }
+  },0);
 });
 
 async function loadAll(){
@@ -1302,7 +1366,7 @@ function renderSidebar(){
     var isExpanded=!!uiState.projExpanded[p.id];
     var projSeqs=sequences.filter(function(s){return s.project_id===p.id;});
     html += '<div class="proj-row' + (isActive ? ' active' : '') + '">';
-    html+='<div class="proj-row-main" onclick="selectProject(\''+p.id+'\')"><span class="proj-dot" style="background:'+p.color+'"></span><span class="proj-row-name">'+p.name+'</span></div>';
+    html+='<div class="proj-row-main" onclick="selectProject(\''+p.id+'\')"><span class="proj-dot" style="background:'+p.color+'"></span><span class="proj-row-name">'+escH(p.name)+'</span></div>';
     html+='<span class="proj-chevron'+(isExpanded?" open":"")+'" onclick="toggleProjExpand(\''+p.id+'\',event)">&#9658;</span></div>';
     if(isExpanded){
       html+='<div class="proj-tree">';
@@ -1312,13 +1376,13 @@ function renderSidebar(){
         var seqShots=shots.filter(function(s){return s.sequence_id===seq.id;});
         html+='<div class="seq-row" onclick="toggleSeq(\''+p.id+'\',\''+seq.id+'\')">';
         html+='<span class="seq-arrow'+(isSeqOpen?" open":"")+'">&#9658;</span>';
-        html+='<span class="seq-code">'+seq.code+'</span>';
-        if(seq.name)html+='<span class="seq-name-lbl">'+seq.name+'</span>';
+        html+='<span class="seq-code">'+escH(seq.code)+'</span>';
+        if(seq.name)html+='<span class="seq-name-lbl">'+escH(seq.name)+'</span>';
         html+='<span class="seq-btns"><button class="tree-btn" onclick="openSeqModal(\''+seq.id+'\',\''+p.id+'\');event.stopPropagation()">&#9998;</button><button class="tree-btn" onclick="deleteSeq(\''+seq.id+'\');event.stopPropagation()">&#215;</button></span></div>';
         if(isSeqOpen){
           seqShots.forEach(function(sh){
             var isActiveShot=activeShot&&activeShot.id===sh.id;
-            html+='<div class="shot-row'+(isActiveShot?" active":"")+'" onclick="openShot(\''+sh.id+'\')"><span class="shot-sdot" style="background:'+shotStatusColor(sh.status)+'"></span><span class="shot-code-lbl">'+sh.code+'</span>'+(sh.description?'<span class="shot-desc-lbl">'+sh.description+'</span>':'')+'<button class="shot-del-btn" onclick="deleteShot(\''+sh.id+'\');event.stopPropagation()">&#215;</button></div>';
+            html+='<div class="shot-row'+(isActiveShot?" active":"")+'" onclick="openShot(\''+sh.id+'\')"><span class="shot-sdot" style="background:'+shotStatusColor(sh.status)+'"></span><span class="shot-code-lbl">'+escH(sh.code)+'</span>'+(sh.description?'<span class="shot-desc-lbl">'+escH(sh.description)+'</span>':'')+'<button class="shot-del-btn" onclick="deleteShot(\''+sh.id+'\');event.stopPropagation()">&#215;</button></div>';
           });
           html+='<button class="add-shot-row" onclick="openShotModal(\''+seq.id+'\');event.stopPropagation()">+ Add Shot</button>';
         }
@@ -1343,7 +1407,7 @@ window.selectProject=function(id){
   if(isMobile())closeMobileSidebar();
 };
 function setHeaderProject(p){
-  document.getElementById("hdr-bc").innerHTML='<div class="proj-badge"><span class="dot" style="background:'+p.color+'"></span><span>'+p.name+'</span></div>';
+  document.getElementById("hdr-bc").innerHTML='<div class="proj-badge"><span class="dot" style="background:'+p.color+'"></span><span>'+escH(p.name)+'</span></div>';
   document.getElementById("hdr-actions").innerHTML='<button class="btn btn-primary" onclick="openModal(null)">+ Add Task</button>';
   document.getElementById("no-proj").style.display="none";
   document.getElementById("nav-tabs").style.display="";
@@ -1365,8 +1429,8 @@ window.deleteSeq = async function(id) {
     await sb.from("shot_tasks").delete().in("shot_id", shotIds);
     shotTasks = shotTasks.filter(function(t) { return shotIds.indexOf(t.shot_id) === -1; });
   }
-  await sb.from("shots").delete().eq("sequence_id", id);
-  await sb.from("sequences").delete().eq("id", id);
+  if(!dbOk(await sb.from("shots").delete().eq("sequence_id", id)))return;
+  if(!dbOk(await sb.from("sequences").delete().eq("id", id)))return;
   sequences = sequences.filter(function(s) { return s.id !== id; });
   shots = shots.filter(function(s) { return s.sequence_id !== id; });
   renderSidebar(); renderSchedule(); showToast("Deleted.");
@@ -1380,7 +1444,7 @@ window.deleteShot = async function(id) {
   if (activeShot && activeShot.id === id) backToProject();
   await sb.from("shot_tasks").delete().eq("shot_id", id);
   shotTasks = shotTasks.filter(function(t) { return t.shot_id !== id; });
-  await sb.from("shots").delete().eq("id", id);
+  if(!dbOk(await sb.from("shots").delete().eq("id", id)))return;
   shots = shots.filter(function(s) { return s.id !== id; });
   renderSidebar(); renderSchedule(); showToast("Deleted.");
 };
@@ -1392,7 +1456,7 @@ window.openShot=async function(id){
   var seq=sequences.find(function(x){return x.id===sh.sequence_id;});
   var proj=projects.find(function(x){return x.id===sh.project_id;})||activeProject;
   if(!activeProject||activeProject.id!==sh.project_id){activeProject=proj; uiState.projExpanded[proj.id]=true; saveUIState(); localStorage.setItem("celio-proj-"+currentUser.id,proj.id);}
-  document.getElementById("hdr-bc").innerHTML='<div class="breadcrumb"><span class="bc-proj" onclick="backToProject()">'+proj.name+'</span><span class="bc-sep">/</span><span class="bc-seq">'+(seq?seq.code:"")+'</span><span class="bc-sep">/</span><span class="bc-shot">'+sh.code+'</span></div>';
+  document.getElementById("hdr-bc").innerHTML='<div class="breadcrumb"><span class="bc-proj" onclick="backToProject()">'+escH(proj.name)+'</span><span class="bc-sep">/</span><span class="bc-seq">'+escH(seq?seq.code:"")+'</span><span class="bc-sep">/</span><span class="bc-shot">'+escH(sh.code)+'</span></div>';
   document.getElementById("hdr-actions").innerHTML='<button class="btn btn-ghost btn-sm" onclick="backToProject()">&#8592; Back</button>';
   document.getElementById("sp-code").textContent=sh.code;
   document.getElementById("sp-seq-label").textContent=seq?seq.code+(seq.name?" \u2014 "+seq.name:""):"";
@@ -1427,7 +1491,7 @@ window.saveShotField=async function(field,value){
   if(!activeShot)return;
   var payload={};payload[field]=value||null;
   if(field==="frame_count")payload[field]=value?parseInt(value):null;
-  await sb.from("shots").update(payload).eq("id",activeShot.id);
+  if(!dbOk(await sb.from("shots").update(payload).eq("id",activeShot.id)))return;
   activeShot[field]=payload[field];
   var idx=shots.findIndex(function(s){return s.id===activeShot.id;});
   if(idx>=0)shots[idx][field]=payload[field];
@@ -1451,10 +1515,10 @@ function renderShotTasks(){
   activeShotTasks.forEach(function(st){
     var vNum = st.version || 1;
     html+='<div class="shot-task-row">';
-    html+='<div style="flex:1;min-width:0"><div class="st-type">'+st.task_type+' <span class="version-badge">v'+vNum+'</span></div>';
-    if(st.department)html+='<div class="st-dept">'+st.department+'</div></div>';
+    html+='<div style="flex:1;min-width:0"><div class="st-type">'+escH(st.task_type)+' <span class="version-badge">v'+vNum+'</span></div>';
+    if(st.department)html+='<div class="st-dept">'+escH(st.department)+'</div></div>';
     else html+='</div>';
-    if(st.assignee)html+='<span class="chip" style="font-size:.7rem; margin-right:8px">'+st.assignee+'</span>';
+    if(st.assignee)html+='<span class="chip" style="font-size:.7rem; margin-right:8px">'+escH(st.assignee)+'</span>';
     if(st.due_date)html+='<span style="font-size:.72rem;color:var(--text3); margin-right:8px">'+fmtDate(st.due_date)+'</span>';
     
     var selHtml = '<select class="shot-status-sel" style="padding:2px 6px; font-size:.7rem; margin-right:8px; border-radius:4px" onchange="updateShotTaskStatus(\''+st.id+'\', this.value)">';
@@ -1482,19 +1546,19 @@ window.updateShotTaskStatus = async function(id, newStatus) {
   var newVer = st.version || 1;
   if (isRevision) newVer++;
   
+  if(!dbOk(await sb.from("shot_tasks").update({status: newStatus, version: newVer}).eq("id", id))){ renderShotTasks(); return; }
   st.status = newStatus;
   st.version = newVer;
 
   var globalSt = shotTasks.find(function(x) { return x.id === id; });
   if(globalSt) { globalSt.status = newStatus; globalSt.version = newVer; }
 
-  await sb.from("shot_tasks").update({status: newStatus, version: newVer}).eq("id", id);
   renderShotTasks();
   showToast("Status updated!");
 };
 
 window.deleteShotTask=async function(id){
-  await sb.from("shot_tasks").delete().eq("id",id);
+  if(!dbOk(await sb.from("shot_tasks").delete().eq("id",id)))return;
   activeShotTasks=activeShotTasks.filter(function(s){return s.id!==id;});
   shotTasks=shotTasks.filter(function(s){return s.id!==id;});
   renderShotTasks();
@@ -1569,9 +1633,9 @@ function renderShotAssets(assetTasks){
     var dotColor=allReady?"#10b981":anyLate?"#ef4444":inprog>0?"#3b82f6":"#64748b";
     html+='<div class="shot-asset-item">';
     html+='<span class="asset-ready-dot" style="background:'+dotColor+'"></span>';
-    html+='<div class="asset-info"><div class="asset-info-name">'+g.name+'</div><div class="asset-info-type">'+assetTypeLabel(g.type)+'</div>';
+    html+='<div class="asset-info"><div class="asset-info-name">'+escH(g.name)+'</div><div class="asset-info-type">'+assetTypeLabel(g.type)+'</div>';
     html+='<div class="asset-pipeline-mini">';
-    g.tasks.forEach(function(t){var cls=t.status==="done"?"pmb-done":t.status==="inprogress"||t.status==="review"?"pmb-prog":"pmb-pend";html+='<span class="pipeline-mini-badge '+cls+'">'+(t.pipeline_stage||t.name)+'</span>';});
+    g.tasks.forEach(function(t){var cls=t.status==="done"?"pmb-done":t.status==="inprogress"||t.status==="review"?"pmb-prog":"pmb-pend";html+='<span class="pipeline-mini-badge '+cls+'">'+escH(t.pipeline_stage||t.name)+'</span>';});
     html+='</div></div>';
     html+='<span style="font-size:.72rem;font-weight:700;color:'+(allReady?"#10b981":anyLate?"#ef4444":"#f59e0b")+'">'+done+'/'+total+' done</span>';
     html+='</div>';
@@ -1606,14 +1670,14 @@ window.closeAssetLinkModal=function(){document.getElementById("asset-link-modal"
 function renderAssetSearchList(q,groups,sel){
   var keys=Object.keys(groups).filter(function(k){return !q||groups[k].name.toLowerCase().indexOf(q.toLowerCase())>=0;});
   if(!keys.length){document.getElementById("asset-search-list").innerHTML='<div style="padding:14px;text-align:center;color:var(--text4);font-size:.8rem">No assets found. Add asset tasks in the Schedule tab first.</div>';return;}
-  var html=keys.map(function(k){var g=groups[k];var isSel=assetLinkSelection.indexOf(k)>=0;return'<div class="asset-search-item'+(isSel?" selected":"")+'" onclick="toggleAssetLink(\''+k.replace(/'/g,"\\'")+'\')" data-key="'+k.replace(/"/g,"&quot;")+'"><div><div class="asi-name">'+g.name+'</div><div class="asi-type">'+assetTypeLabel(g.type)+'</div></div>'+(isSel?'<span class="asi-check">&#10003;</span>':'')+'</div>';}).join("");
+  var html=keys.map(function(k){var g=groups[k];var isSel=assetLinkSelection.indexOf(k)>=0;return'<div class="asset-search-item'+(isSel?" selected":"")+'" onclick="toggleAssetLink(\''+k.replace(/'/g,"\\'")+'\')" data-key="'+k.replace(/"/g,"&quot;")+'"><div><div class="asi-name">'+escH(g.name)+'</div><div class="asi-type">'+assetTypeLabel(g.type)+'</div></div>'+(isSel?'<span class="asi-check">&#10003;</span>':'')+'</div>';}).join("");
   document.getElementById("asset-search-list").innerHTML=html;
 }
 window.filterAssetSearch=function(q){renderAssetSearchList(q,window._assetGroups||{},assetLinkSelection);};
 window.toggleAssetLink=function(key){var idx=assetLinkSelection.indexOf(key);if(idx>=0)assetLinkSelection.splice(idx,1);else assetLinkSelection.push(key);renderAssetSearchList(document.getElementById("asset-search-inp").value,window._assetGroups||{},assetLinkSelection);};
 window.saveAssetLinks=async function(){
   var val=assetLinkSelection.join(",");
-  await sb.from("shots").update({linked_assets:val}).eq("id",activeShot.id);
+  if(!dbOk(await sb.from("shots").update({linked_assets:val}).eq("id",activeShot.id)))return;
   activeShot.linked_assets=val;
   var idx=shots.findIndex(function(s){return s.id===activeShot.id;});
   if(idx>=0)shots[idx].linked_assets=val;
@@ -1693,7 +1757,7 @@ window.renderSchedule=function(){
     visibleShotTasks = (shotTasks||[]).filter(_stLate);
   } else if (sf === "revisions") {
     visibleTasks = tasks.filter(function(t){return (t.revision_count||0)>0;});
-    visibleShotTasks = (shotTasks||[]).filter(function(t){return (t.revision_count||0)>0;});
+    visibleShotTasks = (shotTasks||[]).filter(function(t){return (t.version||1)>1;});
   }
   var assetTasks=visibleTasks.filter(function(t){return t.category==="asset";});
   var assetSec=document.getElementById("asset-sections");
@@ -1715,8 +1779,7 @@ window.renderSchedule=function(){
   (function(){
     var _t=tasks, _st=shotTasks;
     if(sf!=="all"){tasks=visibleTasks; shotTasks=visibleShotTasks;}
-    renderShotSection();
-    tasks=_t; shotTasks=_st;
+    try { renderShotSection(); } finally { tasks=_t; shotTasks=_st; }
   })();
   renderHandoffs();
   renderAssetDeliverables();
@@ -1815,8 +1878,8 @@ function renderAssetSections(assetTasks){
           var tk=tasks.find(function(x){return x.id===tid;});
           var revCount = tk ? (tk.revision_count || 0) : 0;
           if ((oldStat === "review" || oldStat === "done") && (nv === "inprogress" || nv === "todo")) revCount++;
+          if(!dbOk(await sb.from("tasks").update({status:nv, revision_count: revCount}).eq("id",tid))){ renderSchedule(); return; }
           if(tk) { tk.status=nv; tk.revision_count = revCount; }
-          await sb.from("tasks").update({status:nv, revision_count: revCount}).eq("id",tid);
           showToast("Updated!");
           updateStats();
           renderSchedule();
@@ -1857,8 +1920,8 @@ function renderShotSection(){
     var emp=document.createElement("div");emp.style.cssText="padding:20px;text-align:center;color:var(--text4);font-size:.82rem";
     emp.textContent="No shots yet. Add a sequence first, then add shots.";sectionBody.appendChild(emp);wrap.appendChild(sectionBody);container.appendChild(wrap);return;
   }
+  var _activeShotIds=(shotTasks||[]).map(function(t){return t.shot_id;});
   projSeqs.forEach(function(seq){
-    var _activeShotIds=(shotTasks||[]).map(function(t){return t.shot_id;});
     var seqShots=projShots.filter(function(s){
       if(s.sequence_id!==seq.id) return false;
       // When a filter is active, only show shots that have matching tasks
@@ -1965,7 +2028,7 @@ function updateStats(){
   var total=allT.length,done=allT.filter(isDone).length;
   var inprog=allT.filter(isInProg).length;
   var late=allT.filter(isLate).length;
-  var revs=allT.reduce(function(sum,t){return sum+(t.revision_count||0);},0);
+  var revs=allT.reduce(function(sum,t){return sum+(t.revision_count||(t.version?t.version-1:0));},0);
   var _sc=document.getElementById("s-total");if(_sc){_sc.textContent=total;_sc.style.color="#7c3aed";}
   var _sd=document.getElementById("s-done");if(_sd){_sd.textContent=done;_sd.style.color="#16a34a";}
   var _sp=document.getElementById("s-prog");if(_sp){_sp.textContent=inprog;_sp.style.color="#2563eb";}
@@ -1978,7 +2041,7 @@ function updateStats(){
   _celebLastPct=pct;
 }
 
-function renderHandoffs(){var h=tasks.filter(function(t){return t.handoff_to;});var el=document.getElementById("handoff-list");if(!h.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No handoffs configured.</div>';return;}var html="";h.forEach(function(t){var conf=t.status==="done";html+='<div class="hitem"><div class="hrow"><span class="chip">'+t.lead+'</span><span style="color:#7c3aed;margin:0 5px;font-weight:700">&#8594;</span><span class="chip" style="color:#3b82f6">'+t.handoff_to+'</span><span style="margin-left:auto" class="'+(conf?"conf":"pend")+'">'+(conf?"Done":"Pending")+'</span></div><div class="htask">'+t.name+"</div></div>";});el.innerHTML=html;}
+function renderHandoffs(){var h=tasks.filter(function(t){return t.handoff_to;});var el=document.getElementById("handoff-list");if(!h.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No handoffs configured.</div>';return;}var html="";h.forEach(function(t){var conf=t.status==="done";html+='<div class="hitem"><div class="hrow"><span class="chip">'+escH(t.lead||"Unassigned")+'</span><span style="color:#7c3aed;margin:0 5px;font-weight:700">&#8594;</span><span class="chip" style="color:#3b82f6">'+escH(t.handoff_to)+'</span><span style="margin-left:auto" class="'+(conf?"conf":"pend")+'">'+(conf?"Done":"Pending")+'</span></div><div class="htask">'+escH(t.name)+"</div></div>";});el.innerHTML=html;}
 function renderAssetDeliverables(){
   // Show asset pipeline tasks that are done, plus general tasks with asset field
   var done=tasks.filter(function(t){
@@ -1990,22 +2053,19 @@ function renderAssetDeliverables(){
   if(!all.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No completed assets yet.</div>';return;}
   var html="";
   done.forEach(function(t){
-    var nm=t.asset_url?'<a href="'+t.asset_url+'" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-weight:600">'+(t.name)+' &#8599;</a>':'<span style="font-weight:600">'+(t.name)+'</span>';
+    var nm=t.asset_url?'<a href="'+safeUrl(t.asset_url)+'" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-weight:600">'+escH(t.name)+' &#8599;</a>':'<span style="font-weight:600">'+escH(t.name)+'</span>';
     var typeLbl=assetTypeLabel(t.asset_type)||t.asset_type||'Asset';
-    html+='<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+typeLbl+(t.lead?' &middot; '+t.lead:'')+'</div></div><div class="a-ready">Ready</div></div>';
+    html+='<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+escH(typeLbl)+(t.lead?' &middot; '+escH(t.lead):'')+'</div></div><div class="a-ready">Ready</div></div>';
   });
   general.forEach(function(t){
     var ready=t.status==="done",missing=t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;
     var cls=ready?"a-ready":missing?"a-late":"a-pend",lbl=ready?"Ready":missing?"Late":"Pending";
-    var nm=t.asset_url?'<a href="'+t.asset_url+'" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-weight:600">'+t.asset+' &#8599;</a>':'<span style="font-weight:600">'+t.asset+'</span>';
-    html+='<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+t.lead+' &middot; '+fmtDate(t.due_date)+'</div></div><div class="'+cls+'">'+lbl+'</div></div>';
+    var nm=t.asset_url?'<a href="'+safeUrl(t.asset_url)+'" target="_blank" rel="noopener" style="color:#3b82f6;text-decoration:none;font-weight:600">'+escH(t.asset)+' &#8599;</a>':'<span style="font-weight:600">'+escH(t.asset)+'</span>';
+    html+='<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+escH(t.lead||"Unassigned")+' &middot; '+fmtDate(t.due_date)+'</div></div><div class="'+cls+'">'+lbl+'</div></div>';
   });
   el.innerHTML=html;
 }
 
-function mkStatusCell(t){var cls={todo:"b-todo",inprogress:"b-inprogress",review:"b-review",done:"b-done"};var lbl={todo:"To Do",inprogress:"In Progress",review:"In Review",done:"Done"};var opts=[{v:"todo",l:"To Do",d:"dot-todo"},{v:"inprogress",l:"In Progress",d:"dot-inprogress"},{v:"review",l:"In Review",d:"dot-review"},{v:"done",l:"Done",d:"dot-done"}];var oh=opts.map(function(o){return'<div class="status-option" onclick="setStatus(\''+t.id+'\',\''+o.v+'\',event)"><span class="dot '+o.d+'"></span>'+o.l+"</div>";}).join("");return'<td><div class="status-cell"><button class="status-badge-btn" onclick="toggleStatusDrop(\''+t.id+'\',event)"><span class="badge '+(cls[t.status]||"b-todo")+'">'+(lbl[t.status]||t.status)+'</span><span class="arr">&#9660;</span></button><div class="status-dropdown" id="sdrop-'+t.id+'">'+oh+"</div></div></td>";}
-window.toggleStatusDrop=function(id,e){e.stopPropagation();var d=document.getElementById("sdrop-"+id);document.querySelectorAll(".status-dropdown.open").forEach(function(x){if(x!==d)x.classList.remove("open");});d.classList.toggle("open");};
-window.setStatus=async function(id,status,e){e.stopPropagation();document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});await sb.from("tasks").update({status:status}).eq("id",id);showToast("Status updated!");loadTasks();};
 document.addEventListener("click",function(){document.querySelectorAll(".status-dropdown.open").forEach(function(d){d.classList.remove("open");});});
 
 window.toggleAdv = function() {
@@ -2060,13 +2120,13 @@ window.openModal=function(id,forceCat,forceAssetType){
       } else { document.getElementById("adv-toggle").style.display = "none"; document.getElementById("general-extra-fields").style.display = "none"; }
       document.getElementById("f-name").value=t.name;
       var ld = document.getElementById("f-lead");
-      if(t.lead && !Array.from(ld.options).some(o => o.value === t.lead)){ ld.innerHTML += '<option value="'+t.lead+'">'+t.lead+' (Legacy)</option>'; }
+      if(t.lead && !Array.from(ld.options).some(o => o.value === t.lead)){ ld.innerHTML += '<option value="'+escH(t.lead)+'">'+escH(t.lead)+' (Legacy)</option>'; }
       ld.value=t.lead||"";
       document.getElementById("f-start").value=t.start_date||"";document.getElementById("f-due").value=t.due_date||"";
       document.getElementById("f-time").value=t.due_time||"";document.getElementById("f-priority").value=t.priority;
       document.getElementById("f-status").value=t.status;
       var hf = document.getElementById("f-handoff");
-      if(t.handoff_to && !Array.from(hf.options).some(o => o.value === t.handoff_to)){ hf.innerHTML += '<option value="'+t.handoff_to+'">'+t.handoff_to+' (Legacy)</option>'; }
+      if(t.handoff_to && !Array.from(hf.options).some(o => o.value === t.handoff_to)){ hf.innerHTML += '<option value="'+escH(t.handoff_to)+'">'+escH(t.handoff_to)+' (Legacy)</option>'; }
       hf.value=t.handoff_to||"";
       document.getElementById("f-deliverable").value=t.asset||"";document.getElementById("f-deliverable-url").value=t.asset_url||"";
       if(cat==="asset"){document.getElementById("f-asset-type").value=t.asset_type||"character";document.getElementById("f-asset-name").value=t.asset_name||"";updatePipelineStages();selectedPipelineStage=t.pipeline_stage;if(t.pipeline_stage){document.querySelectorAll("#pipeline-stages-grid .stage-pill").forEach(function(p){if(p.textContent===t.pipeline_stage)p.classList.add("active");});}}
@@ -2109,6 +2169,7 @@ window.saveTask = async function(){
   else {payload.handoff_to=document.getElementById("f-handoff").value.trim() || null; payload.asset=document.getElementById("f-deliverable").value.trim() || null; payload.asset_url=document.getElementById("f-deliverable-url").value.trim() || null; payload.asset_type=null; payload.asset_name=null; payload.pipeline_stage=null;}
   
   var result;
+  if (editTaskId) delete payload.user_id;
   if (editTaskId) { result = await sb.from("tasks").update(payload).eq("id", editTaskId).select(); } 
   else { result = await sb.from("tasks").insert(payload).select(); }
 
@@ -2122,7 +2183,7 @@ window.saveTask = async function(){
   if(tabName === "schedule") renderSchedule(); else if(tabName === "calendar") renderCalendar(); else if(tabName === "gantt") renderGantt(); else if(tabName === "milestones") renderMilestones();
 };
 
-window.deleteTask=async function(id){if(!confirm("Remove this task?"))return;await sb.from("tasks").delete().eq("id",id);showToast("Removed.");loadTasks();};
+window.deleteTask=async function(id){if(!confirm("Remove this task?"))return;if(!dbOk(await sb.from("tasks").delete().eq("id",id)))return;showToast("Removed.");loadTasks();};
 window.editTask=function(id){openModal(id);};
 
 function renderCalendar(){var months=["January","February","March","April","May","June","July","August","September","October","November","December"];document.getElementById("cal-month-label").textContent=months[calMonth]+" "+calYear;var grid=document.getElementById("cal-grid");grid.querySelectorAll(".cal-day").forEach(function(c){c.remove();});var first=new Date(calYear,calMonth,1),sd=first.getDay(),dim=new Date(calYear,calMonth+1,0).getDate(),dip=new Date(calYear,calMonth,0).getDate();for(var i=sd-1;i>=0;i--)grid.appendChild(mkCalCell(calYear,calMonth-1,dip-i,true));for(var d=1;d<=dim;d++)grid.appendChild(mkCalCell(calYear,calMonth,d,false));var rem=(7-(sd+dim)%7)%7;for(var d=1;d<=rem;d++)grid.appendChild(mkCalCell(calYear,calMonth+1,d,true));}
@@ -2314,7 +2375,7 @@ function renderGantt() {
         var ned = new Date(viewStart.getTime() + ne * 86400000);
         var payload = { due_date: fmtYMD(ned) };
         if (task.start_date || mode !== "right") payload.start_date = fmtYMD(nsd);
-        await sb.from("tasks").update(payload).eq("id", task.id);
+        if(!dbOk(await sb.from("tasks").update(payload).eq("id", task.id))){ renderGantt(); return; }
         showToast("Dates updated!"); loadTasks();
       }
       document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp);
@@ -2358,7 +2419,7 @@ function renderGantt() {
       var labelEl = document.createElement("div");
       var lbl = (t.category === "asset" && t.asset_name) ? (t.asset_name + " \u2014 " + (t.pipeline_stage || t.name)) : t.name;
       labelEl.innerHTML = '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px">'
-        + '<div style="font-size:.78rem;font-weight:600">' + lbl + '</div>'
+        + '<div style="font-size:.78rem;font-weight:600">' + escH(lbl) + '</div>'
         + (t.category === "asset" ? '<div class="gantt-label-sub">' + assetTypeLabel(t.asset_type) + '</div>' : '')
         + '</div>';
       var rr = mkRow(labelEl, function(row) {
@@ -2417,8 +2478,8 @@ function renderGantt() {
       seqShots.forEach(function(sh) {
         var labelEl = document.createElement("div");
         labelEl.innerHTML = '<div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:190px">'
-          + '<div class="gantt-label-shot">' + sh.code + '</div>'
-          + '<div class="gantt-label-sub-shot">' + (sh.description || "") + '</div></div>';
+          + '<div class="gantt-label-shot">' + escH(sh.code) + '</div>'
+          + '<div class="gantt-label-sub-shot">' + escH(sh.description || "") + '</div></div>';
         var rr = mkRow(labelEl, function(row) {
           if (!sh.due_date) return;
           var ei2 = dateToCol(sh.due_date);
@@ -2449,7 +2510,7 @@ function renderGantt() {
                   var ns = csi + dd, ne = ns + sp;
                   var nsd = new Date(viewStart.getTime() + ns * 86400000);
                   var ned = new Date(viewStart.getTime() + ne * 86400000);
-                  await sb.from("shots").update({ start_date: fmtYMD(nsd), due_date: fmtYMD(ned) }).eq("id", shot.id);
+                  if(!dbOk(await sb.from("shots").update({ start_date: fmtYMD(nsd), due_date: fmtYMD(ned) }).eq("id", shot.id))){ renderGantt(); return; }
                   shot.start_date = fmtYMD(nsd); shot.due_date = fmtYMD(ned);
                   showToast("Shot dates updated!"); renderGantt();
                 }
@@ -2500,8 +2561,8 @@ window.populateTeamDropdowns = function() {
   });
   var html = '<option value="">-- Unassigned --</option>';
   Object.keys(byRole).sort().forEach(function(role) {
-    html += '<optgroup label="' + role + '">';
-    byRole[role].sort().forEach(function(name) { html += '<option value="' + name + '">' + name + '</option>'; });
+    html += '<optgroup label="' + escH(role) + '">';
+    byRole[role].sort().forEach(function(name) { html += '<option value="' + escH(name) + '">' + escH(name) + '</option>'; });
     html += '</optgroup>';
   });
   function updateSelect(id) {
@@ -2509,7 +2570,7 @@ window.populateTeamDropdowns = function() {
      if (!el) return;
      var currentVal = el.value;
      el.innerHTML = html;
-     if (currentVal && !team.find(function(m){ return m.name === currentVal; })) { el.innerHTML += '<option value="' + currentVal + '">' + currentVal + ' (Legacy Data)</option>'; }
+     if (currentVal && !team.find(function(m){ return m.name === currentVal; })) { el.innerHTML += '<option value="' + escH(currentVal) + '">' + escH(currentVal) + ' (Legacy Data)</option>'; }
      el.value = currentVal;
   }
   updateSelect("f-lead");
@@ -2712,7 +2773,7 @@ window.handleProjectImport = async function(event) {
     }
 
     if (archive.shots.length) {
-      var shotPayload = archive.shots.map(function(sh) { return { code: sh.code || "", description: sh.description || "", sequence_id: sh.sequence_id ? (seqIdMap[sh.sequence_id] || null) : null, project_id: newProject.id, user_id: currentUser.id, status: sh.status || "pending", start_date: sh.start_date || null, due_date: sh.due_date || null, frame_count: sh.frame_count || null, camera: sh.camera || null, storyboard_notes: sh.storyboard_notes || null, linked_assets: sh.linked_assets || null }; });
+      var shotPayload = archive.shots.map(function(sh) { return { code: sh.code || "", description: sh.description || "", sequence_id: sh.sequence_id ? (seqIdMap[sh.sequence_id] || null) : null, project_id: newProject.id, user_id: currentUser.id, status: sh.status || "pending", start_date: sh.start_date || null, due_date: sh.due_date || null, frame_count: sh.frame_count || null, camera: sh.camera || null, camera_proximity: sh.camera_proximity || null, camera_angle: sh.camera_angle || null, storyboard_notes: sh.storyboard_notes || null, linked_assets: sh.linked_assets || null }; });
       var shotRes = await sb.from("shots").insert(shotPayload).select();
       if (shotRes.error) throw new Error("Shots Insert: " + shotRes.error.message);
       shotRes.data.forEach(function(newShot, i) { shotIdMap[archive.shots[i].id] = newShot.id; });
@@ -2829,7 +2890,7 @@ window.renderMilestones=function(){
         main.appendChild(av);
         main.appendChild(tw);
       } else {
-        if(t.lead){var a=document.createElement("span");a.innerHTML='<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:3px"><circle cx="6" cy="4" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M1 11c0-2.5 2-4 5-4s5 1.5 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>'+t.lead;meta.appendChild(a);}
+        if(t.lead){var a=document.createElement("span");a.innerHTML='<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:3px"><circle cx="6" cy="4" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M1 11c0-2.5 2-4 5-4s5 1.5 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>'+escH(t.lead);meta.appendChild(a);}
         if(t.due_date){var d=daysUntil(t.due_date);var dm=document.createElement("span");dm.style.color=t.status==="done"?"var(--text4)":d<0?"#ef4444":d<=3?"#f59e0b":"var(--text4)";dm.innerHTML='<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:3px"><rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1v2M8 1v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="1" y1="5" x2="11" y2="5" stroke="currentColor" stroke-width="1"/></svg>'+(d<0&&t.status!=="done"?Math.abs(d)+"d overdue":fmtDate(t.due_date));meta.appendChild(dm);}
       }
       if(cat!=="team"){main.appendChild(title);main.appendChild(meta);}
@@ -2897,6 +2958,7 @@ window.saveAdminEntry = async function() {
     user_id: currentUser.id, project_id: activeProject.id
   };
   var r;
+  if (adminEditId) delete payload.user_id;
   if (adminEditId) r = await sb.from("tasks").update(payload).eq("id", adminEditId).select();
   else r = await sb.from("tasks").insert(payload).select();
   if (r.error) { showToast("Database Error: " + r.error.message, "error"); return; }
@@ -2978,6 +3040,7 @@ window.submitInviteCode = async function(codeOverride) {
           showToast("Join cancelled.");
           return;
         }
+        if (role.trim().toLowerCase() === "owner") role = "Member";
       }
 
       var insertRes = await sb.from("project_members")
@@ -3046,7 +3109,7 @@ window.openInviteModal = async function(projectId) {
   var roleSelect = document.getElementById("invite-role");
   roleSelect.innerHTML = '<option value="">Let them choose their role</option>';
   Object.keys(roleSet).sort().forEach(function(role){
-    roleSelect.innerHTML += '<option value="' + role + '">' + role + '</option>';
+    roleSelect.innerHTML += '<option value="' + escH(role) + '">' + escH(role) + '</option>';
   });
 
   var r = await sb.from("project_invites")
@@ -3054,13 +3117,15 @@ window.openInviteModal = async function(projectId) {
     .eq("project_id", projectId)
     .eq("created_by", currentUser.id)
     .gt("expires_at", new Date().toISOString())
-    .maybeSingle();
+    .limit(1);
 
   var inviteCode;
+  var existingInvite = r.data && r.data[0];
+  if (existingInvite && existingInvite.role && roleSet[existingInvite.role]) roleSelect.value = existingInvite.role;
   var selectedRole = roleSelect.value || null;
 
-  if(r.data) {
-    inviteCode = r.data.invite_code;
+  if(existingInvite) {
+    inviteCode = existingInvite.invite_code;
   } else {
     inviteCode = Math.random().toString(36).substring(2, 10);
     var expires = new Date();
@@ -3129,8 +3194,8 @@ window.renderProjectMembers = async function(projectId) {
     
     var displayEmail = m.user_id === currentUser.id ? currentUser.email : 'Team Member';
     
-    info.innerHTML = '<div style="font-size:.84rem;font-weight:600">' + displayEmail + 
-      '</div><div style="font-size:.72rem;color:var(--text4);margin-top:2px">🎭 ' + m.role + '</div>';
+    info.innerHTML = '<div style="font-size:.84rem;font-weight:600">' + escH(displayEmail) + 
+      '</div><div style="font-size:.72rem;color:var(--text4);margin-top:2px">🎭 ' + escH(m.role) + '</div>';
     
     div.appendChild(info);
     
@@ -3141,7 +3206,7 @@ window.renderProjectMembers = async function(projectId) {
       removeBtn.textContent = "Remove";
       removeBtn.onclick = (function(mid, projectId){ return async function(){
         if(!confirm("Remove this team member from the project?")) return;
-        await sb.from("project_members").delete().eq("id", mid);
+        if(!dbOk(await sb.from("project_members").delete().eq("id", mid)))return;
         renderProjectMembers(projectId);
         showToast("Member removed");
       }; })(m.id, projectId);
@@ -3153,6 +3218,14 @@ window.renderProjectMembers = async function(projectId) {
 };
 
 window.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-bg.open').forEach(function(m){ m.classList.remove('open'); });
+    var co = document.getElementById('confirm-overlay');
+    if (co && co.style.display === 'flex') closeConfirm();
+    var cm = document.getElementById('celebration-modal');
+    if (cm && cm.classList.contains('open')) closeCelebration();
+    return;
+  }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault();
     if(currentUser) openCmd();
@@ -3175,12 +3248,12 @@ window.filterCmd = function(q) {
   
   var projShots = shots.filter(function(s){ return s.project_id === activeProject.id && (!q || s.code.toLowerCase().includes(q) || (s.description||'').toLowerCase().includes(q)); });
   projShots.forEach(function(s){
-    html += '<div class="cmd-item" onclick="closeCmd(); openShot(\''+s.id+'\')"><span class="cmd-icon" style="opacity:.55;font-size:.8rem;">&#9654;</span><div><div style="font-weight:700">'+s.code+'</div><div style="font-size:.7rem;color:var(--text4)">'+(s.description||'Shot')+'</div></div></div>';
+    html += '<div class="cmd-item" onclick="closeCmd(); openShot(\''+s.id+'\')"><span class="cmd-icon" style="opacity:.55;font-size:.8rem;">&#9654;</span><div><div style="font-weight:700">'+escH(s.code)+'</div><div style="font-size:.7rem;color:var(--text4)">'+escH(s.description||'Shot')+'</div></div></div>';
   });
   
   var projTasks = tasks.filter(function(t){ return t.project_id === activeProject.id && (!q || t.name.toLowerCase().includes(q) || (t.asset_name||'').toLowerCase().includes(q)); });
   projTasks.forEach(function(t){
-    html += '<div class="cmd-item" onclick="closeCmd(); editTask(\''+t.id+'\')"><span class="cmd-icon" style="opacity:.55;font-size:.8rem;">&#9711;</span><div><div style="font-weight:700">'+t.name+'</div><div style="font-size:.7rem;color:var(--text4)">'+(t.asset_name||t.category)+'</div></div></div>';
+    html += '<div class="cmd-item" onclick="closeCmd(); editTask(\''+t.id+'\')"><span class="cmd-icon" style="opacity:.55;font-size:.8rem;">&#9711;</span><div><div style="font-weight:700">'+escH(t.name)+'</div><div style="font-size:.7rem;color:var(--text4)">'+escH(t.asset_name||t.category)+'</div></div></div>';
   });
 
   if(!html) html = '<div style="padding:14px;color:var(--text4)">No results found.</div>';
@@ -3231,7 +3304,8 @@ window.addEventListener("DOMContentLoaded", function () {
     "asset-link-modal",
     "admin-modal",
     "invite-code-modal",
-    "invite-modal"
+    "invite-modal",
+    "cmd-palette"
   ].forEach(function (id) {
     var el = document.getElementById(id);
     if (!el) return;
@@ -3245,7 +3319,8 @@ window.addEventListener("DOMContentLoaded", function () {
       "asset-link-modal": closeAssetLinkModal,
       "admin-modal": closeAdminModal,
       "invite-code-modal": closeInviteCodeModal,
-      "invite-modal": closeInviteModal
+      "invite-modal": closeInviteModal,
+      "cmd-palette": closeCmd
     };
 
     el.addEventListener("click", function (e) {
@@ -3262,8 +3337,6 @@ window.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
-
-})();
 
 var _celebLastPct = 0;
 window.triggerCelebration = function() {
@@ -3296,6 +3369,7 @@ window.closeCelebration = function() {
   modal.classList.remove("open");
   setTimeout(function(){ modal.style.display = "none"; }, 500);
 };
+})();
 </script>
 
     <div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;">
