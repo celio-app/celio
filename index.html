@@ -790,7 +790,7 @@ body.tpl-org #sc-revisions{display:none;}
             <div class="admin-list" id="admin-list-meetings"></div>
           </div>
           <div class="admin-section" id="admin-sec-team">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('team')" style="cursor:pointer;"><span style="font-size:1.1rem"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="display:inline-block;vertical-align:middle"><circle cx="5.5" cy="5" r="2.2" stroke="currentColor" stroke-width="1.3"/><circle cx="10.5" cy="5" r="2.2" stroke="currentColor" stroke-width="1.3"/><path d="M1 13c0-2.5 2-4 4.5-4M7 13c0-2.5 1.5-4 5-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span><span class="admin-sec-title">Production Team</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('team')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-team">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('team')" style="cursor:pointer;"><span style="font-size:1.1rem"><svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="display:inline-block;vertical-align:middle"><circle cx="5.5" cy="5" r="2.2" stroke="currentColor" stroke-width="1.3"/><circle cx="10.5" cy="5" r="2.2" stroke="currentColor" stroke-width="1.3"/><path d="M1 13c0-2.5 2-4 4.5-4M7 13c0-2.5 1.5-4 5-4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg></span><span class="admin-sec-title">Production Team</span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('team')">+ Add</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();emailTeam()" title="Email everyone on this project">&#9993; Email all</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();teamsTeam()" title="Group chat in Microsoft Teams">Teams chat</button><span class="admin-collapse-arrow open" id="admin-arrow-team">&#9660;</span></div>
             <div class="admin-list" id="admin-list-team"></div>
           </div>
         </div>
@@ -940,7 +940,7 @@ body.tpl-org #sc-revisions{display:none;}
       <label class="flbl">Project Type</label>
       <div class="tpl-cards">
         <button type="button" class="tpl-card active" data-tpl="production" onclick="selectTemplate('production')"><div class="tpl-card-t">Production</div><div class="tpl-card-d">Animation &amp; film: assets, sequences and shots</div></button>
-        <button type="button" class="tpl-card" data-tpl="organization" onclick="selectTemplate('organization')"><div class="tpl-card-t">Organization</div><div class="tpl-card-d">Student council, clubs, fundraising: initiatives and teams</div></button>
+        <button type="button" class="tpl-card" data-tpl="organization" onclick="selectTemplate('organization')"><div class="tpl-card-t">Studio Management</div><div class="tpl-card-d">Initiatives, teams, marketing, events and fundraising</div></button>
       </div>
       <label class="tpl-seed" id="tpl-seed-wrap" style="display:none"><input type="checkbox" id="tpl-seed" checked> Add starter tasks to get going</label>
     </div>
@@ -1086,7 +1086,49 @@ var today=new Date();today.setHours(0,0,0,0);
 var COL_W=34,selectedColor="#7c3aed",selectedCat="general",selectedPipelineStage=null,selectedShotTaskType=null;
 var COLORS=["#7c3aed","#3b82f6","#10b981","#f59e0b","#ef4444","#ec4899","#06b6d4","#84cc16","#f97316","#8b5cf6","#64748b","#0ea5e9"];
 var assetLinkSelection=[];
-var projectMembers=[],userRole=null;
+var projectMembers=[],userRole=null,profilesById={};
+function profileEmail(uid){var p=profilesById[uid];return p&&p.email?p.email:"";}
+function profileName(uid){var p=profilesById[uid];if(!p)return "";return p.display_name||(p.email?p.email.split("@")[0]:"");}
+function encE(e){return encodeURIComponent(e).replace(/%40/g,"@");}
+function teamsLink(emails){return "https://teams.microsoft.com/l/chat/0/0?users="+emails.map(encE).join(",");}
+function mailLink(emails,subject){return "mailto:"+(emails.length===1?encE(emails[0]):"?bcc="+emails.map(encE).join(","))+(subject?(emails.length===1?"?":"&")+"subject="+encodeURIComponent(subject):"");}
+function emailForName(name){
+  if(!name||!activeProject)return "";
+  var te=tasks.find(function(t){return t.category==="team"&&t.project_id===activeProject.id&&t.name===name&&t.contact_email;});
+  if(te)return te.contact_email;
+  var ids=Object.keys(profilesById);
+  for(var i=0;i<ids.length;i++){var p=profilesById[ids[i]];if(p.display_name===name||p.email===name||(p.email&&p.email.split("@")[0]===name))return p.email;}
+  return "";
+}
+function mkPersonChip(name){
+  var em=emailForName(name);
+  var el=document.createElement(em?"a":"span");el.className="chip";el.textContent=name;
+  if(em){el.href=mailLink([em]);el.title="Email "+em;el.style.textDecoration="none";el.style.cursor="pointer";}
+  return el;
+}
+function projectEmails(pid){
+  var set={};
+  tasks.forEach(function(t){if(t.category==="team"&&t.project_id===pid&&t.contact_email)set[t.contact_email.toLowerCase()]=t.contact_email;});
+  projectMembers.forEach(function(m){if(m.project_id===pid){var e=profileEmail(m.user_id);if(e)set[e.toLowerCase()]=e;}});
+  if(currentUser&&currentUser.email)delete set[currentUser.email.toLowerCase()];
+  return Object.keys(set).map(function(k){return set[k];});
+}
+window.emailTeam=function(){
+  if(!activeProject)return;var em=projectEmails(activeProject.id);
+  if(!em.length){showToast("No emails yet. Add them to Team Members, or invite people.","error");return;}
+  window.location.href=mailLink(em,activeProject.name);
+};
+window.teamsTeam=function(){
+  if(!activeProject)return;var em=projectEmails(activeProject.id);
+  if(!em.length){showToast("No emails yet. Add them to Team Members, or invite people.","error");return;}
+  window.open(teamsLink(em),"_blank","noopener");
+};
+async function loadProfiles(uids){
+  uids=uids.filter(function(u){return u&&!profilesById[u];});
+  if(!uids.length)return;
+  var rp=await sb.from("member_profiles").select("*").in("id",uids);
+  if(!rp.error)(rp.data||[]).forEach(function(p){profilesById[p.id]=p;});
+}
 
 // Centralized UI State Memory
 var uiState = {
@@ -1175,7 +1217,7 @@ var TPL_LABELS={
   production:{catGeneral:"Milestone / Admin",catAsset:"Asset Task",assetType:"Asset Type",assetName:"Asset Name",assetNamePh:"e.g. Hero Character",stage:"Pipeline Stage",lead:"Lead / Artist",namePh:"e.g. Final rig sign-off",deliv:"Final Assets",cmdPh:"Search shots, tasks... (e.g. SH010)",tabAll:"All Tasks",tabAssets:"Assets",
     admin:{client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Production Team"}},
   organization:{catGeneral:"General",catAsset:"Team Task",assetType:"Team",assetName:"Initiative",assetNamePh:"e.g. Winter Formal, Food Drive",stage:"Step",lead:"Responsible",namePh:"e.g. Design the event poster",deliv:"Deliverables",cmdPh:"Search tasks and initiatives...",tabAll:"By Initiative",tabAssets:"By Team",
-    admin:{client:"Feedback & Suggestions",marketing:"Announcements",meetings:"Meetings",team:"Council Members"}}
+    admin:{client:"Feedback & Suggestions",marketing:"Announcements",meetings:"Meetings",team:"Team Members"}}
 };
 var selectedTemplate="production";
 function isOrg(p){p=p||activeProject;return !!(p&&p.type==="organization");}
@@ -1214,8 +1256,8 @@ async function seedOrgStarter(pid){
   function d(n){var x=new Date(today);x.setDate(x.getDate()+n);return fmtYMD(x);}
   var rows=[
     ["Getting Started","finance","Budget","Set the term budget",2,9],
-    ["Getting Started","social","Draft","Set up council social media accounts",1,5],
-    ["Getting Started","marketing","Plan","Plan a welcome campaign for students",3,12],
+    ["Getting Started","social","Draft","Set up social media accounts",1,5],
+    ["Getting Started","marketing","Plan","Plan a launch campaign",3,12],
     ["First General Meeting","events","Book","Book a room for the first meeting",0,3],
     ["First General Meeting","print","Design","Design the meeting poster",1,4],
     ["First General Meeting","social","Post","Announce the meeting online",4,6],
@@ -1425,6 +1467,7 @@ async function loadAll(){
     var pids=projects.map(function(p){return p.id;});
     var rMembers=await sb.from("project_members").select("*").in("project_id",pids);
     projectMembers=rMembers.data||[];
+    await loadProfiles(projectMembers.map(function(m){return m.user_id;}));
     
     var rs=await sb.from("sequences").select("*").in("project_id",pids).order("code",{ascending:true});
     sequences=rs.data||[];
@@ -1956,7 +1999,7 @@ function renderAssetSections(assetTasks){
         var tr=document.createElement("tr");
         var d=t.due_date?daysUntil(t.due_date):null;
         var c1=document.createElement("td");var stg=document.createElement("span");stg.className="pipeline-stage-badge";stg.textContent=t.pipeline_stage||t.name;c1.appendChild(stg);
-        var c2=document.createElement("td");if(t.lead){var ch=document.createElement("span");ch.className="chip";ch.textContent=t.lead;c2.appendChild(ch);}else{c2.textContent="—";c2.style.color="var(--text4)";}
+        var c2=document.createElement("td");if(t.lead){c2.appendChild(mkPersonChip(t.lead));}else{c2.textContent="—";c2.style.color="var(--text4)";}
         var c3=document.createElement("td");c3.style.fontSize=".75rem";c3.textContent=fmtDate(t.start_date)||"—";
         var c4=document.createElement("td");if(t.due_date){var ds=document.createElement("span");ds.className=t.status==="done"?"d-ok":d<0?"d-late":d<=2?"d-soon":"d-ok";ds.textContent=fmtDate(t.due_date);c4.appendChild(ds);}else{c4.textContent="—";}
         var c5=document.createElement("td");
@@ -2048,7 +2091,7 @@ function renderOrgSections(orgTasks){
       if(t.handoff_to){var ho=document.createElement("div");ho.style.cssText="font-size:.66rem;color:var(--text4);margin-top:2px";ho.textContent="→ hands off to "+t.handoff_to;c0.appendChild(ho);}
       var c1=document.createElement("td");var gch=document.createElement("span");gch.className="chip";gch.style.fontSize=".7rem";gch.textContent=byTeam?(t.asset_name||"General"):teamLabel(t.asset_type);c1.appendChild(gch);
       var c2=document.createElement("td");var stg=document.createElement("span");stg.className="pipeline-stage-badge";stg.textContent=t.pipeline_stage||"—";c2.appendChild(stg);
-      var c3=document.createElement("td");if(t.lead){var ch=document.createElement("span");ch.className="chip";ch.textContent=t.lead;c3.appendChild(ch);}else{c3.textContent="—";c3.style.color="var(--text4)";}
+      var c3=document.createElement("td");if(t.lead){c3.appendChild(mkPersonChip(t.lead));}else{c3.textContent="—";c3.style.color="var(--text4)";}
       var c4=document.createElement("td");if(t.due_date){var dd=daysUntil(t.due_date);var ds=document.createElement("span");ds.className=t.status==="done"?"d-ok":dd<0?"d-late":dd<=2?"d-soon":"d-ok";ds.textContent=fmtDate(t.due_date);c4.appendChild(ds);}else c4.textContent="—";
       var c5=document.createElement("td");var sel=document.createElement("select");sel.style.cssText=baseSelStyle+(stColors[t.status]||stColors.todo);
       [["todo","To Do"],["inprogress","In Progress"],["review","In Review"],["done","Done"]].forEach(function(p){var o=document.createElement("option");o.value=p[0];o.textContent=p[1];if(t.status===p[0])o.selected=true;sel.appendChild(o);});
@@ -2972,7 +3015,7 @@ window.handleProjectImport = async function(event) {
     }
 
     if (archive.tasks.length) {
-      var taskPayload = archive.tasks.map(function(t) { return { name: t.name || "", lead: t.lead || null, start_date: t.start_date || null, due_date: t.due_date || null, due_time: t.due_time || null, priority: t.priority || "med", status: t.status || "todo", category: t.category || "general", user_id: currentUser.id, project_id: newProject.id, handoff_to: t.handoff_to || null, asset: t.asset || null, asset_url: t.asset_url || null, asset_type: t.asset_type || null, asset_name: t.asset_name || null, pipeline_stage: t.pipeline_stage || null, revision_count: t.revision_count || 0 }; });
+      var taskPayload = archive.tasks.map(function(t) { return { name: t.name || "", lead: t.lead || null, start_date: t.start_date || null, due_date: t.due_date || null, due_time: t.due_time || null, priority: t.priority || "med", status: t.status || "todo", category: t.category || "general", user_id: currentUser.id, project_id: newProject.id, handoff_to: t.handoff_to || null, asset: t.asset || null, asset_url: t.asset_url || null, asset_type: t.asset_type || null, asset_name: t.asset_name || null, pipeline_stage: t.pipeline_stage || null, contact_email: t.contact_email || null, revision_count: t.revision_count || 0 }; });
       var taskRes = await sb.from("tasks").insert(taskPayload);
       if (taskRes.error) throw new Error("Tasks Insert: " + taskRes.error.message);
     }
@@ -3020,7 +3063,7 @@ window.renderMilestones=function(){
       var dot=document.createElement("span");dot.style.cssText="width:10px;height:10px;border-radius:50%;flex-shrink:0;background:"+p.color;
       var main=document.createElement("div");main.className="admin-entry-main";
       var nm=document.createElement("div");nm.className="admin-entry-title";nm.textContent=p.name;
-      var mt=document.createElement("div");mt.className="admin-entry-meta";mt.textContent=isOrg(p)?"Organization project":seqCnt+" sequences · "+shotCnt+" shots";
+      var mt=document.createElement("div");mt.className="admin-entry-meta";mt.textContent=isOrg(p)?"Studio Management project":seqCnt+" sequences · "+shotCnt+" shots";
       main.appendChild(nm);main.appendChild(mt);
       var editBtn=document.createElement("button");editBtn.className="btn btn-ghost btn-sm";editBtn.style.fontSize=".68rem";editBtn.textContent="Edit";
       editBtn.onclick=(function(pid){return function(){openProjectModal(pid);};})(p.id);
@@ -3079,6 +3122,10 @@ window.renderMilestones=function(){
         rl.textContent=t.lead||"Team Member";
         tw.appendChild(nm);
         tw.appendChild(rl);
+        var _em=t.contact_email||emailForName(t.name);
+        if(_em){var ml=document.createElement("div");ml.style.cssText="font-size:.7rem;display:flex;gap:10px;flex-wrap:wrap;margin-top:1px";
+          ml.innerHTML='<a href="'+mailLink([_em])+'" style="color:#3b82f6;text-decoration:none">&#9993; '+escH(_em)+'</a><a href="'+teamsLink([_em])+'" target="_blank" rel="noopener" style="color:#7c3aed;text-decoration:none">Teams chat</a>';
+          tw.appendChild(ml);}
         main.appendChild(av);
         main.appendChild(tw);
       } else {
@@ -3110,13 +3157,23 @@ window.renderMilestones=function(){
 var adminCat=null,adminEditId=null;
 window.openAdminModal=function(cat,editId){
   adminCat=cat||null;adminEditId=editId||null;
-  var labels=isOrg()?{client:"Feedback",marketing:"Announcement",meetings:"Meeting",team:"Council Member"}:{client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Team Member"};
+  var labels=isOrg()?{client:"Feedback",marketing:"Announcement",meetings:"Meeting",team:"Team Member"}:{client:"Client Feedback",marketing:"Marketing",meetings:"Meetings",team:"Team Member"};
 
   var isTeam = cat === "team";
   document.getElementById("lbl-af-title").textContent = isTeam ? "Name" : "Title";
-  document.getElementById("lbl-af-assignee").textContent = isTeam ? (isOrg() ? "Role (e.g. President, Treasurer)" : "Role (e.g. Animator, Lighter)") : "Assignee";
+  document.getElementById("lbl-af-assignee").textContent = isTeam ? (isOrg() ? "Role (e.g. Director, Finance Lead)" : "Role (e.g. Animator, Lighter)") : "Assignee";
   document.getElementById("wrap-af-date").style.display = isTeam ? "none" : "block";
   document.getElementById("wrap-af-status").style.display = isTeam ? "none" : "grid";
+  document.getElementById("wrap-af-email").style.display = isTeam ? "block" : "none";
+  if (isTeam) {
+    var pick=document.getElementById("af-member-pick");
+    var opts='<option value="">— Not linked —</option>';
+    projectMembers.filter(function(m){return activeProject&&m.project_id===activeProject.id;}).forEach(function(m){
+      var em=profileEmail(m.user_id); if(!em) return;
+      opts+='<option value="'+escH(m.user_id)+'">'+escH(profileName(m.user_id))+' ('+escH(em)+')</option>';
+    });
+    pick.innerHTML=opts; pick.value="";
+  }
 
   if(editId){
     var t=tasks.find(function(x){return x.id===editId;});
@@ -3124,17 +3181,25 @@ window.openAdminModal=function(cat,editId){
       document.getElementById("admin-modal-title").textContent="Edit — "+(labels[t.category]||t.category);
       document.getElementById("af-title").value=t.name;document.getElementById("af-assignee").value=t.lead||"";
       document.getElementById("af-date").value=t.due_date||"";document.getElementById("af-priority").value=t.priority||"med";
-      document.getElementById("af-status").value=t.status||"todo";document.getElementById("af-notes").value=t.asset||"";
+      document.getElementById("af-status").value=t.status||"todo";document.getElementById("af-notes").value=t.asset||"";document.getElementById("af-email").value=t.contact_email||"";
     }
   } else {
     document.getElementById("admin-modal-title").textContent="New — "+(labels[cat]||cat);
     document.getElementById("af-title").value="";document.getElementById("af-assignee").value="";
     document.getElementById("af-date").value="";document.getElementById("af-priority").value="med";
-    document.getElementById("af-status").value="todo";document.getElementById("af-notes").value="";
+    document.getElementById("af-status").value="todo";document.getElementById("af-notes").value="";document.getElementById("af-email").value="";
   }
   document.getElementById("admin-modal").classList.add("open");
 };
 
+window.pickAdminMember=function(uid){
+  if(!uid)return;
+  var em=profileEmail(uid),nm=profileName(uid);
+  document.getElementById("af-email").value=em;
+  var ti=document.getElementById("af-title");if(!ti.value.trim())ti.value=nm;
+  var m=projectMembers.find(function(x){return x.user_id===uid&&activeProject&&x.project_id===activeProject.id;});
+  var ro=document.getElementById("af-assignee");if(m&&m.role&&m.role!=="Owner"&&!ro.value.trim())ro.value=m.role;
+};
 window.closeAdminModal=function(){document.getElementById("admin-modal").classList.remove("open");};
 
 window.saveAdminEntry = async function() {
@@ -3147,6 +3212,7 @@ window.saveAdminEntry = async function() {
     due_date: dueDate, priority: document.getElementById("af-priority").value,
     status: document.getElementById("af-status").value, category: adminCat,
     asset: document.getElementById("af-notes").value.trim() || null,
+    contact_email: adminCat === "team" ? (document.getElementById("af-email").value.trim() || null) : null,
     user_id: currentUser.id, project_id: activeProject.id
   };
   var r;
@@ -3370,41 +3436,55 @@ window.renderProjectMembers = async function(projectId) {
   var r = await sb.from("project_members").select("*").eq("project_id", projectId);
   var members = r.data || [];
   var container = document.getElementById("members-list-container");
-  
   if(!members.length) {
     container.innerHTML = '<div style="padding:14px;color:var(--text4);font-size:.82rem;text-align:center">No members yet — share the invite link to add team members</div>';
     return;
   }
-  
+  // keep the global list in step so emails/roles are available elsewhere
+  projectMembers = projectMembers.filter(function(m){ return m.project_id !== projectId; }).concat(members);
+  await loadProfiles(members.map(function(m){ return m.user_id; }));
+  var proj = projects.find(function(p){ return p.id === projectId; }) || {};
+  var iAmOwner = proj.user_id === currentUser.id || members.some(function(m){ return m.user_id === currentUser.id && m.role === "Owner"; });
+  var roleSet = { Owner:1, Member:1 };
+  tasks.forEach(function(t){ if(t.category === "team" && t.project_id === projectId && t.lead) roleSet[t.lead] = 1; });
+  members.forEach(function(m){ if(m.role) roleSet[m.role] = 1; });
+  var roles = Object.keys(roleSet).sort(function(a,b){ return a === "Owner" ? -1 : b === "Owner" ? 1 : a.localeCompare(b); });
+
   container.innerHTML = "";
+  members.sort(function(a,b){ return (a.user_id === proj.user_id ? -1 : 0) - (b.user_id === proj.user_id ? -1 : 0); });
   members.forEach(function(m){
+    var isCreator = m.user_id === proj.user_id, isMe = m.user_id === currentUser.id;
+    var em = isMe ? currentUser.email : profileEmail(m.user_id);
     var div = document.createElement("div");
-    div.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border2);gap:10px";
-    
-    var info = document.createElement("div");
-    info.style.flex = "1";
-    
-    var displayEmail = m.user_id === currentUser.id ? currentUser.email : 'Team Member';
-    
-    info.innerHTML = '<div style="font-size:.84rem;font-weight:600">' + escH(displayEmail) + 
-      '</div><div style="font-size:.72rem;color:var(--text4);margin-top:2px">🎭 ' + escH(m.role) + '</div>';
-    
+    div.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:10px 12px;border-bottom:1px solid var(--border2);gap:10px;flex-wrap:wrap";
+    var info = document.createElement("div"); info.style.cssText = "flex:1;min-width:160px";
+    var top = '<div style="font-size:.84rem;font-weight:600">' + escH(em || "Team Member") + (isMe ? ' <span style="font-size:.68rem;color:var(--text4);font-weight:400">(you)</span>' : '') + '</div>';
+    var sub = '<div style="font-size:.72rem;color:var(--text4);margin-top:2px;display:flex;gap:10px;flex-wrap:wrap">' + (isCreator ? 'Project creator' : escH(m.role || "Member"));
+    if (em && !isMe) sub += ' <a href="' + mailLink([em]) + '" style="color:#3b82f6;text-decoration:none">&#9993; Email</a><a href="' + teamsLink([em]) + '" target="_blank" rel="noopener" style="color:#7c3aed;text-decoration:none">Teams chat</a>';
+    sub += '</div>';
+    info.innerHTML = top + sub;
     div.appendChild(info);
-    
-    if(m.role !== 'Owner') {
+
+    if (iAmOwner && !isCreator) {
+      var sel = document.createElement("select"); sel.className = "inp"; sel.style.cssText = "width:auto;padding:4px 8px;font-size:.74rem";
+      roles.forEach(function(ro){ var o = document.createElement("option"); o.value = ro; o.textContent = ro === "Owner" ? "Owner (co-owner)" : ro; if (ro === m.role) o.selected = true; sel.appendChild(o); });
+      sel.onchange = async function(){
+        var nv = this.value, prev = m.role;
+        if (nv === "Owner" && !confirm("Make this person a co-owner? They'll get the Admin tab and can manage the team and invites.")) { this.value = prev; return; }
+        var res = await sb.rpc("celio_set_member_role", { pid: projectId, member: m.user_id, new_role: nv });
+        if (res.error) { showToast("Couldn't change role: " + res.error.message, "error"); this.value = prev; return; }
+        m.role = nv; showToast("Role updated"); renderProjectMembers(projectId);
+      };
+      div.appendChild(sel);
       var removeBtn = document.createElement("button");
-      removeBtn.className = "btn btn-sm btn-del";
-      removeBtn.style.fontSize = ".68rem";
-      removeBtn.textContent = "Remove";
-      removeBtn.onclick = (function(mid, projectId){ return async function(){
-        if(!confirm("Remove this team member from the project?")) return;
-        if(!dbOk(await sb.from("project_members").delete().eq("id", mid)))return;
-        renderProjectMembers(projectId);
-        showToast("Member removed");
-      }; })(m.id, projectId);
+      removeBtn.className = "btn btn-sm btn-del"; removeBtn.style.fontSize = ".68rem"; removeBtn.textContent = "Remove";
+      removeBtn.onclick = async function(){
+        if(!confirm("Remove this person from the project?")) return;
+        if(!dbOk(await sb.from("project_members").delete().eq("id", m.id))) return;
+        renderProjectMembers(projectId); showToast("Member removed");
+      };
       div.appendChild(removeBtn);
     }
-    
     container.appendChild(div);
   });
 };
@@ -3597,6 +3677,12 @@ window.closeCelebration = function() {
               <select id="af-status" class="inp"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="done">Done</option></select>
             </div>
           </div>
+          <div id="wrap-af-email" style="display:none">
+            <label class="flbl">Link to someone who has joined (optional)</label>
+            <select id="af-member-pick" class="inp" onchange="pickAdminMember(this.value)"></select>
+            <label class="flbl" style="margin-top:10px">Email (optional)</label>
+            <input id="af-email" class="inp" type="email" placeholder="name@example.com">
+          </div>
           <div><label class="flbl">Notes</label><textarea id="af-notes" class="inp" rows="2" style="resize:vertical"></textarea></div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
@@ -3647,6 +3733,10 @@ window.closeCelebration = function() {
         </div>
         
         <div id="invite-members-section">
+          <div style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:8px">
+            <button class="btn btn-ghost btn-sm" onclick="emailTeam()">&#9993; Email everyone</button>
+            <button class="btn btn-ghost btn-sm" onclick="teamsTeam()">Teams chat</button>
+          </div>
           <h4 style="font-size:.88rem;margin-bottom:10px;font-weight:700">Current Members</h4>
           <div id="members-list-container"></div>
         </div>
