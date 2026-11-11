@@ -3,6 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Workprint">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#f4f0e8">
 <title>Workprint – Production Schedule</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23b4232f'/%3E%3Ctext x='50' y='74' text-anchor='middle' font-family='Georgia,serif' font-size='70' fill='%23ffffff'%3EW%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -629,6 +636,10 @@ html:not([data-scheme="classic"]) .btn-del{background:color-mix(in srgb,var(--la
 html:not([data-scheme="classic"]) .btn-del:hover{background:var(--late);color:#fff;}
 html:not([data-scheme="classic"]) .admin-pri-high{background:color-mix(in srgb,var(--late) 15%,var(--bg2));color:var(--late);}html:not([data-scheme="classic"]) .admin-pri-med{background:color-mix(in srgb,var(--review) 15%,var(--bg2));color:var(--review);}
 html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([data-scheme="classic"]) .auth-msg.success{color:var(--done);}html:not([data-scheme="classic"]) .st-del:hover{color:var(--late);}
+.gantt-bar,.cal-task-chip{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;}
+.touch-lift{transform:scale(1.04);box-shadow:0 6px 18px rgba(0,0,0,.28)!important;z-index:5;transition:transform .12s;}
+.cal-touch-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.92;transform:translate(-50%,-120%);box-shadow:0 8px 22px rgba(0,0,0,.3);border-radius:4px;max-width:180px;}
+@media (pointer:coarse){.gantt-resize-handle,.gantt-resize-handle-left{width:16px;}}
 [stroke="#7c3aed"]{stroke:var(--purple);} [fill="#7c3aed"]{fill:var(--purple);}
 .wp-serif{font-family:"DM Serif Display",Georgia,serif;font-weight:400;letter-spacing:-.5px;}
 .sb-logo{gap:9px;}
@@ -1685,6 +1696,48 @@ window.adminPickProject=function(id){
   else{showTab("schedule");showToast("You're a member of "+p.name+", not an owner, so its Admin lists are hidden.");}
   loadTasks();
 };
+/* Touch: press and hold to drag; a normal swipe still scrolls, a tap still opens */
+var TOUCH_HOLD_MS=350;
+function addTouchHold(el,h){
+  el.addEventListener("contextmenu",function(e){if(e.pointerType!=="mouse")e.preventDefault();});
+  el.addEventListener("touchstart",function(e){
+    if(e.touches.length!==1)return;
+    var t=e.touches[0],sx=t.clientX,sy=t.clientY,lx=sx,ly=sy,active=false,target=e.target;
+    var timer=setTimeout(function(){active=true;el.classList.add("touch-lift");if(navigator.vibrate)try{navigator.vibrate(10);}catch(x){}h.start(sx,sy,target);},TOUCH_HOLD_MS);
+    function mv(ev){var p=ev.touches[0];if(!p)return;lx=p.clientX;ly=p.clientY;
+      if(!active){if(Math.abs(lx-sx)>8||Math.abs(ly-sy)>8)cleanup();return;}
+      ev.preventDefault();h.move(lx,ly);}
+    function en(ev){var was=active;cleanup();if(was){ev.preventDefault();h.end(lx,ly);}}
+    function cc(){var was=active;cleanup();if(was&&h.cancel)h.cancel();}
+    function cleanup(){clearTimeout(timer);el.classList.remove("touch-lift");el.removeEventListener("touchmove",mv);el.removeEventListener("touchend",en);el.removeEventListener("touchcancel",cc);}
+    el.addEventListener("touchmove",mv,{passive:false});el.addEventListener("touchend",en);el.addEventListener("touchcancel",cc);
+  },{passive:true});
+}
+/* Feeds a held touch into the existing mouse-drag code, so mouse and touch share one path */
+function touchAsMouse(el){
+  var tgt=null;
+  function fire(node,type,x,y){node.dispatchEvent(new MouseEvent(type,{clientX:x,clientY:y,bubbles:true,cancelable:true,view:window}));}
+  addTouchHold(el,{
+    start:function(x,y,target){tgt=target.nodeType===1?target:el;fire(tgt,"mousedown",x,y);},
+    move:function(x,y){fire(document,"mousemove",x,y);},
+    end:function(x,y){fire(document,"mouseup",x,y);tgt=null;},
+    cancel:function(){fire(document,"mouseup",-99999,-99999);tgt=null;}
+  });
+}
+var calTouchPrimary=window.matchMedia&&window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+function calTouchDrag(chip,info){
+  chip.draggable=!calTouchPrimary;
+  var ghost=null,over=null;
+  function cellAt(x,y){var n=document.elementFromPoint(x,y);return n&&n.closest?n.closest(".cal-day[data-ymd]"):null;}
+  function mark(c){if(over&&over!==c)over.classList.remove("cal-drop-hover");over=c;if(c)c.classList.add("cal-drop-hover");}
+  function done(){if(ghost){ghost.remove();ghost=null;}mark(null);chip.classList.remove("cal-chip-dragging");}
+  addTouchHold(chip,{
+    start:function(x,y){ghost=chip.cloneNode(true);ghost.classList.add("cal-touch-ghost");ghost.classList.remove("touch-lift");ghost.style.width=chip.offsetWidth+"px";ghost.style.left=x+"px";ghost.style.top=y+"px";document.body.appendChild(ghost);chip.classList.add("cal-chip-dragging");},
+    move:function(x,y){if(ghost){ghost.style.left=x+"px";ghost.style.top=y+"px";}mark(cellAt(x,y));},
+    end:function(x,y){var c=cellAt(x,y);done();if(c)calMoveItem(info,c.dataset.ymd);},
+    cancel:done
+  });
+}
 function setHeaderProject(p){
   applyTemplateUI();
   document.getElementById("hdr-bc").innerHTML='<div class="proj-badge"><span class="dot" style="background:'+p.color+'"></span><span>'+escH(p.name)+'</span></div>';
@@ -2595,6 +2648,7 @@ function mkCalCell(year, month, day, other) {
   cell.addEventListener("dragleave", function() {
     cell.classList.remove("cal-drop-hover");
   });
+  calFillDay(cell, ymd);
   cell.addEventListener("drop", async function(e) {
     e.preventDefault();
     cell.classList.remove("cal-drop-hover");
@@ -2602,6 +2656,11 @@ function mkCalCell(year, month, day, other) {
     if (!raw) return;
     var info;
     try { info = JSON.parse(raw); } catch(ex) { return; }
+    calMoveItem(info, ymd);
+  });
+  return cell;
+}
+async function calMoveItem(info, ymd) {
     if (info.ymd === ymd) return; // dropped on same day — no-op
     if (info.type === "task") {
       var t = tasks.find(function(x) { return x.id === info.id; });
@@ -2618,8 +2677,8 @@ function mkCalCell(year, month, day, other) {
     }
     showToast("Moved to " + ymd);
     renderCalendar();
-  });
-
+}
+function calFillDay(cell, ymd) {
   // ── Task chips ──
   tasks.filter(function(t) { return t.due_date === ymd; }).forEach(function(t) {
     var chip = document.createElement("div");
@@ -2632,6 +2691,7 @@ function mkCalCell(year, month, day, other) {
       chip.classList.add("cal-chip-dragging");
     });
     chip.addEventListener("dragend", function() { chip.classList.remove("cal-chip-dragging"); });
+    calTouchDrag(chip, { type: "task", id: t.id, ymd: ymd });
     chip.addEventListener("click", function() { openModal(t.id); });
     cell.appendChild(chip);
   });
@@ -2652,11 +2712,10 @@ function mkCalCell(year, month, day, other) {
       chip.classList.add("cal-chip-dragging");
     });
     chip.addEventListener("dragend", function() { chip.classList.remove("cal-chip-dragging"); });
+    calTouchDrag(chip, { type: "shottask", id: t.id, ymd: ymd });
     chip.addEventListener("click", function() { if (sh) openShot(sh.id); });
     cell.appendChild(chip);
   });
-
-  return cell;
 }
 
 
@@ -2742,6 +2801,7 @@ function renderGantt() {
   }
 
   function mkDraggable(el, row, task, origSi, origEi, mode) {
+    if (mode === "move") touchAsMouse(el);
     el.addEventListener("mousedown", function(e) {
       if (mode === "move" && (e.target.classList.contains("gantt-resize-handle") || e.target.classList.contains("gantt-resize-handle-left"))) return;
       e.preventDefault();
@@ -2890,6 +2950,7 @@ function renderGantt() {
             var lbl2 = sh.code + (sh.description ? " \u2014 " + sh.description : "");
             bar2.textContent = lbl2; bar2.title = lbl2 + " | Due: " + fmtDate(sh.due_date);
             bar2.style.cursor = "grab";
+            touchAsMouse(bar2);
             (function(shot, csi, cei) {
               bar2.addEventListener("mousedown", function(e) {
                 e.preventDefault(); bar2.style.cursor = "grabbing";
