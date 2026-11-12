@@ -669,6 +669,7 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
 .fund-sug .b{display:flex;gap:6px;margin-top:auto;padding-top:4px;flex-wrap:wrap;}
 .fund-type{align-self:flex-start;font-size:.64rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:5px;background:color-mix(in srgb,var(--purple) 12%,var(--bg2));color:var(--purple);}
 .fund-note{font-size:.72rem;color:var(--text4);}
+.fund-new{border-color:color-mix(in srgb,var(--review) 45%,var(--border));}
 .fund-st{font:inherit;font-size:.76rem;padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);}
 .fund-star{font:inherit;font-size:1.15rem;line-height:1;background:none;border:none;cursor:pointer;color:var(--text4);padding:0 2px;}
 .fund-star:hover,.fund-star.on{color:var(--review);}
@@ -1824,7 +1825,7 @@ function calTouchDrag(chip,info){
 }
 
 /* ═══ Funding (Studio Management) ═══ */
-var funders=[];var fundShowAll=false;var editFunderId=null;var fpDraft=null;
+var funders=[];var scoutSugg=[];var scoutLast=null;var scoutReady=false;var scoutBusy=false;var fundShowAll=false;var editFunderId=null;var fpDraft=null;
 var FUND_ORG=[["student","Student club or council"],["nonprofit","Non-profit or community group"],["studio","Small studio or company"],["artist","Individual artist or freelancer"]];
 var FUND_IND=[["animation","Animation"],["film","Film and TV"],["games","Games"],["xr","Interactive / XR"],["music","Music and audio"],["visual","Visual and fine arts"],["design","Design"],["community","Community and events"]];
 var FUND_PUR=[["production","A production or project"],["event","An event or festival"],["equipment","Equipment"],["travel","Travel to festivals or conferences"],["training","Training or workshops"],["outreach","Community outreach"]];
@@ -1876,6 +1877,10 @@ async function loadFunders(){
   funders=[];if(!activeProject||!isOrg())return;
   var r=await sb.from("funders").select("*").eq("project_id",activeProject.id).order("deadline",{ascending:true,nullsFirst:false});
   if(!r.error)funders=r.data||[];
+  scoutSugg=[];scoutLast=null;
+  var rs=await sb.from("funding_suggestions").select("*").eq("project_id",activeProject.id).eq("status","new").order("found_at",{ascending:false});
+  scoutReady=!rs.error;if(scoutReady)scoutSugg=rs.data||[];
+  if(scoutReady){var rr=await sb.from("funding_scout_runs").select("*").eq("project_id",activeProject.id).order("ran_at",{ascending:false}).limit(1);if(!rr.error&&rr.data&&rr.data.length)scoutLast=rr.data[0];}
 }
 function fundDays(d){if(!d)return null;var x=new Date(d+"T00:00:00");return Math.round((x-today)/86400000);}
 function fundDeadlineHtml(f){
@@ -1920,11 +1925,35 @@ window.renderFunding=function(){
     h+='</div>';
   }
   h+='</div>';
+  // weekly scout
+  if(scoutReady&&fundHasProfile(p)){
+    var lastTxt=scoutLast?("Last checked "+new Date(scoutLast.ran_at).toLocaleDateString(undefined,{month:"short",day:"numeric"})+(scoutLast.error?" (didn't finish)":"")):"Not run yet";
+    h+='<div class="fund-card"><div class="fund-card-hdr">New from the weekly scout<span class="fund-note" style="font-weight:500">'+escH(lastTxt)+'</span><span class="sp"></span>'+
+       (owner?'<button class="btn btn-ghost btn-sm" '+(scoutBusy?'disabled':'')+' onclick="runScoutNow()">'+(scoutBusy?'Searching…':'Run now')+'</button>':'')+'</div>';
+    if(!scoutSugg.length)h+='<div class="fund-empty">'+(scoutBusy?'Searching the web for funding that fits your profile. This takes a minute or two…':'Nothing new right now. Every Monday the scout searches the web for open funding that fits your profile and lists it here.')+'</div>';
+    else{
+      h+='<div class="fund-grid">';
+      scoutSugg.forEach(function(g){
+        var url=/^https:\/\//i.test(g.url||"")?g.url:"";
+        h+='<div class="fund-sug fund-new"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><span class="fund-type">'+escH(fundLabel(FUND_TYPES,g.ftype||"grant"))+'</span>'+
+           '<button class="fund-star" title="Bookmark: save to your list" aria-label="Bookmark" onclick="saveScoutSugg(\''+g.id+'\')">☆</button></div>'+
+           '<div class="t">'+escH(g.name)+'</div>'+(g.funder?'<div class="f">'+escH(g.funder)+'</div>':'')+
+           (g.blurb?'<div class="d">'+escH(g.blurb)+'</div>':'')+
+           '<div class="w">'+(g.amount?'<b>'+escH(g.amount)+'</b>':'Amount not listed')+(g.deadline?' · Deadline '+escH(new Date(g.deadline+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"})):'')+'</div>'+
+           (g.who?'<div class="w">For: '+escH(g.who)+'</div>':'')+(g.why?'<div class="w"><i>Why it fits: '+escH(g.why)+'</i></div>':'')+
+           '<div class="w" style="color:var(--review)">Found '+escH(new Date(g.found_at).toLocaleDateString(undefined,{month:"short",day:"numeric"}))+' · check details before applying</div>'+
+           '<div class="b">'+(url?'<a class="btn btn-ghost btn-sm" href="'+escH(url)+'" target="_blank" rel="noopener">Visit site</a>':'')+
+           '<button class="btn btn-ghost btn-sm" onclick="dismissScoutSugg(\''+g.id+'\')">Dismiss</button></div></div>';
+      });
+      h+='</div>';
+    }
+    h+='</div>';
+  }
   // suggestions
   var saved={};funders.forEach(function(f){if(f.catalog_key)saved[f.catalog_key]=1;});
   var matches=FUND_CATALOG.filter(function(c){return fundMatches(c,p);});
   var list=(fundShowAll||!fundHasProfile(p))?FUND_CATALOG:matches;
-  h+='<div class="fund-card"><div class="fund-card-hdr">'+(fundShowAll||!fundHasProfile(p)?'All starter funders':'Suggested for you')+'<span class="sp"></span>'+
+  h+='<div class="fund-card"><div class="fund-card-hdr">'+(fundShowAll||!fundHasProfile(p)?'All starter funders':'Suggested for you')+'<span class="fund-note" style="font-weight:500">Starter list checked November 2026</span>' +'<span class="sp"></span>'+
      (fundHasProfile(p)?'<button class="btn btn-ghost btn-sm" onclick="toggleFundAll()">'+(fundShowAll?'Show suggestions only':'Show all '+FUND_CATALOG.length)+'</button>':'')+'</div>';
   if(!list.length)h+='<div class="fund-empty">No starter funders match this profile yet. Try adding more industries or funding types, or click Show all.</div>';
   else{
@@ -2008,6 +2037,30 @@ window.toggleBookmark=async function(k){
     showToast("Bookmarked. It's saved in Our funding list.");
   }
   await loadFunders();renderFunding();
+};
+window.saveScoutSugg=async function(id){
+  var g=scoutSugg.find(function(x){return x.id===id;});if(!g)return;
+  var ri=await sb.from("funders").insert({project_id:activeProject.id,created_by:currentUser.id,catalog_key:"scout:"+g.id,name:g.name,funder:g.funder,ftype:g.ftype||"grant",amount:g.amount,deadline:g.deadline,url:g.url,status:"watching",notes:[g.blurb,g.who?"For: "+g.who:"","Found by the weekly scout. Check the details on the funder's site."].filter(Boolean).join(" ")});
+  if(!dbOk(ri))return;
+  await sb.from("funding_suggestions").update({status:"saved"}).eq("id",id);
+  showToast("Bookmarked. It's saved in Our funding list.");await loadFunders();renderFunding();
+};
+window.dismissScoutSugg=async function(id){
+  var r=await sb.from("funding_suggestions").update({status:"dismissed"}).eq("id",id);if(!dbOk(r))return;
+  scoutSugg=scoutSugg.filter(function(x){return x.id!==id;});renderFunding();
+};
+window.runScoutNow=async function(){
+  if(scoutBusy||!activeProject)return;scoutBusy=true;renderFunding();
+  var msg=null,res=null;
+  try{
+    var out=await sb.functions.invoke("funding-scout",{body:{project_id:activeProject.id}});
+    if(out.error){try{var j=await out.error.context.json();msg=j.error;}catch(e){msg="The scout isn't set up yet, or couldn't be reached.";}}
+    else res=out.data;
+  }catch(e){msg="The scout couldn't be reached.";}
+  scoutBusy=false;await loadFunders();renderFunding();
+  if(msg)showToast(msg,"error");
+  else if(res&&res.error)showToast("Scout: "+res.error,"error");
+  else showToast(res&&res.added?("Found "+res.added+" new funding option"+(res.added>1?"s":"")+"."):"No new funding found this time.");
 };
 window.saveFunder=async function(){
   var name=document.getElementById("fm-name").value.trim();if(!name){showToast("Give the program a name.","error");return;}
