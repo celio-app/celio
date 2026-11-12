@@ -147,7 +147,7 @@ function render(){
   else if(md.type==="tool")stage='<div class="stage"><div class="linkout"><strong style="font-size:1.1rem">This version is in '+esc(md.name)+'.</strong><br><br><a href="'+esc(md.url)+'" target="_blank" rel="noopener">Open in '+esc(md.name)+' ↗</a><p class="hint" style="color:#aaa;margin-top:12px;max-width:460px;margin-left:auto;margin-right:auto">Draw and comment on frames there as usual. Then come back here to leave a summary note and click <strong style="color:#fff">Approve</strong> or <strong style="color:#fff">Request changes</strong>, which updates the task in Workprint.</p></div></div>';
   else stage='<div class="stage"><div class="linkout">This file opens on its own site.<br><br><a href="'+esc(md.url)+'" target="_blank" rel="noopener">Open the file ↗</a><p class="hint" style="color:#aaa;margin-top:10px">Watch it there, then leave notes here. Type a time like 1:24 if a note is about a moment.</p></div></div>';
   var timed=md.type==="youtube"||md.type==="vimeo"||md.type==="video";
-  var html='<div class="title-row"><div><h1>'+esc(data.title)+'</h1><div class="meta">'+esc(data.project||"")+' · Version '+data.round+'</div></div><div id="pill">'+statusPill()+'</div></div>';
+  var html='<div class="title-row"><div><h1>'+esc(data.title)+'</h1><div class="meta">'+esc(data.project||"")+' · Version '+data.round+(data.label?' · '+esc(data.label):'')+'</div></div><div id="pill">'+statusPill()+'</div></div>';
   html+='<div class="grid"><div>'+stage;
   html+='<div class="bar">'+(timed?'<span class="tc" id="tc">0:00 · f1</span>':'')+''+(md.type==="video"?'<span class="hint">Press , and . to step one frame</span>':'')+'<label class="hint">Frames per second <select id="fps">'+[24,25,30,60].map(function(v){return '<option'+(v===fps?' selected':'')+'>'+v+'</option>';}).join("")+'</select></label>'+(md.type!=="link"&&md.type!=="tool"?'<a class="hint" href="'+esc(data.media_url)+'" target="_blank" rel="noopener" style="margin-left:auto">Open original ↗</a>':'')+'</div>';
   html+='<div class="compose"><textarea id="body" placeholder="'+(timed?"Pause where you want, then type a note. It's pinned to that moment.":"Type a note")+'" maxlength="2000"></textarea>';
@@ -180,7 +180,7 @@ function renderNotes(){
   if(data.decision){
     d.innerHTML='<p>'+(data.decision==="approved"?"Approved":"Changes requested")+' by <strong>'+esc(data.decided_by||"")+'</strong>. The next version will appear on this same link.</p>';
   } else {
-    d.innerHTML='<p>Done reviewing? Your choice updates the task in Workprint.</p><div class="row"><button class="btn ok" id="appr">Approve</button><button class="btn chg" id="chg">Request changes</button></div>';
+    d.innerHTML='<p>Done reviewing? '+(data.kind==="cut"?'Your choice is recorded on this version of the cut.':'Your choice updates the task in Workprint.')+'</p><div class="row"><button class="btn ok" id="appr">Approve</button><button class="btn chg" id="chg">Request changes</button></div>';
     document.getElementById("appr").onclick=function(){decide("approved");};
     document.getElementById("chg").onclick=function(){decide("changes");};
   }

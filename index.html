@@ -661,6 +661,44 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
 .cal-touch-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.92;transform:translate(-50%,-120%);box-shadow:0 8px 22px rgba(0,0,0,.3);border-radius:4px;max-width:180px;}
 @media (pointer:coarse){.gantt-resize-handle,.gantt-resize-handle-left{width:16px;}}
 .nav-tab-funding{display:none;}body.tpl-org .nav-tab-funding{display:block;}
+body.tpl-org .nav-tab-cut{display:none;}
+.cut-wrap{padding:22px 24px 40px;}
+.cut-head{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-bottom:16px;}
+.cut-head h2{font-family:"DM Serif Display",Georgia,serif;font-weight:400;font-size:1.9rem;line-height:1;color:var(--text);}
+.cut-sub{font-size:.82rem;color:var(--text3);margin-top:6px;}
+.cut-actions{display:flex;gap:8px;flex-wrap:wrap;}
+.cut-grid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:18px;align-items:start;}
+.cut-player{background:#111;border-radius:12px;overflow:hidden;}
+.cut-player .ratio{position:relative;padding-top:56.25%;}
+.cut-player .ratio>*{position:absolute;inset:0;width:100%;height:100%;border:0;background:#000;}
+.cut-player img{display:block;width:100%;height:auto;}
+.cut-out{padding:54px 20px;text-align:center;color:#ddd;font-size:.9rem;}
+.cut-out a{color:#fff;font-weight:700;}
+.cut-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;margin-bottom:14px;}
+.cut-card h3{font-size:.72rem;letter-spacing:1.5px;font-weight:800;color:var(--text3);margin-bottom:8px;}
+.cut-changed{font-size:.85rem;color:var(--text2);white-space:pre-wrap;}
+.cut-ver{display:grid;grid-template-columns:40px 1fr auto auto;gap:10px;align-items:center;padding:9px 10px;border-radius:8px;font-size:.82rem;cursor:pointer;}
+.cut-ver:hover{background:var(--bg3);}
+.cut-ver.on{background:var(--bg3);outline:1.5px solid var(--purple);}
+.cut-ver .v{font-weight:800;color:var(--text);}
+.cut-ver .lbl{min-width:0;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cut-ver .meta{color:var(--text3);font-size:.74rem;white-space:nowrap;}
+.cut-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:18px 0;}
+.cut-step{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:14px;font-size:.82rem;color:var(--text2);}
+.cut-step b{display:block;font-family:"DM Serif Display",Georgia,serif;font-weight:400;font-size:1.5rem;color:var(--purple);line-height:1;margin-bottom:6px;}
+.sb-seq{font-size:.72rem;font-weight:800;letter-spacing:1px;color:var(--text3);margin:4px 0 6px;}
+.sb-shots{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;}
+.sb-shot{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:8px 10px;min-width:118px;cursor:pointer;}
+.sb-shot:hover{border-color:var(--purple);}
+.sb-code{font-weight:800;font-size:.8rem;color:var(--text);display:flex;justify-content:space-between;gap:8px;}
+.sb-code span{font-weight:600;color:var(--text3);font-size:.7rem;}
+.sb-pips{display:flex;gap:3px;margin-top:7px;}
+.sb-pip{width:14px;height:6px;border-radius:2px;background:var(--border);}
+.sb-pip.s-inprogress{background:var(--prog);}.sb-pip.s-review{background:var(--review);}.sb-pip.s-approved,.sb-pip.s-final{background:var(--done);}.sb-pip.s-ready{background:color-mix(in srgb,var(--todo) 45%,transparent);}
+.sb-now{font-size:.68rem;color:var(--text3);margin-top:5px;white-space:nowrap;}
+.sb-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:.7rem;color:var(--text3);margin-bottom:10px;}
+.sb-legend i{display:inline-block;width:12px;height:6px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+@media(max-width:1000px){.cut-grid{grid-template-columns:minmax(0,1fr);}.cut-steps{grid-template-columns:repeat(2,minmax(0,1fr));}}
 .fund-wrap{max-width:1140px;padding:16px 20px 32px;display:flex;flex-direction:column;gap:18px;}
 .fund-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;}
 .fund-head h2{margin:0;font-size:1.25rem;}
@@ -846,6 +884,7 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
         <div class="nav-tab active" data-tab="schedule" onclick="showTab('schedule')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><path d="M1 3h12M1 7h8M1 11h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Schedule</div>
         <div class="nav-tab" data-tab="calendar" onclick="showTab('calendar')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="2" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><line x1="4" y1="1" x2="4" y2="4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="1" y1="6" x2="13" y2="6" stroke="currentColor" stroke-width="1.2"/></svg>Calendar</div>
         <div class="nav-tab" data-tab="gantt" onclick="showTab('gantt')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="3" width="7" height="2" rx="1" fill="currentColor"/><rect x="1" y="3" width="3" height="2" rx="1" fill="currentColor" opacity=".35"/><rect x="3" y="7" width="8" height="2" rx="1" fill="currentColor"/><rect x="3" y="7" width="3" height="2" rx="1" fill="currentColor" opacity=".35"/><rect x="1" y="11" width="6" height="2" rx="1" fill="currentColor"/></svg>Gantt Chart</div>
+        <div class="nav-tab nav-tab-cut" data-tab="cut" onclick="showTab('cut')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:-2px;margin-right:5px"><rect x="1" y="2.5" width="12" height="9" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3.5 2.5v9M10.5 2.5v9M1 5h2.5M1 9h2.5M10.5 5H13M10.5 9H13" stroke="currentColor" stroke-width="1.1"/></svg>Cut</div>
         <div class="nav-tab nav-tab-funding" data-tab="funding" onclick="showTab('funding')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:-2px;margin-right:5px"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M8.6 5.2c-.3-.6-.9-.9-1.6-.9-.9 0-1.6.5-1.6 1.2 0 1.6 3.3.9 3.3 2.6 0 .7-.7 1.3-1.7 1.3-.8 0-1.4-.3-1.7-1M7 3.3v.9M7 9.5v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Funding</div>
         <div class="nav-tab" data-tab="milestones" id="nav-tab-admin" onclick="showTab('milestones')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Admin</div>
       </div>
@@ -932,6 +971,7 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
       </div>
 
       <div class="tab-content" id="tab-funding" style="display:none"><div class="fund-wrap" id="fund-wrap"></div></div>
+      <div class="tab-content" id="tab-cut" style="display:none"><div class="cut-wrap" id="cut-wrap"></div></div>
 
       <div class="tab-content" id="tab-milestones" style="display:none">
         <div class="admin-wrap">
@@ -1100,6 +1140,23 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="cut-modal">
+  <div class="modal" style="width:480px">
+    <div class="modal-title">Add a new cut</div>
+    <p style="font-size:.82rem;color:var(--text3);margin:6px 0 14px">Export the full edit from Premiere, Resolve or Avid, upload it (unlisted YouTube or Vimeo, Google Drive, Dropbox, or SyncSketch), then paste the link here.</p>
+    <div class="form-row-2">
+      <div><label class="flbl">Stage</label><select id="cm-stage" class="inp"></select></div>
+      <div><label class="flbl">Name (optional)</label><input id="cm-label" class="inp" placeholder="e.g. Anim pass 2"></div>
+    </div>
+    <div class="form-row"><label class="flbl">Link to the cut</label><input id="cm-url" class="inp" placeholder="https://…"></div>
+    <div class="form-row"><label class="flbl">What changed</label><textarea id="cm-notes" class="inp" rows="3" placeholder="e.g. SH030 to SH050 now in blocking. New temp music."></textarea></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeCutModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveCut()">Add cut</button>
     </div>
   </div>
 </div>
@@ -2504,6 +2561,142 @@ window.saveAssetLinks=async function(){
   showToast("Assets linked!");
 };
 
+// ── The Cut ──
+var cuts=[],cutsReady=false,cutViewing=null,cutNotes=null;
+var CUT_STAGES=["Animatic","Layout","Blocking","Animation","Lighting","Compositing","Final","Other"];
+async function loadCuts(){
+  cutNotes=null;
+  if(!activeProject||isOrg()){cuts=[];return;}
+  var r=await sb.from("cuts").select("*").eq("project_id",activeProject.id).order("version",{ascending:false});
+  if(r.error){cuts=[];cutsReady=false;return;}
+  cuts=r.data||[];cutsReady=true;
+  if(cutViewing&&!cuts.some(function(c){return c.id===cutViewing;}))cutViewing=null;
+}
+function cutLink(){return reviews.find(function(l){return l.target_kind==="cut"&&l.target_id===(activeProject&&activeProject.id);})||null;}
+function cutDate(c){var d=c&&c.created_at?new Date(c.created_at):new Date();return isNaN(d)?"":d.toLocaleDateString(undefined,{month:"short",day:"numeric"});}
+function cutName(c){return c.label?c.label:c.stage;}
+function cutMedia(url){
+  var u;try{u=new URL(url);}catch(e){return {type:"link",url:url};}
+  var h=u.hostname.replace(/^www\./,""),m;
+  if(h==="youtu.be")return {type:"frame",src:"https://www.youtube.com/embed/"+u.pathname.slice(1).split("/")[0]+"?rel=0"};
+  if(/(^|\.)youtube\.com$/.test(h)){var id=u.searchParams.get("v")||((m=u.pathname.match(/^\/(shorts|embed|live)\/([\w-]+)/))&&m[2]);if(id)return {type:"frame",src:"https://www.youtube.com/embed/"+id+"?rel=0"};}
+  if(/(^|\.)vimeo\.com$/.test(h)&&(m=u.pathname.match(/(\d{5,})(?:\/([0-9a-f]+))?/))){var hh=u.searchParams.get("h")||m[2]||"";return {type:"frame",src:"https://player.vimeo.com/video/"+m[1]+(hh?"?h="+hh:"")};}
+  if(h==="drive.google.com"&&(m=u.pathname.match(/\/file\/d\/([\w-]+)/)))return {type:"frame",src:"https://drive.google.com/file/d/"+m[1]+"/preview"};
+  if(/(^|\.)syncsketch\.com$/.test(h))return {type:"tool",name:"SyncSketch",url:url};
+  if(/(^|\.)(frame\.io|f\.io)$/.test(h))return {type:"tool",name:"Frame.io",url:url};
+  if(/(^|\.)dropbox\.com$/.test(h)){u.searchParams.delete("dl");u.searchParams.set("raw","1");url=u.toString();}
+  var p=u.pathname.toLowerCase();
+  if(/\.(mp4|webm|m4v|mov|ogv)$/.test(p))return {type:"video",src:url};
+  if(/\.(png|jpe?g|gif|webp)$/.test(p))return {type:"image",src:url};
+  return {type:"link",url:url};
+}
+function cutPlayerHtml(c){
+  var md=cutMedia(c.media_url);
+  if(md.type==="frame")return '<div class="cut-player"><div class="ratio"><iframe src="'+escH(md.src)+'" allow="autoplay; fullscreen" allowfullscreen></iframe></div></div>';
+  if(md.type==="video")return '<div class="cut-player"><div class="ratio"><video controls playsinline preload="metadata" src="'+escH(md.src)+'"></video></div></div>';
+  if(md.type==="image")return '<div class="cut-player"><img src="'+escH(md.src)+'" alt=""></div>';
+  return '<div class="cut-player"><div class="cut-out">'+(md.type==="tool"?'This cut is in '+escH(md.name)+'.':'This cut opens on its own site.')+'<br><br><a href="'+escH(md.url)+'" target="_blank" rel="noopener">Open it &#8599;</a></div></div>';
+}
+function cutDecisionFor(round){
+  var l=cutLink();if(!l)return null;
+  if(round===l.round)return l.decision||null;
+  var n=(cutNotes||[]).filter(function(x){return x.round===round&&x.kind!=="note";}).pop();
+  return n?n.kind:null;
+}
+function cutDecisionPill(round){var d=cutDecisionFor(round);return d==="approved"?'<span class="conf">Approved</span>':d==="changes"?'<span class="pend" style="color:var(--late)">Changes</span>':'';}
+function shotBoardHtml(){
+  var seqs=sequences.filter(function(q){return q.project_id===activeProject.id;});
+  if(!seqs.length)return '<div style="font-size:.82rem;color:var(--text3)">No sequences yet. Add them from the sidebar (&#9654; next to the project).</div>';
+  var order=SHOT_TASK_TYPES.filter(function(t){return t!=="Custom...";});
+  var html='<div class="sb-legend"><span><i style="background:color-mix(in srgb,var(--todo) 45%,transparent)"></i>Ready</span><span><i style="background:var(--prog)"></i>In progress</span><span><i style="background:var(--review)"></i>In review</span><span><i style="background:var(--done)"></i>Approved</span><span>One bar per shot task, in pipeline order. Click a shot to open it.</span></div>';
+  seqs.forEach(function(q){
+    var sh=shots.filter(function(x){return x.sequence_id===q.id;}).sort(function(a,b){return String(a.code).localeCompare(String(b.code));});
+    html+='<div class="sb-seq">'+escH(q.code)+(q.name?' · '+escH(q.name):'')+'</div><div class="sb-shots">';
+    if(!sh.length)html+='<span style="font-size:.78rem;color:var(--text3)">No shots yet.</span>';
+    sh.forEach(function(x){
+      var st=shotTasks.filter(function(t){return t.shot_id===x.id;}).sort(function(a,b){var ia=order.indexOf(a.task_type),ib=order.indexOf(b.task_type);return (ia<0?99:ia)-(ib<0?99:ib);});
+      var cur=st.filter(function(t){return t.status==="inprogress"||t.status==="review";})[0];
+      var allDone=st.length&&st.every(function(t){return t.status==="approved"||t.status==="final";});
+      var now=!st.length?"No tasks yet":allDone?"All approved":cur?cur.task_type+(cur.status==="review"?" in review":" in progress"):"Waiting to start";
+      html+='<div class="sb-shot" onclick="openShot(\''+x.id+'\')" title="Open '+escH(x.code)+'"><div class="sb-code">'+escH(x.code)+(x.frame_count?'<span>'+escH(x.frame_count)+'f</span>':'')+'</div><div class="sb-pips">'+(st.length?st.map(function(t){return '<i class="sb-pip s-'+escH(t.status||"ready")+'" title="'+escH(t.task_type)+': '+escH(t.status||"")+'"></i>';}).join(""):'<i class="sb-pip"></i>')+'</div><div class="sb-now">'+escH(now)+'</div></div>';
+    });
+    html+='</div>';
+  });
+  return html;
+}
+function renderCut(){
+  var w=document.getElementById("cut-wrap");if(!w||!activeProject)return;
+  if(!cutsReady){w.innerHTML='<div class="cut-card" style="max-width:560px">The Cut needs a quick database update before it can be used.</div>';return;}
+  var l=cutLink();
+  if(l&&cutNotes===null){
+    cutNotes=[];
+    sb.from("review_notes").select("*").eq("link_id",l.id).order("round",{ascending:false}).order("t_seconds",{ascending:true,nullsFirst:false}).order("created_at",{ascending:true}).then(function(r){cutNotes=r.error?[]:(r.data||[]);if(document.getElementById("tab-cut").classList.contains("active"))renderCut();});
+  }
+  var latest=cuts[0];
+  var html='<div class="cut-head"><div><h2>The Cut</h2><div class="cut-sub">'+(latest?'Latest: v'+latest.version+' · '+escH(cutName(latest))+' · '+cutDate(latest)+(latest.added_by?' · '+escH(latest.added_by):''):'The full edit of '+escH(activeProject.name)+', version by version.')+'</div></div><div class="cut-actions">';
+  if(l&&l.active)html+='<button class="btn btn-ghost btn-sm" onclick="copyText(\''+reviewUrl(l)+'\')">Copy review link</button><a class="btn btn-ghost btn-sm" href="'+reviewUrl(l)+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">Open review page</a>';
+  html+='<button class="btn btn-primary btn-sm" onclick="openCutModal()">+ Add new cut</button></div></div>';
+  if(!latest){
+    html+='<div class="cut-steps"><div class="cut-step"><b>1</b>Export the full edit from your editing software, at any stage: animatic, layout, blocking, final.</div><div class="cut-step"><b>2</b>Upload it where your team watches video (unlisted YouTube or Vimeo, Google Drive, Dropbox or SyncSketch).</div><div class="cut-step"><b>3</b>Click <strong>+ Add new cut</strong>, pick the stage and paste the link. Workprint makes one review link for the film.</div><div class="cut-step"><b>4</b>Send that link once. Every new cut appears on it, and the notes come back here, version by version.</div></div>';
+    html+='<div class="cut-card"><h3>WHERE EACH SHOT IS</h3>'+shotBoardHtml()+'</div>';
+    w.innerHTML=html;return;
+  }
+  var view=cuts.find(function(c){return c.id===cutViewing;})||latest;
+  html+='<div class="cut-grid"><div>';
+  html+=cutPlayerHtml(view);
+  html+='<div class="cut-card" style="margin-top:12px"><h3>V'+view.version+' · '+escH(cutName(view).toUpperCase())+(view.id!==latest.id?' · OLDER VERSION':'')+'</h3><div class="cut-changed">'+(view.notes?escH(view.notes):'<span style="color:var(--text3)">No notes on what changed.</span>')+'</div><div style="margin-top:8px;font-size:.74rem;color:var(--text3)">Added '+cutDate(view)+(view.added_by?' by '+escH(view.added_by):'')+' · <a href="'+escH(view.media_url)+'" target="_blank" rel="noopener" style="color:var(--purple)">Open original &#8599;</a></div></div>';
+  html+='<div class="cut-card"><h3>WHERE EACH SHOT IS</h3>'+shotBoardHtml()+'</div>';
+  html+='</div><div>';
+  var dec=l?(l.decision==="approved"?'<span class="conf">Approved</span> by '+escH(l.decided_by||""):l.decision==="changes"?'<span class="pend" style="color:var(--late)">Changes requested</span> by '+escH(l.decided_by||""):'<span class="pend">Waiting for review</span>'):'';
+  html+='<div class="cut-card"><h3>REVIEW · V'+latest.version+'</h3><div style="font-size:.84rem;color:var(--text2);margin-bottom:6px">'+dec+'</div>';
+  if(l)html+=!cutNotes||!cutNotes.length?'<div style="font-size:.8rem;color:var(--text3)">No notes yet. Copy the review link and send it to your supervisors.</div>':cutNotesHtml(l);
+  html+='</div><div class="cut-card"><h3>VERSIONS</h3>'+cuts.map(function(c){
+    return '<div class="cut-ver'+(c.id===view.id?' on':'')+'" onclick="viewCut(\''+c.id+'\')"><span class="v">v'+c.version+'</span><span class="lbl">'+escH(cutName(c))+'</span><span class="meta">'+cutDate(c)+'</span><span>'+cutDecisionPill(c.version)+'</span></div>';
+  }).join("")+'</div></div></div>';
+  w.innerHTML=html;
+}
+function cutNotesHtml(l){
+  var byRound={};cutNotes.forEach(function(n){(byRound[n.round]=byRound[n.round]||[]).push(n);});
+  return '<div class="st-rv-notes" style="margin-top:4px;max-height:420px">'+Object.keys(byRound).map(Number).sort(function(a,b){return b-a;}).map(function(r){
+    return '<div class="st-rv-round">VERSION '+r+(r===l.round?' · CURRENT':'')+'</div>'+byRound[r].map(function(n){
+      var t=n.t_seconds!=null?'<span class="st-rv-t">'+Math.floor(n.t_seconds/60)+':'+String(Math.floor(n.t_seconds%60)).padStart(2,"0")+'</span>':'';
+      var cls=n.kind==="approved"?' ok':n.kind==="changes"?' chg':'';
+      return '<label class="st-rv-note'+cls+(n.resolved?' done':'')+'">'+(n.kind==="note"?'<input type="checkbox" '+(n.resolved?'checked':'')+' onchange="cutResolve(\''+n.id+'\',this.checked)" title="Mark as fixed">':'<span style="width:13px"></span>')+'<span style="min-width:0"><span class="st-rv-who">'+escH(n.author_name)+'</span>'+t+'<span class="st-rv-body">'+escH(n.body)+'</span></span></label>';
+    }).join("");
+  }).join("")+'</div>';
+}
+window.cutResolve=async function(id,val){
+  var r=await sb.from("review_notes").update({resolved:val}).eq("id",id);if(!dbOk(r))return;
+  var n=(cutNotes||[]).find(function(x){return x.id===id;});if(n)n.resolved=val;renderCut();
+};
+window.viewCut=function(id){cutViewing=id;renderCut();var t=document.getElementById("tab-cut");if(t)t.scrollIntoView({behavior:"smooth",block:"start"});};
+window.openCutModal=function(){
+  var latest=cuts[0],next="Animatic";
+  if(latest)next=latest.stage;
+  document.getElementById("cm-stage").innerHTML=CUT_STAGES.map(function(s){return '<option'+(s===next?' selected':'')+'>'+s+'</option>';}).join("");
+  document.getElementById("cm-label").value="";document.getElementById("cm-url").value="";document.getElementById("cm-notes").value="";
+  document.getElementById("cut-modal").classList.add("open");
+  setTimeout(function(){document.getElementById("cm-url").focus();},50);
+};
+window.closeCutModal=function(){document.getElementById("cut-modal").classList.remove("open");};
+window.saveCut=async function(){
+  var url=document.getElementById("cm-url").value.trim();
+  if(!/^https:\/\//i.test(url)){showToast("Paste a link that starts with https://","error");return;}
+  var stage=document.getElementById("cm-stage").value,label=document.getElementById("cm-label").value.trim()||null,notes=document.getElementById("cm-notes").value.trim()||null;
+  var ver=(cuts[0]?cuts[0].version:0)+1;
+  var me=profileName(currentUser.id)||(currentUser.email||"").split("@")[0]||null;
+  var r=await sb.from("cuts").insert({project_id:activeProject.id,version:ver,stage:stage,label:label,media_url:url,notes:notes,added_by:me}).select().single();
+  if(!dbOk(r))return;
+  cuts.unshift(r.data);cutViewing=null;
+  var l=cutLink(),had=!!l,rr;
+  var exp=new Date(Date.now()+90*864e5).toISOString();
+  if(!l){rr=await sb.from("review_links").insert({project_id:activeProject.id,target_kind:"cut",target_id:activeProject.id,title:activeProject.name+" — The Cut",media_url:url,round:ver}).select("*, review_notes(count)").single();if(!rr.error)reviews.push(rr.data);}
+  else{rr=await sb.from("review_links").update({media_url:url,round:ver,decision:null,decided_by:null,decided_at:null,active:true,expires_at:exp}).eq("id",l.id).select("*, review_notes(count)").single();if(!rr.error)Object.assign(l,rr.data);}
+  if(rr.error)showToast("Cut saved, but the review link didn't update: "+rr.error.message,"error");
+  else showToast(had?"v"+ver+" added. Reviewers see it on the same link.":"v"+ver+" added. Copy the review link and send it to your supervisors.");
+  closeCutModal();cutNotes=null;renderCut();renderReviews();
+};
+
 // ── Review links ──
 var reviews=[],reviewsReady=false,rvKind=null,rvTarget=null;
 async function loadReviews(){
@@ -2522,6 +2715,7 @@ function reviewPill(l){
   return '<span class="pend">Waiting</span>';
 }
 function reviewTargetName(l){
+  if(l.target_kind==="cut")return "The Cut";
   if(l.target_kind==="task"){var t=tasks.find(function(x){return x.id===l.target_id;});return t?t.name:l.title;}
   var st=shotTasks.find(function(x){return x.id===l.target_id;});if(!st)return l.title;
   var sh=shots.find(function(x){return x.id===st.shot_id;});return (sh?sh.code+" — ":"")+st.task_type;
@@ -2562,6 +2756,7 @@ window.openReviewModal=function(kind,id){
 };
 window.goToReview=async function(kind,id){
   if(kind==="shot_task"){var st=shotTasks.find(function(x){return x.id===id;});if(st){await openShot(st.shot_id);openShotReview=null;await toggleShotReview(id);return;}}
+  if(kind==="cut"){if(activeShot)backToProject();showTab("cut");return;}
   openReviewModal(kind,id);
 };
 window.closeReviewModal=function(){document.getElementById("review-modal").classList.remove("open");};
@@ -2628,6 +2823,7 @@ async function loadTasks(){
   if(shotIds.length){var rst=await sb.from("shot_tasks").select("*").in("shot_id",shotIds);shotTasks=rst.data||[];}
   else{shotTasks=[];}
   await loadReviews();
+  await loadCuts();
   await loadFunders();
   var active=document.querySelector(".tab-content.active");
   var name=active?active.id.replace("tab-",""):"schedule";
@@ -3654,13 +3850,15 @@ window.populateTeamDropdowns = function() {
 window.showTab=function(name){
   if(name==="milestones"&&!canEditProject()){showToast("Admin access is owner-only.","error");name="schedule";}
   if(name==="funding"&&!isOrg())name="schedule";
-  ["tab-schedule","tab-calendar","tab-gantt","tab-funding","tab-milestones"].forEach(function(id){var el=document.getElementById(id);el.style.display="none";el.classList.remove("active");});
+  if(name==="cut"&&isOrg())name="schedule";
+  ["tab-schedule","tab-calendar","tab-gantt","tab-funding","tab-cut","tab-milestones"].forEach(function(id){var el=document.getElementById(id);el.style.display="none";el.classList.remove("active");});
   document.querySelectorAll(".nav-tab").forEach(function(el){el.classList.remove("active");});
   var el=document.getElementById("tab-"+name);el.style.display="block";el.classList.add("active");
   var _nt=document.querySelector('.nav-tab[data-tab="'+name+'"]');if(_nt)_nt.classList.add("active");
   if(name==="schedule")renderSchedule();else if(name==="calendar")renderCalendar();else if(name==="gantt")renderGantt();
   else if(name==="milestones")renderMilestones();
   else if(name==="funding")renderFunding();
+  else if(name==="cut")renderCut();
 };
 
 window.openProjectModal=function(id){editProjId=id||null;document.getElementById("proj-modal-title").textContent=id?"Edit Project":"New Project";selectedColor=id?(projects.find(function(p){return p.id===id;})||{color:"#7c3aed"}).color:"#7c3aed";var row=document.getElementById("color-row");row.innerHTML="";COLORS.forEach(function(c){var sw=document.createElement("div");sw.className="color-swatch"+(c===selectedColor?" selected":"");sw.style.background=c;sw.dataset.color=c;sw.onclick=function(){selectedColor=c;document.querySelectorAll(".color-swatch").forEach(function(s){s.classList.toggle("selected",s.dataset.color===c);});};row.appendChild(sw);});if(id){var p=projects.find(function(x){return x.id===id;});if(p){document.getElementById("pf-name").value=p.name;document.getElementById("pf-desc").value=p.description||"";}}else{document.getElementById("pf-name").value="";document.getElementById("pf-desc").value="";}document.getElementById("tpl-row").style.display=id?"none":"";renderGanttColorEditor(id);selectTemplate("production");document.getElementById("tpl-seed").checked=true;document.getElementById("proj-modal").classList.add("open");};
