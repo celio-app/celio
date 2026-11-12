@@ -640,6 +640,41 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
 .touch-lift{transform:scale(1.04);box-shadow:0 6px 18px rgba(0,0,0,.28)!important;z-index:5;transition:transform .12s;}
 .cal-touch-ghost{position:fixed;z-index:9999;pointer-events:none;opacity:.92;transform:translate(-50%,-120%);box-shadow:0 8px 22px rgba(0,0,0,.3);border-radius:4px;max-width:180px;}
 @media (pointer:coarse){.gantt-resize-handle,.gantt-resize-handle-left{width:16px;}}
+.nav-tab-funding{display:none;}body.tpl-org .nav-tab-funding{display:block;}
+.fund-wrap{max-width:1140px;padding:16px 20px 32px;display:flex;flex-direction:column;gap:18px;}
+.fund-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.fund-head h2{margin:0;font-size:1.25rem;}
+.fund-sub{font-size:.8rem;color:var(--text3);margin-top:3px;}
+.fund-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.fund-card-hdr{padding:11px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border2);font-weight:700;font-size:.9rem;}
+.fund-card-hdr .sp{flex:1;}
+.fund-body{padding:14px 16px;}
+.fund-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.fund-chip{font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:999px;background:var(--bg3);border:1px solid var(--border);color:var(--text2);}
+.fund-empty{font-size:.82rem;color:var(--text3);padding:14px 16px;}
+.fund-row{display:grid;grid-template-columns:minmax(0,2.2fr) 1fr 1.1fr 1fr auto;gap:12px;align-items:center;padding:11px 16px;border-top:1px solid var(--border2);}
+.fund-row:first-child{border-top:none;}
+.fund-name{font-weight:700;font-size:.85rem;}
+.fund-meta{font-size:.72rem;color:var(--text4);margin-top:2px;}
+.fund-dl{font-size:.8rem;font-weight:600;}
+.fund-dl small{display:block;font-weight:600;font-size:.68rem;}
+.fund-dl .soon{color:var(--review);}.fund-dl .past{color:var(--late);}.fund-dl .ok{color:var(--text4);}
+.fund-acts{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;}
+.fund-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;padding:14px 16px;}
+.fund-sug{border:1px solid var(--border);border-radius:10px;padding:12px 13px;background:var(--bg);display:flex;flex-direction:column;gap:6px;}
+.fund-sug .t{font-weight:700;font-size:.86rem;line-height:1.25;}
+.fund-sug .f{font-size:.72rem;color:var(--text3);font-weight:600;}
+.fund-sug .d{font-size:.76rem;color:var(--text2);line-height:1.4;}
+.fund-sug .w{font-size:.7rem;color:var(--text4);}
+.fund-sug .b{display:flex;gap:6px;margin-top:auto;padding-top:4px;flex-wrap:wrap;}
+.fund-type{align-self:flex-start;font-size:.64rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:5px;background:color-mix(in srgb,var(--purple) 12%,var(--bg2));color:var(--purple);}
+.fund-note{font-size:.72rem;color:var(--text4);}
+.fund-st{font:inherit;font-size:.76rem;padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);}
+.fp-opts{display:flex;flex-wrap:wrap;gap:6px;}
+.fp-opt{font:inherit;font-size:.76rem;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;}
+.fp-opt.on{background:var(--purple);border-color:var(--purple);color:#fff;}
+.cal-chip-fund{background:color-mix(in srgb,var(--review) 16%,var(--bg2));color:var(--review);border:1px dashed color-mix(in srgb,var(--review) 55%,transparent);cursor:pointer;}
+@media (max-width:760px){.fund-row{grid-template-columns:1fr;gap:6px;}.fund-acts{justify-content:flex-start;}}
 [stroke="#7c3aed"]{stroke:var(--purple);} [fill="#7c3aed"]{fill:var(--purple);}
 .wp-serif{font-family:"DM Serif Display",Georgia,serif;font-weight:400;letter-spacing:-.5px;}
 .sb-logo{gap:9px;}
@@ -773,10 +808,11 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
       </header>
 
       <div class="nav-tabs" id="nav-tabs" style="display:none">
-        <div class="nav-tab active" onclick="showTab('schedule')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><path d="M1 3h12M1 7h8M1 11h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Schedule</div>
-        <div class="nav-tab" onclick="showTab('calendar')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="2" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><line x1="4" y1="1" x2="4" y2="4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="1" y1="6" x2="13" y2="6" stroke="currentColor" stroke-width="1.2"/></svg>Calendar</div>
-        <div class="nav-tab" onclick="showTab('gantt')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="3" width="7" height="2" rx="1" fill="currentColor"/><rect x="1" y="3" width="3" height="2" rx="1" fill="currentColor" opacity=".35"/><rect x="3" y="7" width="8" height="2" rx="1" fill="currentColor"/><rect x="3" y="7" width="3" height="2" rx="1" fill="currentColor" opacity=".35"/><rect x="1" y="11" width="6" height="2" rx="1" fill="currentColor"/></svg>Gantt Chart</div>
-        <div class="nav-tab" id="nav-tab-admin" onclick="showTab('milestones')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Admin</div>
+        <div class="nav-tab active" data-tab="schedule" onclick="showTab('schedule')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><path d="M1 3h12M1 7h8M1 11h10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>Schedule</div>
+        <div class="nav-tab" data-tab="calendar" onclick="showTab('calendar')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="2" width="12" height="11" rx="1.5" stroke="currentColor" stroke-width="1.3"/><line x1="4" y1="1" x2="4" y2="4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="10" y1="1" x2="10" y2="4" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/><line x1="1" y1="6" x2="13" y2="6" stroke="currentColor" stroke-width="1.2"/></svg>Calendar</div>
+        <div class="nav-tab" data-tab="gantt" onclick="showTab('gantt')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><rect x="1" y="3" width="7" height="2" rx="1" fill="currentColor"/><rect x="1" y="3" width="3" height="2" rx="1" fill="currentColor" opacity=".35"/><rect x="3" y="7" width="8" height="2" rx="1" fill="currentColor"/><rect x="3" y="7" width="3" height="2" rx="1" fill="currentColor" opacity=".35"/><rect x="1" y="11" width="6" height="2" rx="1" fill="currentColor"/></svg>Gantt Chart</div>
+        <div class="nav-tab nav-tab-funding" data-tab="funding" onclick="showTab('funding')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:-2px;margin-right:5px"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.4"/><path d="M8.6 5.2c-.3-.6-.9-.9-1.6-.9-.9 0-1.6.5-1.6 1.2 0 1.6 3.3.9 3.3 2.6 0 .7-.7 1.3-1.7 1.3-.8 0-1.4-.3-1.7-1M7 3.3v.9M7 9.5v1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>Funding</div>
+        <div class="nav-tab" data-tab="milestones" id="nav-tab-admin" onclick="showTab('milestones')"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" style="display:inline-block;vertical-align:middle;margin-right:5px"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.3"/><path d="M7 4v3.5l2 1.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>Admin</div>
       </div>
 
       <div id="no-proj" class="no-project" style="display:flex">
@@ -858,6 +894,8 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
           </div>
         </div>
       </div>
+
+      <div class="tab-content" id="tab-funding" style="display:none"><div class="fund-wrap" id="fund-wrap"></div></div>
 
       <div class="tab-content" id="tab-milestones" style="display:none">
         <div class="admin-wrap">
@@ -1054,6 +1092,47 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
   </div>
 </div>
 
+<div class="modal-bg" id="fund-profile-modal">
+  <div class="modal" style="width:560px">
+    <h3>Funding profile</h3>
+    <div class="hint" style="margin:-6px 0 14px">Workprint uses this to suggest funders that fit this project. Pick everything that applies.</div>
+    <div class="form-row"><label class="flbl">Who we are</label><div class="fp-opts" id="fp-org"></div></div>
+    <div class="form-row"><label class="flbl">Industry</label><div class="fp-opts" id="fp-ind"></div></div>
+    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label class="flbl">Country</label><select id="fp-country" class="inp"><option>Canada</option><option>Other</option></select></div>
+      <div><label class="flbl">Province or territory</label><select id="fp-prov" class="inp"></select></div>
+      <div><label class="flbl">City or town</label><input id="fp-city" class="inp" placeholder="e.g. Oakville"></div>
+      <div><label class="flbl">School (optional)</label><input id="fp-school" class="inp" placeholder="e.g. Sheridan College"></div>
+    </div>
+    <div class="form-row"><label class="flbl">What the money is for</label><div class="fp-opts" id="fp-pur"></div></div>
+    <div class="form-row"><label class="flbl">Kinds of funding</label><div class="fp-opts" id="fp-types"></div></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeFundProfile()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFundProfile()">Save Profile</button>
+    </div>
+  </div>
+</div>
+<div class="modal-bg" id="funder-modal">
+  <div class="modal" style="width:520px">
+    <h3 id="funder-modal-title">Add funder</h3>
+    <div class="form-row"><label class="flbl">Program name</label><input id="fm-name" class="inp" placeholder="e.g. Seed Grant"></div>
+    <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div><label class="flbl">Funder</label><input id="fm-funder" class="inp" placeholder="e.g. Ontario Trillium Foundation"></div>
+      <div><label class="flbl">Type</label><select id="fm-type" class="inp"></select></div>
+      <div><label class="flbl">Amount</label><input id="fm-amount" class="inp" placeholder="e.g. Up to $10,000"></div>
+      <div><label class="flbl">Deadline</label><input id="fm-deadline" class="inp" type="date"></div>
+    </div>
+    <div class="form-row"><label class="flbl">Website</label><input id="fm-url" class="inp" placeholder="https://"></div>
+    <div class="form-row"><label class="flbl">Status</label><select id="fm-status" class="inp"></select></div>
+    <div class="form-row"><label class="flbl">Notes</label><textarea id="fm-notes" class="inp" rows="3" placeholder="Eligibility, what to include, contacts..."></textarea>
+      <div class="hint" id="fm-hint">Check the deadline and rules on the funder's own website. They change from year to year.</div></div>
+    <div class="form-actions">
+      <button class="btn btn-del" id="fm-del" style="margin-right:auto;display:none" onclick="deleteFunder()">Delete</button>
+      <button class="btn btn-ghost" onclick="closeFunderModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveFunder()">Save</button>
+    </div>
+  </div>
+</div>
 <div class="modal-bg" id="seq-modal">
   <div class="modal" style="width:420px">
     <h3 id="seq-modal-title">New Sequence</h3>
@@ -1311,6 +1390,7 @@ var ORG_TEAMS=[
   ["contests","Contests",["Announce","Collect Entries","Judge","Award"]],
   ["fundraising","Fundraising",["Set Goal","Plan","Collect","Thank Donors"]],
   ["outreach","Community Outreach",["Contact","Plan","Run","Follow-up"]],
+  ["grants","Grants",["Research","Draft","Budget","Review","Submit","Report"]],
   ["other","Other",["Plan","Do","Review"]]
 ];
 var PROD_TYPE_OPTIONS='<option value="character">Character</option><option value="prop">Prop</option><option value="environment">Environment</option><option value="vehicle">Vehicle</option><option value="fx">FX Element</option>';
@@ -1329,6 +1409,7 @@ function setTxt(id,v){var el=document.getElementById(id);if(el)el.textContent=v;
 function applyTemplateUI(){
   var org=isOrg(),L=tplL();
   document.body.classList.toggle("tpl-org",org);
+  if(!org){var _ft=document.getElementById("tab-funding");if(_ft&&_ft.classList.contains("active"))setTimeout(function(){showTab("schedule");},0);}
   setTxt("cat-lbl-general",L.catGeneral);setTxt("cat-lbl-asset",L.catAsset);
   setTxt("lbl-asset-type",L.assetType);setTxt("lbl-asset-name",L.assetName);
   setTxt("lbl-stage",L.stage);setTxt("lbl-lead",L.lead);setTxt("deliv-hdr",L.deliv);
@@ -1738,6 +1819,217 @@ function calTouchDrag(chip,info){
     cancel:done
   });
 }
+
+/* ═══ Funding (Studio Management) ═══ */
+var funders=[];var fundShowAll=false;var editFunderId=null;var fpDraft=null;
+var FUND_ORG=[["student","Student club or council"],["nonprofit","Non-profit or community group"],["studio","Small studio or company"],["artist","Individual artist or freelancer"]];
+var FUND_IND=[["animation","Animation"],["film","Film and TV"],["games","Games"],["xr","Interactive / XR"],["music","Music and audio"],["visual","Visual and fine arts"],["design","Design"],["community","Community and events"]];
+var FUND_PUR=[["production","A production or project"],["event","An event or festival"],["equipment","Equipment"],["travel","Travel to festivals or conferences"],["training","Training or workshops"],["outreach","Community outreach"]];
+var FUND_TYPES=[["grant","Grants"],["bursary","Bursaries and scholarships"],["competition","Competitions and awards"],["sponsorship","Sponsorships"],["taxcredit","Tax credits"],["placement","Placements and apprenticeships"]];
+var FUND_STATUS=[["watching","Watching"],["applying","Applying"],["submitted","Submitted"],["awarded","Awarded"],["declined","Not this time"]];
+var FUND_PROV=["Alberta","British Columbia","Manitoba","New Brunswick","Newfoundland and Labrador","Northwest Territories","Nova Scotia","Nunavut","Ontario","Prince Edward Island","Quebec","Saskatchewan","Yukon"];
+/* Starter list, checked November 2026. Programs, amounts and dates change: always confirm on the funder's site. */
+var FUND_CATALOG=[
+ {k:"cc_create",name:"Explore and Create: Artistic Creation",funder:"Canada Council for the Arts",url:"https://canadacouncil.ca/funding/grants/explore-and-create",types:["grant"],who:["artist","nonprofit"],ind:["animation","film","games","xr","music","visual","design"],region:"CA",amount:"Up to $75,000",when:"Rolling intake",blurb:"Project grants for new artistic work, from first idea to public presentation."},
+ {k:"oac_mac",name:"Media Artists Creation Projects",funder:"Ontario Arts Council",url:"https://arts.on.ca/Grants/Media-Artists-Creation-Projects",types:["grant"],who:["artist"],ind:["animation","film","games","xr","music"],region:"ON",amount:"Up to $10,000 (emerging) or $40,000",when:"Usually March and October",blurb:"Independent media art projects in production or post-production. Undergraduate students aren't eligible."},
+ {k:"oac_map",name:"Media Arts Projects",funder:"Ontario Arts Council",url:"https://www.arts.on.ca/grants",types:["grant"],who:["artist","nonprofit"],ind:["animation","film","games","xr"],region:"ON",amount:"Varies",when:"Usually March",blurb:"Presentation, professional development and publication projects in media arts."},
+ {k:"oc_ip",name:"IP Fund (screen and interactive)",funder:"Ontario Creates",url:"https://www.ontariocreates.ca",types:["grant"],who:["studio"],ind:["animation","film","games","xr"],region:"ON",amount:"Varies",when:"Usually April and September",blurb:"Development and production funding for Ontario film, TV and interactive companies."},
+ {k:"ocase",name:"Computer Animation and Special Effects Tax Credit (OCASE)",funder:"Ontario Creates",url:"https://ontariocreates.ca/tax-incentives/ocase",types:["taxcredit"],who:["studio"],ind:["animation","film"],region:"ON",amount:"18% of eligible Ontario labour",when:"Ongoing",blurb:"Refundable credit for animation and VFX work done in Ontario on certified film and TV productions."},
+ {k:"oidmtc",name:"Interactive Digital Media Tax Credit (OIDMTC)",funder:"Ontario Creates",url:"https://www.ontariocreates.ca",types:["taxcredit"],who:["studio"],ind:["games","xr"],region:"ON",amount:"Up to 40% of eligible costs",when:"Ongoing",blurb:"Refundable credit for Ontario companies making games and interactive media."},
+ {k:"cmf_ie",name:"Innovation & Experimentation Program",funder:"Canada Media Fund",url:"https://cmf-fmc.ca/program/innovation-experimentation-program/",types:["grant"],who:["studio"],ind:["games","xr","animation"],region:"CA",amount:"Varies",when:"Usually April and August–September",blurb:"Funding for innovative interactive digital media projects."},
+ {k:"tf_ttw",name:"Talent to Watch",funder:"Telefilm Canada",url:"https://telefilm.ca/en/financing/talent-to-watch",types:["grant"],who:["artist","studio"],ind:["film","animation"],region:"CA",amount:"Varies",when:"Usually April",blurb:"Production funding for emerging filmmakers' first feature films."},
+ {k:"bell_sfds",name:"Short-Form Digital Series Program",funder:"Bell Fund",url:"https://bellfund.ca",types:["grant"],who:["studio"],ind:["film","animation"],region:"CA",amount:"Varies",when:"See the Bell Fund deadlines page",blurb:"Funds original series made for digital platforms."},
+ {k:"nfb_hh",name:"Hothouse",funder:"National Film Board of Canada",url:"https://hothouse.nfb.ca",types:["placement"],who:["artist"],ind:["animation"],region:"CA",amount:"Paid apprenticeship",when:"Periodic calls",blurb:"Paid apprenticeship for emerging animators to make a short film with the NFB."},
+ {k:"mitacs",name:"Research placements",funder:"Mitacs",url:"https://www.mitacs.ca",types:["placement"],who:["studio","nonprofit"],ind:["all"],region:"CA",amount:"Co-funded with your organization",when:"Ongoing",blurb:"Paid placements that match students and postdocs with your organization on a research project, such as a pipeline tool or R&D."},
+ {k:"otf_seed",name:"Seed Grant",funder:"Ontario Trillium Foundation",url:"https://otf.ca",types:["grant"],who:["nonprofit"],ind:["all"],region:"ON",amount:"$10,000–$100,000",when:"Usually July–August",blurb:"Helps Ontario non-profits try new ideas and programs that benefit their community."},
+ {k:"miss",name:"Arts and Culture Grants",funder:"City of Mississauga",url:"https://www.mississauga.ca/services-and-programs/community-support-programs/apply-for-a-grant/",types:["grant"],who:["nonprofit","artist"],ind:["all"],region:"city",city:"mississauga",amount:"Varies",when:"Usually August–October",blurb:"City grants for Mississauga arts and culture groups, including a yearly themed projects grant."},
+ {k:"oak",name:"Cultural Grants and Artist Project Fund",funder:"Oakville Arts Council",url:"https://oakvillearts.com/Cultural-Grants",types:["grant"],who:["nonprofit","artist"],ind:["all"],region:"city",city:"oakville",amount:"Varies",when:"See the Oakville Arts Council site",blurb:"Town of Oakville arts funding for organizations, artists and collectives."},
+ {k:"bram",name:"Advance Brampton Fund (arts and culture)",funder:"City of Brampton",url:"https://www.brampton.ca",types:["grant"],who:["nonprofit"],ind:["all"],region:"city",city:"brampton",amount:"Varies",when:"See the City of Brampton site",blurb:"City funding with an arts and culture priority area for Brampton groups."},
+ {k:"sher_club",name:"Academic club funding",funder:"Sheridan College",url:"https://thinkfast.sheridancollege.ca/club-support/",types:["grant"],who:["student"],ind:["all"],region:"school",school:"sheridan",amount:"Depends on your school's budget",when:"Request each year",blurb:"Submit the Club Funding Request Form with a budget. The Associate Dean of your school reviews it."},
+ {k:"rookies",name:"Rookie Awards",funder:"The Rookies",url:"https://www.therookies.co",types:["competition"],who:["student","artist"],ind:["animation","film","games","xr","design","visual"],region:"INTL",amount:"Awards and studio opportunities",when:"Usually April–June",blurb:"Global competition for student and emerging work in animation, VFX, games and design."}
+];
+function fundLabel(list,k){for(var i=0;i<list.length;i++)if(list[i][0]===k)return list[i][1];return k;}
+function fundProfile(){return (activeProject&&activeProject.funding_profile)||{};}
+function fundHasProfile(p){p=p||fundProfile();return !!(p.org&&p.org.length);}
+function fundRegionOk(c,p){
+  var country=p.country||"Canada",prov=p.province||"",city=(p.city||"").toLowerCase(),school=(p.school||"").toLowerCase();
+  if(c.region==="INTL")return true;
+  if(c.region==="CA")return country==="Canada";
+  if(c.region==="ON")return country==="Canada"&&prov==="Ontario";
+  if(c.region==="city")return city.indexOf(c.city)>=0;
+  if(c.region==="school")return school.indexOf(c.school)>=0;
+  return true;
+}
+function fundMatches(c,p){
+  if(!fundHasProfile(p))return false;
+  if(!c.who.some(function(w){return p.org.indexOf(w)>=0;}))return false;
+  if(!fundRegionOk(c,p))return false;
+  var ind=p.ind||[];if(ind.length&&c.ind.indexOf("all")<0&&!c.ind.some(function(x){return ind.indexOf(x)>=0;}))return false;
+  var ty=p.types||[];if(ty.length&&!c.types.some(function(x){return ty.indexOf(x)>=0;}))return false;
+  return true;
+}
+function fundRegionText(c){return c.region==="INTL"?"International":c.region==="CA"?"Canada":c.region==="ON"?"Ontario":c.region==="city"?(c.city.charAt(0).toUpperCase()+c.city.slice(1)):"Sheridan";}
+async function loadFunders(){
+  funders=[];if(!activeProject||!isOrg())return;
+  var r=await sb.from("funders").select("*").eq("project_id",activeProject.id).order("deadline",{ascending:true,nullsFirst:false});
+  if(!r.error)funders=r.data||[];
+}
+function fundDays(d){if(!d)return null;var x=new Date(d+"T00:00:00");return Math.round((x-today)/86400000);}
+function fundDeadlineHtml(f){
+  if(!f.deadline)return '<div class="fund-dl"><span class="ok">No date yet</span><small class="ok">Add it from the funder\'s site</small></div>';
+  var n=fundDays(f.deadline),cls=n<0?"past":n<=21?"soon":"ok",txt=n<0?(-n)+" days ago":n===0?"Today":n===1?"Tomorrow":"In "+n+" days";
+  var dt=new Date(f.deadline+"T00:00:00").toLocaleDateString(undefined,{month:"short",day:"numeric",year:"numeric"});
+  return '<div class="fund-dl">'+dt+'<small class="'+cls+'">'+txt+'</small></div>';
+}
+function fundScheduled(f){return tasks.some(function(t){return t.category==="asset"&&t.asset_type==="grants"&&t.asset_name===fundInitiative(f);});}
+function fundInitiative(f){return "Grant: "+f.name;}
+window.renderFunding=function(){
+  var w=document.getElementById("fund-wrap");if(!w||!activeProject)return;
+  var p=fundProfile(),owner=canEditProject(),h='';
+  h+='<div class="fund-head"><div><h2>Funding</h2><div class="fund-sub">Grants, awards and other funding for '+escH(activeProject.name)+', with deadlines that go on your schedule.</div></div>'+
+     '<button class="btn btn-primary" onclick="openFunderModal(null)">+ Add Funder</button></div>';
+  // profile
+  h+='<div class="fund-card"><div class="fund-card-hdr">Funding profile<span class="sp"></span>'+(owner?'<button class="btn btn-ghost btn-sm" onclick="openFundProfile()">'+(fundHasProfile(p)?'Edit':'Set up')+'</button>':'')+'</div>';
+  if(fundHasProfile(p)){
+    var chips=[];(p.org||[]).forEach(function(k){chips.push(fundLabel(FUND_ORG,k));});(p.ind||[]).forEach(function(k){chips.push(fundLabel(FUND_IND,k));});
+    var place=[p.city,p.province,p.country].filter(Boolean).join(", ");if(place)chips.push(place);if(p.school)chips.push(p.school);
+    (p.pur||[]).forEach(function(k){chips.push(fundLabel(FUND_PUR,k));});(p.types||[]).forEach(function(k){chips.push(fundLabel(FUND_TYPES,k));});
+    h+='<div class="fund-body"><div class="fund-chips">'+chips.map(function(c){return '<span class="fund-chip">'+escH(c)+'</span>';}).join("")+'</div></div>';
+  }else{
+    h+='<div class="fund-empty">'+(owner?'Tell Workprint who you are and what you need money for, and it will suggest funders that fit.':'An owner hasn\'t set up the funding profile yet.')+'</div>';
+  }
+  h+='</div>';
+  // our list
+  h+='<div class="fund-card"><div class="fund-card-hdr">Our funding list<span class="sp"></span><span class="fund-note">'+funders.length+' saved</span></div>';
+  if(!funders.length)h+='<div class="fund-empty">Nothing saved yet. Add a funder from the suggestions below, or click + Add Funder.</div>';
+  else{
+    h+='<div>';
+    funders.forEach(function(f){
+      var sch=fundScheduled(f);
+      var st='<select class="fund-st" onchange="setFunderStatus(\''+f.id+'\',this.value)">'+FUND_STATUS.map(function(o){return '<option value="'+o[0]+'"'+(f.status===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join("")+'</select>';
+      var url=/^https?:\/\//i.test(f.url||"")?f.url:"";
+      h+='<div class="fund-row"><div><div class="fund-name">'+escH(f.name)+'</div><div class="fund-meta">'+escH([f.funder,fundLabel(FUND_TYPES,f.ftype||"grant")].filter(Boolean).join(" · "))+'</div></div>'+
+         '<div class="fund-meta" style="font-size:.78rem;color:var(--text2)">'+escH(f.amount||"—")+'</div>'+fundDeadlineHtml(f)+'<div>'+st+'</div>'+
+         '<div class="fund-acts">'+(url?'<a class="btn btn-ghost btn-sm" href="'+escH(url)+'" target="_blank" rel="noopener">Visit</a>':'')+
+         (sch?'<span class="fund-chip" title="Tasks are on the schedule">On schedule ✓</span>':'<button class="btn btn-ghost btn-sm" onclick="scheduleFunder(\''+f.id+'\')">Add to schedule</button>')+
+         '<button class="btn btn-ghost btn-sm" onclick="openFunderModal(\''+f.id+'\')">Edit</button></div></div>';
+    });
+    h+='</div>';
+  }
+  h+='</div>';
+  // suggestions
+  var saved={};funders.forEach(function(f){if(f.catalog_key)saved[f.catalog_key]=1;});
+  var matches=FUND_CATALOG.filter(function(c){return fundMatches(c,p);});
+  var list=(fundShowAll||!fundHasProfile(p))?FUND_CATALOG:matches;
+  h+='<div class="fund-card"><div class="fund-card-hdr">'+(fundShowAll||!fundHasProfile(p)?'All starter funders':'Suggested for you')+'<span class="sp"></span>'+
+     (fundHasProfile(p)?'<button class="btn btn-ghost btn-sm" onclick="toggleFundAll()">'+(fundShowAll?'Show suggestions only':'Show all '+FUND_CATALOG.length)+'</button>':'')+'</div>';
+  if(!list.length)h+='<div class="fund-empty">No starter funders match this profile yet. Try adding more industries or funding types, or click Show all.</div>';
+  else{
+    h+='<div class="fund-grid">';
+    list.forEach(function(c){
+      var who=c.who.map(function(k){return fundLabel(FUND_ORG,k);}).join(", ");
+      h+='<div class="fund-sug"><span class="fund-type">'+escH(fundLabel(FUND_TYPES,c.types[0]))+'</span><div class="t">'+escH(c.name)+'</div><div class="f">'+escH(c.funder)+' · '+escH(fundRegionText(c))+'</div>'+
+         '<div class="d">'+escH(c.blurb)+'</div><div class="w"><b>'+escH(c.amount)+'</b> · '+escH(c.when)+'</div><div class="w">For: '+escH(who)+'</div>'+
+         '<div class="b"><a class="btn btn-ghost btn-sm" href="'+escH(c.url)+'" target="_blank" rel="noopener">Visit site</a>'+
+         (saved[c.k]?'<span class="fund-chip">In your list ✓</span>':'<button class="btn btn-primary btn-sm" onclick="addCatalogFunder(\''+c.k+'\')">Add to our list</button>')+'</div></div>';
+    });
+    h+='</div>';
+  }
+  h+='<div class="fund-empty" style="border-top:1px solid var(--border2)">Programs, amounts and dates change every year. Always check the funder\'s own website before you apply.</div></div>';
+  w.innerHTML=h;
+};
+window.toggleFundAll=function(){fundShowAll=!fundShowAll;renderFunding();};
+function fpRenderOpts(id,list,key,single){
+  var el=document.getElementById(id);
+  el.innerHTML=list.map(function(o){var on=(fpDraft[key]||[]).indexOf(o[0])>=0;return '<button type="button" class="fp-opt'+(on?' on':'')+'" onclick="fpToggle(\''+id+'\',\''+key+'\',\''+o[0]+'\')">'+escH(o[1])+'</button>';}).join("");
+  el.dataset.list=key;
+}
+var FP_LISTS={org:FUND_ORG,ind:FUND_IND,pur:FUND_PUR,types:FUND_TYPES};
+window.fpToggle=function(id,key,v){var a=fpDraft[key]=fpDraft[key]||[];var i=a.indexOf(v);if(i>=0)a.splice(i,1);else a.push(v);fpRenderOpts(id,FP_LISTS[key],key);};
+window.openFundProfile=function(){
+  if(!canEditProject()){showToast("Only owners can change the funding profile.","error");return;}
+  var p=fundProfile();fpDraft=JSON.parse(JSON.stringify(p));
+  fpRenderOpts("fp-org",FUND_ORG,"org");fpRenderOpts("fp-ind",FUND_IND,"ind");fpRenderOpts("fp-pur",FUND_PUR,"pur");fpRenderOpts("fp-types",FUND_TYPES,"types");
+  var pv=document.getElementById("fp-prov");pv.innerHTML='<option value="">—</option>'+FUND_PROV.map(function(x){return '<option>'+x+'</option>';}).join("");
+  document.getElementById("fp-country").value=p.country||"Canada";pv.value=p.province||"Ontario";
+  document.getElementById("fp-city").value=p.city||"";document.getElementById("fp-school").value=p.school||"";
+  document.getElementById("fund-profile-modal").classList.add("open");
+};
+window.closeFundProfile=function(){document.getElementById("fund-profile-modal").classList.remove("open");};
+window.saveFundProfile=async function(){
+  var p=fpDraft||{};
+  p.country=document.getElementById("fp-country").value;p.province=document.getElementById("fp-prov").value;
+  p.city=document.getElementById("fp-city").value.trim();p.school=document.getElementById("fp-school").value.trim();
+  if(!p.org||!p.org.length){showToast("Pick at least one option under Who we are.","error");return;}
+  var r=await sb.from("projects").update({funding_profile:p}).eq("id",activeProject.id);
+  if(!dbOk(r))return;
+  activeProject.funding_profile=p;var pp=projects.find(function(x){return x.id===activeProject.id;});if(pp)pp.funding_profile=p;
+  fundShowAll=false;closeFundProfile();showToast("Funding profile saved");renderFunding();
+};
+function fmFill(f){
+  document.getElementById("fm-type").innerHTML=FUND_TYPES.map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>';}).join("");
+  document.getElementById("fm-status").innerHTML=FUND_STATUS.map(function(o){return '<option value="'+o[0]+'">'+o[1]+'</option>';}).join("");
+  document.getElementById("fm-name").value=f.name||"";document.getElementById("fm-funder").value=f.funder||"";
+  document.getElementById("fm-type").value=f.ftype||"grant";document.getElementById("fm-amount").value=f.amount||"";
+  document.getElementById("fm-deadline").value=f.deadline||"";document.getElementById("fm-url").value=f.url||"";
+  document.getElementById("fm-status").value=f.status||"watching";document.getElementById("fm-notes").value=f.notes||"";
+}
+var fmCatalogKey=null;
+window.openFunderModal=function(id){
+  editFunderId=id||null;fmCatalogKey=null;
+  var f=id?funders.find(function(x){return x.id===id;}):{};if(!f)return;
+  document.getElementById("funder-modal-title").textContent=id?"Edit funder":"Add funder";
+  document.getElementById("fm-del").style.display=id?"":"none";
+  fmFill(f);document.getElementById("funder-modal").classList.add("open");
+};
+window.closeFunderModal=function(){document.getElementById("funder-modal").classList.remove("open");};
+window.addCatalogFunder=function(k){
+  var c=FUND_CATALOG.find(function(x){return x.k===k;});if(!c)return;
+  editFunderId=null;fmCatalogKey=k;
+  document.getElementById("funder-modal-title").textContent="Add to our list";document.getElementById("fm-del").style.display="none";
+  fmFill({name:c.name,funder:c.funder,ftype:c.types[0],amount:c.amount,url:c.url,status:"watching",notes:"Timing: "+c.when+". "+c.blurb});
+  document.getElementById("funder-modal").classList.add("open");
+  setTimeout(function(){document.getElementById("fm-deadline").focus();},50);
+};
+window.saveFunder=async function(){
+  var name=document.getElementById("fm-name").value.trim();if(!name){showToast("Give the program a name.","error");return;}
+  var url=document.getElementById("fm-url").value.trim();if(url&&!/^https?:\/\//i.test(url))url="https://"+url;
+  var row={name:name,funder:document.getElementById("fm-funder").value.trim()||null,ftype:document.getElementById("fm-type").value,
+    amount:document.getElementById("fm-amount").value.trim()||null,deadline:document.getElementById("fm-deadline").value||null,url:url||null,
+    status:document.getElementById("fm-status").value,notes:document.getElementById("fm-notes").value.trim()||null};
+  var r;
+  if(editFunderId)r=await sb.from("funders").update(row).eq("id",editFunderId);
+  else{row.project_id=activeProject.id;row.created_by=currentUser.id;row.catalog_key=fmCatalogKey;r=await sb.from("funders").insert(row);}
+  if(!dbOk(r))return;
+  closeFunderModal();showToast(editFunderId?"Funder updated":"Added to your funding list");await loadFunders();renderFunding();
+};
+window.deleteFunder=async function(){
+  if(!editFunderId||!confirm("Remove this funder from your list? Tasks already on the schedule stay."))return;
+  var r=await sb.from("funders").delete().eq("id",editFunderId);if(!dbOk(r))return;
+  closeFunderModal();showToast("Removed");await loadFunders();renderFunding();
+};
+window.setFunderStatus=async function(id,v){
+  var r=await sb.from("funders").update({status:v}).eq("id",id);if(!dbOk(r))return;
+  var f=funders.find(function(x){return x.id===id;});if(f)f.status=v;
+  if(v==="awarded")showToast("Congratulations! Add a Report task with + Task when you know the reporting date.");
+  if(isOrg()&&document.getElementById("tab-calendar").classList.contains("active"))renderCalendar();
+};
+window.scheduleFunder=async function(id){
+  var f=funders.find(function(x){return x.id===id;});if(!f)return;
+  if(!f.deadline){showToast("Add the deadline first (Edit), then add it to the schedule.","error");openFunderModal(id);return;}
+  var D=new Date(f.deadline+"T00:00:00"),n=fundDays(f.deadline);
+  if(n<1){showToast("That deadline has already passed.","error");return;}
+  var span=Math.min(n,42),start=new Date(D);start.setDate(start.getDate()-span);
+  function at(fr){var x=new Date(start);x.setDate(x.getDate()+Math.round(span*fr));return fmtYMD(x);}
+  var plan=[["Research",0,.15],["Draft",.15,.5],["Budget",.3,.5],["Review",.5,.8],["Submit",.8,1]];
+  var init=fundInitiative(f);
+  var payload=plan.map(function(s){return {name:f.name+" — "+s[0],category:"asset",asset_type:"grants",asset_name:init,pipeline_stage:s[0],
+    start_date:at(s[1]),due_date:at(s[2]),priority:s[0]==="Submit"?"high":"med",status:"todo",lead:"",user_id:currentUser.id,project_id:activeProject.id};});
+  var r=await sb.from("tasks").insert(payload);if(!dbOk(r))return;
+  if(f.status==="watching"){await sb.from("funders").update({status:"applying"}).eq("id",id);f.status="applying";}
+  showToast("Added “"+init+"” to the schedule. Assign who's responsible for each step.");
+  await loadTasks();
+};
 function setHeaderProject(p){
   applyTemplateUI();
   document.getElementById("hdr-bc").innerHTML='<div class="proj-badge"><span class="dot" style="background:'+p.color+'"></span><span>'+escH(p.name)+'</span></div>';
@@ -2031,12 +2323,14 @@ async function loadTasks(){
   var shotIds=shots.filter(function(s){return s.project_id===activeProject.id;}).map(function(s){return s.id;});
   if(shotIds.length){var rst=await sb.from("shot_tasks").select("*").in("shot_id",shotIds);shotTasks=rst.data||[];}
   else{shotTasks=[];}
+  await loadFunders();
   var active=document.querySelector(".tab-content.active");
   var name=active?active.id.replace("tab-",""):"schedule";
   populateTeamDropdowns();
   if(name==="schedule")renderSchedule();
   else if(name==="calendar")renderCalendar();
   else if(name==="gantt")renderGantt();
+  else if(name==="funding")renderFunding();
   else if(name==="milestones")renderMilestones();
 }
 
@@ -2679,6 +2973,14 @@ async function calMoveItem(info, ymd) {
     renderCalendar();
 }
 function calFillDay(cell, ymd) {
+  if (isOrg()) (funders || []).filter(function(f) { return f.deadline === ymd && f.status !== "declined"; }).forEach(function(f) {
+    var fc = document.createElement("div");
+    fc.className = "cal-task-chip cal-chip-fund";
+    fc.textContent = "\u25C6 Deadline: " + f.name;
+    fc.title = (f.funder ? f.funder + " \u2014 " : "") + f.name;
+    fc.addEventListener("click", function() { showTab("funding"); });
+    cell.appendChild(fc);
+  });
   // ── Task chips ──
   tasks.filter(function(t) { return t.due_date === ymd; }).forEach(function(t) {
     var chip = document.createElement("div");
@@ -3037,12 +3339,14 @@ window.populateTeamDropdowns = function() {
 
 window.showTab=function(name){
   if(name==="milestones"&&!canEditProject()){showToast("Admin access is owner-only.","error");name="schedule";}
-  ["tab-schedule","tab-calendar","tab-gantt","tab-milestones"].forEach(function(id){var el=document.getElementById(id);el.style.display="none";el.classList.remove("active");});
+  if(name==="funding"&&!isOrg())name="schedule";
+  ["tab-schedule","tab-calendar","tab-gantt","tab-funding","tab-milestones"].forEach(function(id){var el=document.getElementById(id);el.style.display="none";el.classList.remove("active");});
   document.querySelectorAll(".nav-tab").forEach(function(el){el.classList.remove("active");});
   var el=document.getElementById("tab-"+name);el.style.display="block";el.classList.add("active");
-  document.querySelectorAll(".nav-tab")[{schedule:0,calendar:1,gantt:2,milestones:3}[name]].classList.add("active");
+  var _nt=document.querySelector('.nav-tab[data-tab="'+name+'"]');if(_nt)_nt.classList.add("active");
   if(name==="schedule")renderSchedule();else if(name==="calendar")renderCalendar();else if(name==="gantt")renderGantt();
   else if(name==="milestones")renderMilestones();
+  else if(name==="funding")renderFunding();
 };
 
 window.openProjectModal=function(id){editProjId=id||null;document.getElementById("proj-modal-title").textContent=id?"Edit Project":"New Project";selectedColor=id?(projects.find(function(p){return p.id===id;})||{color:"#7c3aed"}).color:"#7c3aed";var row=document.getElementById("color-row");row.innerHTML="";COLORS.forEach(function(c){var sw=document.createElement("div");sw.className="color-swatch"+(c===selectedColor?" selected":"");sw.style.background=c;sw.dataset.color=c;sw.onclick=function(){selectedColor=c;document.querySelectorAll(".color-swatch").forEach(function(s){s.classList.toggle("selected",s.dataset.color===c);});};row.appendChild(sw);});if(id){var p=projects.find(function(x){return x.id===id;});if(p){document.getElementById("pf-name").value=p.name;document.getElementById("pf-desc").value=p.description||"";}}else{document.getElementById("pf-name").value="";document.getElementById("pf-desc").value="";}document.getElementById("tpl-row").style.display=id?"none":"";renderGanttColorEditor(id);selectTemplate("production");document.getElementById("tpl-seed").checked=true;document.getElementById("proj-modal").classList.add("open");};
@@ -3794,6 +4098,8 @@ window.addEventListener("DOMContentLoaded", function () {
     "modal",
     "proj-modal",
     "seq-modal",
+    "fund-profile-modal",
+    "funder-modal",
     "shot-modal",
     "shot-task-modal",
     "asset-link-modal",
@@ -3809,6 +4115,8 @@ window.addEventListener("DOMContentLoaded", function () {
       "modal": closeModal,
       "proj-modal": closeProjModal,
       "seq-modal": closeSeqModal,
+      "fund-profile-modal": closeFundProfile,
+      "funder-modal": closeFunderModal,
       "shot-modal": closeShotModal,
       "shot-task-modal": closeShotTaskModal,
       "asset-link-modal": closeAssetLinkModal,
