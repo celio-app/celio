@@ -670,6 +670,9 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
 .fund-type{align-self:flex-start;font-size:.64rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:5px;background:color-mix(in srgb,var(--purple) 12%,var(--bg2));color:var(--purple);}
 .fund-note{font-size:.72rem;color:var(--text4);}
 .fund-st{font:inherit;font-size:.76rem;padding:4px 6px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);}
+.fund-star{font:inherit;font-size:1.15rem;line-height:1;background:none;border:none;cursor:pointer;color:var(--text4);padding:0 2px;}
+.fund-star:hover,.fund-star.on{color:var(--review);}
+.fund-star-sm{color:var(--review);margin-right:6px;font-size:.85rem;}
 .fp-opts{display:flex;flex-wrap:wrap;gap:6px;}
 .fp-opt{font:inherit;font-size:.76rem;font-weight:600;padding:5px 10px;border-radius:999px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;}
 .fp-opt.on{background:var(--purple);border-color:var(--purple);color:#fff;}
@@ -1900,7 +1903,7 @@ window.renderFunding=function(){
   }
   h+='</div>';
   // our list
-  h+='<div class="fund-card"><div class="fund-card-hdr">Our funding list<span class="sp"></span><span class="fund-note">'+funders.length+' saved</span></div>';
+  h+='<div class="fund-card"><div class="fund-card-hdr">Our funding list<span class="fund-note" style="font-weight:500">Bookmarked funders stay here when suggestions refresh</span><span class="sp"></span><span class="fund-note">'+funders.length+' saved</span></div>';
   if(!funders.length)h+='<div class="fund-empty">Nothing saved yet. Add a funder from the suggestions below, or click + Add Funder.</div>';
   else{
     h+='<div>';
@@ -1908,7 +1911,7 @@ window.renderFunding=function(){
       var sch=fundScheduled(f);
       var st='<select class="fund-st" onchange="setFunderStatus(\''+f.id+'\',this.value)">'+FUND_STATUS.map(function(o){return '<option value="'+o[0]+'"'+(f.status===o[0]?' selected':'')+'>'+o[1]+'</option>';}).join("")+'</select>';
       var url=/^https?:\/\//i.test(f.url||"")?f.url:"";
-      h+='<div class="fund-row"><div><div class="fund-name">'+escH(f.name)+'</div><div class="fund-meta">'+escH([f.funder,fundLabel(FUND_TYPES,f.ftype||"grant")].filter(Boolean).join(" · "))+'</div></div>'+
+      h+='<div class="fund-row"><div><div class="fund-name"><span class="fund-star-sm" title="Saved to your list">★</span>'+escH(f.name)+'</div><div class="fund-meta">'+escH([f.funder,fundLabel(FUND_TYPES,f.ftype||"grant")].filter(Boolean).join(" · "))+'</div></div>'+
          '<div class="fund-meta" style="font-size:.78rem;color:var(--text2)">'+escH(f.amount||"—")+'</div>'+fundDeadlineHtml(f)+'<div>'+st+'</div>'+
          '<div class="fund-acts">'+(url?'<a class="btn btn-ghost btn-sm" href="'+escH(url)+'" target="_blank" rel="noopener">Visit</a>':'')+
          (sch?'<span class="fund-chip" title="Tasks are on the schedule">On schedule ✓</span>':'<button class="btn btn-ghost btn-sm" onclick="scheduleFunder(\''+f.id+'\')">Add to schedule</button>')+
@@ -1928,10 +1931,11 @@ window.renderFunding=function(){
     h+='<div class="fund-grid">';
     list.forEach(function(c){
       var who=c.who.map(function(k){return fundLabel(FUND_ORG,k);}).join(", ");
-      h+='<div class="fund-sug"><span class="fund-type">'+escH(fundLabel(FUND_TYPES,c.types[0]))+'</span><div class="t">'+escH(c.name)+'</div><div class="f">'+escH(c.funder)+' · '+escH(fundRegionText(c))+'</div>'+
+      h+='<div class="fund-sug"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px"><span class="fund-type">'+escH(fundLabel(FUND_TYPES,c.types[0]))+'</span>'+
+         '<button class="fund-star'+(saved[c.k]?' on':'')+'" title="'+(saved[c.k]?'Bookmarked: saved to your list':'Bookmark: save to your list')+'" aria-label="Bookmark" onclick="toggleBookmark(\''+c.k+'\')">'+(saved[c.k]?'★':'☆')+'</button></div><div class="t">'+escH(c.name)+'</div><div class="f">'+escH(c.funder)+' · '+escH(fundRegionText(c))+'</div>'+
          '<div class="d">'+escH(c.blurb)+'</div><div class="w"><b>'+escH(c.amount)+'</b> · '+escH(c.when)+'</div><div class="w">For: '+escH(who)+'</div>'+
          '<div class="b"><a class="btn btn-ghost btn-sm" href="'+escH(c.url)+'" target="_blank" rel="noopener">Visit site</a>'+
-         (saved[c.k]?'<span class="fund-chip">In your list ✓</span>':'<button class="btn btn-primary btn-sm" onclick="addCatalogFunder(\''+c.k+'\')">Add to our list</button>')+'</div></div>';
+         (saved[c.k]?'<span class="fund-chip">In your list ✓</span>':'<button class="btn btn-primary btn-sm" onclick="addCatalogFunder(\''+c.k+'\')">Add with deadline</button>')+'</div></div>';
     });
     h+='</div>';
   }
@@ -1990,6 +1994,20 @@ window.addCatalogFunder=function(k){
   fmFill({name:c.name,funder:c.funder,ftype:c.types[0],amount:c.amount,url:c.url,status:"watching",notes:"Timing: "+c.when+". "+c.blurb});
   document.getElementById("funder-modal").classList.add("open");
   setTimeout(function(){document.getElementById("fm-deadline").focus();},50);
+};
+window.toggleBookmark=async function(k){
+  var c=FUND_CATALOG.find(function(x){return x.k===k;});if(!c)return;
+  var f=funders.find(function(x){return x.catalog_key===k;});
+  if(f){
+    if(f.status!=="watching"||f.deadline||fundScheduled(f)){showToast("This one has a deadline or status. Use Edit in your list to remove it.","error");return;}
+    var rd=await sb.from("funders").delete().eq("id",f.id);if(!dbOk(rd))return;
+    showToast("Bookmark removed");
+  }else{
+    var ri=await sb.from("funders").insert({project_id:activeProject.id,created_by:currentUser.id,catalog_key:k,name:c.name,funder:c.funder,ftype:c.types[0],amount:c.amount,url:c.url,status:"watching",notes:"Timing: "+c.when+". "+c.blurb});
+    if(!dbOk(ri))return;
+    showToast("Bookmarked. It's saved in Our funding list.");
+  }
+  await loadFunders();renderFunding();
 };
 window.saveFunder=async function(){
   var name=document.getElementById("fm-name").value.trim();if(!name){showToast("Give the program a name.","error");return;}
