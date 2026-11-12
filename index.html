@@ -1108,7 +1108,7 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
   <div class="modal" style="width:500px">
     <div class="modal-title" id="rv-title">Review link</div>
     <p style="font-size:.82rem;color:var(--text3);margin:6px 0 14px">Anyone with the link can watch, leave notes, and approve or request changes. Nothing is uploaded to Workprint; the video or image stays where it is.</p>
-    <div class="form-row"><label class="flbl">Video or image link</label><input id="rv-url" class="inp" placeholder="https://… YouTube, Vimeo, Google Drive, Dropbox, or a direct .mp4 / .png link"></div>
+    <div class="form-row"><label class="flbl">Video or image link</label><input id="rv-url" class="inp" placeholder="https://… YouTube, Vimeo, Google Drive, Dropbox, SyncSketch, or a direct .mp4 / .png link"></div>
     <div class="form-row" style="font-size:.76rem;color:var(--text3);margin-top:-6px">Make sure the file is shared so anyone with its link can view it (unlisted on YouTube or Vimeo is fine).</div>
     <div id="rv-existing" style="display:none">
       <div class="form-row"><label class="flbl">Review link to send</label>
@@ -2294,7 +2294,7 @@ function shotReviewPanel(st,l){
   if(!reviewsReady)return '<div class="st-rv-help">Reviews aren\'t set up yet.</div>';
   var id=st.id, h='';
   if(!l||!l.active){
-    h+='<div class="st-rv-help">'+(l?'This review link is turned off. Paste a link to turn it back on.':'Get a link your supervisor or client can watch and comment on. Paste the playblast or render link (YouTube, Vimeo, Google Drive, Dropbox, or a direct .mp4).')+'</div>';
+    h+='<div class="st-rv-help">'+(l?'This review link is turned off. Paste a link to turn it back on.':'Get a link your supervisor or client can watch and comment on. Paste the playblast or render link (YouTube, Vimeo, Google Drive, Dropbox, SyncSketch, or a direct .mp4).')+'</div>';
     h+='<div class="st-rv-line"><input class="inp" id="st-rv-url-'+id+'" placeholder="https://…" value="'+escH(l?l.media_url:"")+'"><button class="btn btn-primary btn-sm" onclick="shotReviewSubmit(\''+id+'\')">'+(l?'Turn back on':'Create review link')+'</button></div>';
     if(l)h+=shotReviewNotesHtml(l);
     return h;

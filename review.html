@@ -111,6 +111,8 @@ function media(url){
   if(h==="youtu.be")return {type:"youtube",id:u.pathname.slice(1).split("/")[0]};
   if(/(^|\.)youtube\.com$/.test(h)){ if(u.searchParams.get("v"))return {type:"youtube",id:u.searchParams.get("v")}; if((m=u.pathname.match(/^\/(shorts|embed|live)\/([\w-]+)/)))return {type:"youtube",id:m[2]}; }
   if(/(^|\.)vimeo\.com$/.test(h)&&(m=u.pathname.match(/(\d{5,})(?:\/([0-9a-f]+))?/)))return {type:"vimeo",id:m[1],h:u.searchParams.get("h")||m[2]||""};
+  if(/(^|\.)syncsketch\.com$/.test(h))return {type:"tool",name:"SyncSketch",url:url};
+  if(/(^|\.)(frame\.io|f\.io)$/.test(h))return {type:"tool",name:"Frame.io",url:url};
   if(h==="drive.google.com"&&(m=u.pathname.match(/\/file\/d\/([\w-]+)/)))return {type:"frame",src:"https://drive.google.com/file/d/"+m[1]+"/preview",url:url};
   if(/(^|\.)dropbox\.com$/.test(h)){u.searchParams.delete("dl");u.searchParams.set("raw","1");url=u.toString();}
   var path=u.pathname.toLowerCase();
@@ -142,11 +144,12 @@ function render(){
   else if(md.type==="video")stage='<div class="stage"><div class="ratio"><video id="vid" controls playsinline preload="metadata" src="'+esc(md.src)+'"></video></div></div>';
   else if(md.type==="frame")stage='<div class="stage"><div class="ratio"><iframe src="'+esc(md.src)+'" allow="autoplay; fullscreen" allowfullscreen></iframe></div></div>';
   else if(md.type==="image")stage='<div class="stage"><img class="still" src="'+esc(md.src)+'" alt="'+esc(data.title)+'"></div>';
+  else if(md.type==="tool")stage='<div class="stage"><div class="linkout"><strong style="font-size:1.1rem">This version is in '+esc(md.name)+'.</strong><br><br><a href="'+esc(md.url)+'" target="_blank" rel="noopener">Open in '+esc(md.name)+' ↗</a><p class="hint" style="color:#aaa;margin-top:12px;max-width:460px;margin-left:auto;margin-right:auto">Draw and comment on frames there as usual. Then come back here to leave a summary note and click <strong style="color:#fff">Approve</strong> or <strong style="color:#fff">Request changes</strong>, which updates the task in Workprint.</p></div></div>';
   else stage='<div class="stage"><div class="linkout">This file opens on its own site.<br><br><a href="'+esc(md.url)+'" target="_blank" rel="noopener">Open the file ↗</a><p class="hint" style="color:#aaa;margin-top:10px">Watch it there, then leave notes here. Type a time like 1:24 if a note is about a moment.</p></div></div>';
   var timed=md.type==="youtube"||md.type==="vimeo"||md.type==="video";
   var html='<div class="title-row"><div><h1>'+esc(data.title)+'</h1><div class="meta">'+esc(data.project||"")+' · Version '+data.round+'</div></div><div id="pill">'+statusPill()+'</div></div>';
   html+='<div class="grid"><div>'+stage;
-  html+='<div class="bar">'+(timed?'<span class="tc" id="tc">0:00 · f1</span>':'')+''+(md.type==="video"?'<span class="hint">Press , and . to step one frame</span>':'')+'<label class="hint">Frames per second <select id="fps">'+[24,25,30,60].map(function(v){return '<option'+(v===fps?' selected':'')+'>'+v+'</option>';}).join("")+'</select></label>'+(md.type!=="link"?'<a class="hint" href="'+esc(data.media_url)+'" target="_blank" rel="noopener" style="margin-left:auto">Open original ↗</a>':'')+'</div>';
+  html+='<div class="bar">'+(timed?'<span class="tc" id="tc">0:00 · f1</span>':'')+''+(md.type==="video"?'<span class="hint">Press , and . to step one frame</span>':'')+'<label class="hint">Frames per second <select id="fps">'+[24,25,30,60].map(function(v){return '<option'+(v===fps?' selected':'')+'>'+v+'</option>';}).join("")+'</select></label>'+(md.type!=="link"&&md.type!=="tool"?'<a class="hint" href="'+esc(data.media_url)+'" target="_blank" rel="noopener" style="margin-left:auto">Open original ↗</a>':'')+'</div>';
   html+='<div class="compose"><textarea id="body" placeholder="'+(timed?"Pause where you want, then type a note. It's pinned to that moment.":"Type a note")+'" maxlength="2000"></textarea>';
   html+='<div class="row"><input class="name" id="nm" placeholder="Your name" maxlength="80" value="'+esc(localStorage.getItem("wp-review-name")||"")+'">';
   html+=timed?'<label class="hint"><input type="checkbox" id="pin" checked> Pin to <span id="pinat">0:00</span></label>':'<input class="at" id="at" placeholder="Time (opt.)" title="A time like 1:24, or a frame like f120">';
