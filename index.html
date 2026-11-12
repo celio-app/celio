@@ -129,7 +129,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .bc-seq{color:var(--text3);font-weight:600;}
 .bc-shot{color:var(--purple);font-weight:700;}
 .proj-badge{display:inline-flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:5px 13px;font-size:.82rem;font-weight:600;color:var(--text2);}
-.proj-badge .dot{width:8px;height:8px;border-radius:50%;}
+.proj-badge .dot{position:static;width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .btn{padding:7px 14px;border-radius:7px;border:none;cursor:pointer;font-size:.8rem;font-weight:600;transition:all .15s;}
 .btn-primary{background:var(--purple);color:#fff;}.btn-primary:hover{background:var(--purple);filter:brightness(.88);}
 .btn-ghost{background:transparent;color:var(--text2);border:1px solid var(--border);}.btn-ghost:hover{background:var(--bg3);}
@@ -234,7 +234,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .status-dropdown.open{display:block;}
 .status-option{padding:9px 14px;font-size:.8rem;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:8px;}
 .status-option:hover{background:var(--bg3);}
-.status-option .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.status-option .dot{position:static;width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .dot-todo{background:#94a3b8;}.dot-inprogress{background:#3b82f6;}.dot-review{background:#f59e0b;}.dot-done{background:#10b981;}
 
 /* CALENDAR */
@@ -720,7 +720,7 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
 .tc-auto{font-size:.72rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;}
 .sb-about{display:block;text-align:center;font-size:.7rem;color:var(--text3);text-decoration:none;margin-top:6px;white-space:nowrap;overflow:hidden;}
 .sidebar-nav.collapsed .sb-about{display:none;}
-.sb-about:hover{color:var(--text);text-decoration:underline;}
+.sb-about a{color:var(--text3);text-decoration:none;}.sb-about a:hover{color:var(--text);text-decoration:underline;}
 .tc-auto.active{border-color:var(--text);color:var(--text);font-weight:700;}
 </style>
 </head>
@@ -772,7 +772,7 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
     <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <button class="btn-ghost" style="width:100%;padding:10px;font-size:.85rem;color:var(--text3)" onclick="showInviteCodeInput()">Have an invite code? Click here</button>
     </div>
-    <div style="text-align:center;margin-top:12px;font-size:.75rem"><a href="about.html" style="color:var(--text3)">About and privacy</a></div>
+    <div style="text-align:center;margin-top:12px;font-size:.75rem;color:var(--text3)"><a href="manual.html" style="color:var(--text3)">Manual</a> · <a href="about.html" style="color:var(--text3)">About and privacy</a></div>
   </div>
   </div>
 </div>
@@ -801,7 +801,7 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
           <button class="sb-btn" onclick="openSchemeMenu(event)" id="theme-btn" title="Colour scheme">&#9673; <span>Theme</span></button>
           <button class="sb-btn" onclick="doSignOut()">&#8859; <span>Sign Out</span></button>
         </div>
-        <a href="about.html" target="_blank" rel="noopener" class="sb-about" title="About and privacy"><span>About and privacy</span></a>
+        <div class="sb-about"><a href="manual.html" target="_blank" rel="noopener" title="Manual">Help</a> · <a href="about.html" target="_blank" rel="noopener" title="About and privacy">Privacy</a></div>
       </div>
     </nav>
 

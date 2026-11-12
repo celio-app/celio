@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manual · Workprint</title>
+<meta name="description" content="How to use Workprint: projects, tasks, handoffs, the calendar and Gantt chart, funding, and inviting your team.">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#f4f0e8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--paper:#f4f0e8;--ink:#1d1b18;--ink2:#4a463f;--ink3:#7a746a;--red:#b4232f;--line:#ddd5c6;--card:#fbf8f2;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;scroll-padding-top:20px;}
+  body{background:var(--paper);color:var(--ink);font-family:"Segoe UI",system-ui,-apple-system,sans-serif;line-height:1.6;font-size:16px;}
+  a{color:var(--red);}
+  .top{max-width:1180px;margin:0 auto;padding:32px 24px 0;}
+  header{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);}
+  .brand .word{font-family:"DM Serif Display",Georgia,serif;font-size:1.6rem;line-height:1;}
+  .brand .tag{font-family:"DM Serif Display",Georgia,serif;font-style:italic;color:var(--ink3);font-size:.95rem;}
+  .open{font-size:.85rem;font-weight:600;text-decoration:none;border:1.5px solid var(--red);border-radius:999px;padding:7px 16px;}
+  .open:hover{background:var(--red);color:#fff;}
+  .rule{height:3px;background:var(--red);margin:18px 0 0;}
+  .layout{max-width:1180px;margin:0 auto;padding:0 24px 80px;display:grid;grid-template-columns:230px minmax(0,1fr);gap:56px;}
+  nav.toc{position:sticky;top:0;align-self:start;max-height:100vh;overflow:auto;padding:36px 0 24px;font-size:.88rem;}
+  nav.toc .lbl{font-size:.7rem;letter-spacing:2px;font-weight:700;color:var(--ink3);margin-bottom:10px;}
+  nav.toc a{display:block;color:var(--ink2);text-decoration:none;padding:4px 0 4px 12px;border-left:2px solid transparent;}
+  nav.toc a:hover{color:var(--red);border-left-color:var(--red);}
+  main{max-width:760px;padding-top:36px;}
+  h1{font-family:"DM Serif Display",Georgia,serif;font-weight:400;font-size:clamp(2.4rem,6vw,3.6rem);line-height:1;letter-spacing:-1px;}
+  .lede{font-family:"DM Serif Display",Georgia,serif;font-style:italic;font-size:1.3rem;color:var(--ink2);margin:16px 0 8px;line-height:1.35;}
+  h2{font-family:"DM Serif Display",Georgia,serif;font-weight:400;font-size:1.8rem;margin:56px 0 12px;padding-top:28px;border-top:1px solid var(--line);}
+  h3{font-size:1.05rem;margin:28px 0 6px;}
+  p{margin:8px 0;color:var(--ink2);}
+  ul,ol{margin:8px 0 8px 22px;color:var(--ink2);}
+  li{margin:5px 0;}
+  strong{color:var(--ink);}
+  code{font-size:.9em;background:#ebe4d6;padding:1px 5px;border-radius:4px;}
+  figure{margin:18px 0 22px;}
+  figure img{display:block;max-width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#fff;}
+  figure.narrow img{max-width:min(520px,100%);}
+  figcaption{font-size:.82rem;color:var(--ink3);margin-top:6px;}
+  .tbl{overflow-x:auto;margin:14px 0;}
+  table{border-collapse:collapse;width:100%;font-size:.92rem;background:var(--card);}
+  th,td{text-align:left;vertical-align:top;padding:9px 12px;border-bottom:1px solid var(--line);}
+  th{font-size:.75rem;letter-spacing:1px;text-transform:uppercase;color:var(--ink3);background:#efe8da;}
+  td{color:var(--ink2);}
+  .note{background:#fff;border-left:3px solid var(--red);padding:12px 16px;margin:16px 0;border-radius:0 8px 8px 0;color:var(--ink2);}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);font-size:.85rem;color:var(--ink3);}
+  @media(max-width:880px){.layout{grid-template-columns:minmax(0,1fr);gap:0;}nav.toc{position:static;max-height:none;border-bottom:1px solid var(--line);padding-bottom:18px;columns:2;}nav.toc .lbl{column-span:all;}}
+  @media(max-width:520px){nav.toc{columns:1;}}
+  @media print{nav.toc,.open{display:none;}.layout{display:block;}h2{break-before:page;}figure{break-inside:avoid;}}
+</style>
+</head>
+<body>
+<div class="top">
+  <header>
+    <a class="brand" href="/">
+      <svg width="40" height="40" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#b4232f"/><text x="44" y="70" text-anchor="middle" font-family="DM Serif Display, Georgia, serif" font-size="62" fill="#fff">W</text><text x="80" y="72" text-anchor="middle" font-family="DM Serif Display, Georgia, serif" font-style="italic" font-size="28" fill="#fff">p</text></svg>
+      <span><span class="word">Workprint</span><br><span class="tag">The schedule behind the work.</span></span>
+    </a>
+    <a class="open" href="/">Open Workprint</a>
+  </header>
+  <div class="rule"></div>
+</div>
+
+<div class="layout">
+<nav class="toc" aria-label="Contents">
+  <div class="lbl">CONTENTS</div>
+  <a href="#what">What Workprint is</a>
+  <a href="#start">Getting started</a>
+  <a href="#projects">Projects</a>
+  <a href="#schedule">The Schedule tab</a>
+  <a href="#addtask">The Add Task window</a>
+  <a href="#steps">Teams, initiatives and steps</a>
+  <a href="#walkthrough">Walkthrough: an initiative</a>
+  <a href="#funding">Funding</a>
+  <a href="#production">Production projects</a>
+  <a href="#calendar">Calendar and Gantt chart</a>
+  <a href="#people">People and invites</a>
+  <a href="#admin">The Admin tab</a>
+  <a href="#help">Shortcuts and troubleshooting</a>
+</nav>
+
+<main>
+  <h1>Workprint manual</h1>
+  <p class="lede">A shared schedule for teams: who is doing what, by when, and who is waiting on whom.</p>
+  <p>Open Workprint at <a href="/">getworkprint.app</a>. This manual covers every screen, in plain words, with pictures from the app.</p>
+
+  <h2 id="what">What Workprint is</h2>
+  <p>Every project in Workprint lives on one main screen. The numbers in the picture match this list.</p>
+  <figure><img src="manual/main-labelled.webp" width="1600" height="1028" alt="The Workprint main screen with numbered labels" loading="lazy"></figure>
+  <ol>
+    <li><strong>Projects list.</strong> Every project you own or have joined. Click one to open it.</li>
+    <li><strong>Current project.</strong> The name of the project you are looking at.</li>
+    <li><strong>Tabs.</strong> Schedule (the list of work), Calendar, Gantt Chart, Funding (Studio Management projects only), and Admin (owners only).</li>
+    <li><strong>Counters.</strong> How many tasks there are, and how many are done, in progress and overdue. Click one to show only those tasks.</li>
+    <li><strong>View switch.</strong> See the work grouped By Initiative or By Team.</li>
+    <li><strong>Handoffs and Deliverables.</strong> Who is waiting on whom, and the files or links the work produces.</li>
+    <li><strong>Colour scheme and Sign Out.</strong> Pick the look you like. Each person picks their own.</li>
+    <li><strong>+ Add Task.</strong> Add a new piece of work.</li>
+  </ol>
+  <p>Workprint has two kinds of project:</p>
+  <div class="tbl"><table>
+    <tr><th>Template</th><th>Good for</th><th>You organize</th></tr>
+    <tr><td>Studio Management</td><td>Councils, clubs, studios, committees</td><td>Initiatives (events, campaigns, fundraisers) worked on by teams</td></tr>
+    <tr><td>Production</td><td>Animation, film, VFX</td><td>Assets moving through a pipeline, plus sequences and shots</td></tr>
+  </table></div>
+
+  <h2 id="start">Getting started</h2>
+  <p>You need an account to use Workprint. Your email is your login.</p>
+  <ul>
+    <li><strong>Create an account.</strong> On the sign-in screen click <strong>Create Account</strong>. Enter your email and a password (6 characters or more). Open the email you get and click the link to confirm.</li>
+    <li><strong>Sign in.</strong> Email and password on the <strong>Sign In</strong> tab.</li>
+    <li><strong>Forgot your password?</strong> Type your email in the sign-in form, then click <strong>Forgot password?</strong> Open the link in the email, choose a new password, and you are signed in.</li>
+    <li><strong>Got an invite?</strong> Open the invite link first, then sign in or create your account. Lost the link? Click <strong>Have an invite code? Click here</strong> and type the code.</li>
+    <li><strong>Sign out.</strong> The <strong>Sign Out</strong> button at the bottom of the sidebar.</li>
+    <li><strong>On a phone or tablet.</strong> Tap the ☰ button to open the sidebar. Wide tables scroll sideways.</li>
+  </ul>
+  <figure><img src="manual/sign-in.webp" width="1600" height="1009" alt="The Workprint sign-in screen" loading="lazy"></figure>
+
+  <h3>Pick your colour scheme</h3>
+  <p>Click the <strong>Theme</strong> button at the bottom of the sidebar and pick one of five:</p>
+  <div class="tbl"><table>
+    <tr><th>Scheme</th><th>Look</th></tr>
+    <tr><td>Editorial Red (default)</td><td>Warm paper with a red accent</td></tr>
+    <tr><td>Ink &amp; Brass</td><td>Dark, with a gold accent</td></tr>
+    <tr><td>Studio Violet</td><td>Light, with a violet accent</td></tr>
+    <tr><td>Blueprint Blue</td><td>Light, with a navy accent</td></tr>
+    <tr><td>Classic Dark</td><td>The original dark look</td></tr>
+  </table></div>
+  <figure class="narrow"><img src="manual/scheme-menu.webp" width="1120" height="960" alt="The colour scheme menu" loading="lazy"></figure>
+  <figure><img src="manual/schemes-compare.webp" width="1600" height="195" alt="The same screen in Ink &amp; Brass, Studio Violet and Blueprint Blue" loading="lazy"></figure>
+  <p>Your choice follows your account, so it is the same on every computer you sign in on. It only changes what you see, not what your team sees.</p>
+
+  <h3>Install it on an iPad or Android</h3>
+  <p>Workprint can sit on your Home Screen like an app, with its own red W icon. It opens full-screen.</p>
+  <ul>
+    <li><strong>iPad or iPhone:</strong> open getworkprint.app in <strong>Safari</strong>, tap the <strong>Share</strong> button (the square with an arrow), then <strong>Add to Home Screen</strong>. Leave <strong>Open as Web App</strong> on if you see it, then tap <strong>Add</strong>.</li>
+    <li><strong>Android:</strong> open getworkprint.app in <strong>Chrome</strong>, tap <strong>⋮</strong>, then <strong>Install app</strong> (or <strong>Add to Home screen</strong>).</li>
+  </ul>
+  <p>Sign in once inside the app. Links in emails (invites, password resets, confirmations) still open in the browser; finish there, then go back to the app.</p>
+  <p>On a touch screen, <strong>press and hold</strong> a Gantt bar or calendar task for a moment, then drag it. A normal swipe still scrolls, and a tap still opens the task.</p>
+
+  <h2 id="projects">Projects</h2>
+  <p>A project is one shared schedule, for example a council's year or a short film. You pick its template once, when you make it.</p>
+  <h3>Make a project</h3>
+  <ol>
+    <li>Click <strong>+ New Project</strong> at the top of the sidebar.</li>
+    <li>Pick <strong>Studio Management</strong> or <strong>Production</strong>.</li>
+    <li>Studio Management only: leave <strong>Add starter tasks to get going</strong> ticked if you want three sample initiatives (Getting Started, First General Meeting, Term Fundraiser). You can change or delete them later.</li>
+    <li>Type a name, a short description if you like, and pick a colour.</li>
+    <li>Click <strong>Save Project</strong>. It opens right away.</li>
+  </ol>
+  <figure class="narrow"><img src="manual/new-project.webp" width="840" height="932" alt="The New Project window with the two templates" loading="lazy"></figure>
+  <h3>Day to day</h3>
+  <ul>
+    <li><strong>Switch projects.</strong> Click a project in the sidebar. Workprint reopens the last one you used on that device.</li>
+    <li><strong>Rename or recolour.</strong> <strong>Admin → Projects → Edit</strong>. The template can't be changed later.</li>
+    <li><strong>Production projects</strong> have a ▶ arrow in the sidebar that opens their sequences and shots.</li>
+  </ul>
+
+  <h2 id="schedule">The Schedule tab</h2>
+  <p>The Schedule tab is home base: the counters at the top, the work in the middle, Handoffs and Deliverables on the right.</p>
+  <h3>Counters</h3>
+  <div class="tbl"><table>
+    <tr><th>Counter</th><th>Counts</th></tr>
+    <tr><td>Total Tasks</td><td>Every task in the project</td></tr>
+    <tr><td>Completed</td><td>Tasks marked Done</td></tr>
+    <tr><td>In Progress</td><td>Tasks someone is working on</td></tr>
+    <tr><td>Overdue</td><td>Tasks past their due date that aren't Done</td></tr>
+    <tr><td>Revisions (Production only)</td><td>Times work was sent back for changes</td></tr>
+  </table></div>
+  <p>Click a counter to show only those tasks. Click it again, or <strong>Clear</strong>, to show everything. The progress bar under the list shows how much of the project is done. At 100% you get a small celebration.</p>
+  <h3>Groups</h3>
+  <p>Tasks sit in groups you can fold with the ▼ arrow. Each group header shows a badge (Done, Overdue, In Progress or Not Started), a progress bar, a done/total count and a <strong>+ Task</strong> button that fills in the group for you.</p>
+  <figure><img src="manual/initiative-card.webp" width="1600" height="390" alt="An initiative card: badge, progress bar, count and + Task button" loading="lazy"></figure>
+  <h3>Status</h3>
+  <p>Change a task's status from the dropdown in its row. Every task moves the same way:</p>
+  <figure><img src="manual/status-flow.webp" width="1600" height="369" alt="To Do, In Progress, In Review, Done, with a loop back for changes" loading="lazy"></figure>
+  <h3>Handoffs</h3>
+  <p>A handoff says “when I finish, this person is next.” It shows in the <strong>Handoffs</strong> panel as <em>Pending</em> until the task is Done, so the next person can see what's coming. In the list, the task also shows “→ hands off to …” under its name.</p>
+  <h3>Deliverables</h3>
+  <p>A deliverable is the thing a task produces: a poster PDF, a post link, a model file. Add its name and a link under <strong>Show Advanced Options</strong>. It shows in the <strong>Deliverables</strong> panel (called <strong>Final Assets</strong> in Production projects). Links must start with http:// or https://.</p>
+
+  <h2 id="addtask">The Add Task window</h2>
+  <p>Open it with <strong>+ Add Task</strong>, a group's <strong>+ Task</strong> button, or <strong>Edit</strong> on any row. The words change a little with the template; Studio Management words come first below.</p>
+  <figure class="narrow"><img src="manual/add-task.webp" width="1040" height="1656" alt="The Add Task window, filled in for an Instagram post" loading="lazy"></figure>
+  <div class="tbl"><table>
+    <tr><th>Field</th><th>What to put there</th></tr>
+    <tr><td>Category</td><td><strong>Team Task</strong> (Production: Asset Task) for work in a team's process. <strong>General</strong> (Production: Milestone / Admin) for one-off things like a meeting agenda</td></tr>
+    <tr><td>Team (Production: Asset Type)</td><td>Which team does the work: Finance, Social Media, Print and so on</td></tr>
+    <tr><td>Initiative (Production: Asset Name)</td><td>The bigger thing this task is part of, e.g. <em>Winter Showcase</em>. Tasks with the exact same initiative name group together. Start typing to pick an existing one</td></tr>
+    <tr><td>Step (Production: Pipeline Stage)</td><td>Where the task sits in that team's process. Picking a step fills in the task name for you</td></tr>
+    <tr><td>Task Name / Notes</td><td>A short name for the task. Change the filled-in name if you like</td></tr>
+    <tr><td>Responsible (Production: Lead / Artist)</td><td>Who does it. Names come from <strong>Team Members</strong></td></tr>
+    <tr><td>Start Date, Due Date</td><td>When work starts and when it must be done. These place the task on the Calendar and Gantt chart and drive the Overdue counter</td></tr>
+    <tr><td>Due Time</td><td>Optional time of day, e.g. 3:00 PM for a meeting</td></tr>
+    <tr><td>Priority</td><td>High, Medium or Low</td></tr>
+    <tr><td>Gantt Bar Colour</td><td><strong>Auto</strong> uses the team's colour. Pick a swatch to give just this task its own colour</td></tr>
+    <tr><td>Status</td><td>To Do, In Progress, In Review or Done</td></tr>
+    <tr><td>Handoff To (Advanced)</td><td>Who gets the work next. Shows in the Handoffs panel</td></tr>
+    <tr><td>Deliverable Name and URL (Advanced)</td><td>The file or link this task produces. Shows in the Deliverables panel</td></tr>
+  </table></div>
+  <p>Click <strong>Save Task</strong> when you're done, or <strong>Cancel</strong> to close without saving. Pressing Esc or clicking outside the window also closes it without saving.</p>
+
+  <h2 id="steps">Studio Management: teams, initiatives and steps</h2>
+  <p>Three words do most of the work in a Studio Management project:</p>
+  <ul>
+    <li><strong>Initiative</strong>: something you're making happen, with an end. <em>Winter Showcase</em>, <em>Food Drive</em>, <em>Instagram Launch</em>.</li>
+    <li><strong>Team</strong>: a group with a job. Finance, Social Media, Print and so on.</li>
+    <li><strong>Step</strong>: where a task is in that team's usual process. Each team has its own steps, in order.</li>
+  </ul>
+  <p>One initiative usually needs several teams. The Winter Showcase needs Finance to set a budget, Events to book the room, Print to make the poster and Social Media to announce it. Each of those is a task, and they all group under the same initiative.</p>
+  <h3>Two ways to look at the work</h3>
+  <ul>
+    <li><strong>By Initiative</strong> shows one card per initiative, with every team's tasks inside. Use it to see whether an event is on track. Cards with the nearest due date come first.</li>
+    <li><strong>By Team</strong> shows one card per team, with that team's tasks from every initiative. Use it to see one team's workload.</li>
+  </ul>
+  <figure><img src="manual/by-team.webp" width="1600" height="785" alt="The By Team view: one card per team" loading="lazy"></figure>
+  <h3>What each step means</h3>
+  <p>The steps run left to right. A step is just a label that tells everyone where the work is; you don't have to use every step.</p>
+  <div class="tbl"><table>
+    <tr><th>Team</th><th>Steps, in order</th><th>What happens at each step</th></tr>
+    <tr><td>Social Media</td><td>Draft → Approve → Post → Report</td><td><strong>Draft:</strong> write the caption and make the image. <strong>Approve:</strong> someone else checks spelling, facts, dates and tone. <strong>Post:</strong> publish it on the planned day. <strong>Report:</strong> a week later, note how it did (likes, shares, comments)</td></tr>
+    <tr><td>Marketing</td><td>Plan → Create → Review → Launch</td><td><strong>Plan:</strong> decide the message, audience and channels. <strong>Create:</strong> make the posters, emails and videos. <strong>Review:</strong> check them. <strong>Launch:</strong> send them out</td></tr>
+    <tr><td>Print</td><td>Design → Proof → Print → Distribute</td><td><strong>Design:</strong> lay out the poster or flyer. <strong>Proof:</strong> check a test copy for mistakes. <strong>Print:</strong> print the real copies. <strong>Distribute:</strong> put them up or hand them out</td></tr>
+    <tr><td>Finance</td><td>Budget → Approve → Spend → Reconcile</td><td><strong>Budget:</strong> work out what it will cost. <strong>Approve:</strong> get the budget signed off. <strong>Spend:</strong> buy what's needed. <strong>Reconcile:</strong> match receipts to the budget and close it off</td></tr>
+    <tr><td>Events</td><td>Plan → Book → Promote → Run → Wrap-up</td><td><strong>Plan:</strong> date, place, run sheet. <strong>Book:</strong> room, gear, food, guests. <strong>Promote:</strong> tell people. <strong>Run:</strong> the day itself. <strong>Wrap-up:</strong> clean up, thank-yous, what to do better</td></tr>
+    <tr><td>Contests</td><td>Announce → Collect Entries → Judge → Award</td><td><strong>Announce:</strong> rules and deadline. <strong>Collect Entries:</strong> gather submissions. <strong>Judge:</strong> pick winners. <strong>Award:</strong> announce and hand out prizes</td></tr>
+    <tr><td>Fundraising</td><td>Set Goal → Plan → Collect → Thank Donors</td><td><strong>Set Goal:</strong> how much and what for. <strong>Plan:</strong> how you'll raise it. <strong>Collect:</strong> run the drive. <strong>Thank Donors:</strong> say thank you and share the result</td></tr>
+    <tr><td>Community Outreach</td><td>Contact → Plan → Run → Follow-up</td><td><strong>Contact:</strong> reach the partner or group. <strong>Plan:</strong> agree what you'll do together. <strong>Run:</strong> do it. <strong>Follow-up:</strong> thank them and keep in touch</td></tr>
+    <tr><td>Grants</td><td>Research → Draft → Budget → Review → Submit → Report</td><td>Used by the Funding tab. See <a href="#funding">Funding</a></td></tr>
+    <tr><td>Other</td><td>Plan → Do → Review</td><td>For anything that doesn't fit a team above</td></tr>
+  </table></div>
+  <p>Here is the Social Media process as a picture:</p>
+  <figure><img src="manual/social-steps.webp" width="1600" height="370" alt="Social Media steps: Draft, Approve, Post, Report" loading="lazy"></figure>
+
+  <h2 id="walkthrough">Walkthrough: set up an initiative</h2>
+  <p>This example sets up the <em>Winter Showcase</em>, an evening event four weeks away. Here is the plan we're building, one row per team:</p>
+  <figure><img src="manual/initiative-plan.webp" width="1600" height="672" alt="The Winter Showcase plan: four teams over four weeks, with handoffs" loading="lazy"></figure>
+  <h3>Before you start</h3>
+  <ol>
+    <li>Open the project and make sure the people are in <strong>Admin → Team Members</strong>. Anyone who joined with an invite is already there. Add anyone else with <strong>+ Add</strong>.</li>
+    <li>Work out the event date. Every other date counts back from it.</li>
+  </ol>
+  <h3>Add the first task</h3>
+  <ol>
+    <li>On the <strong>Schedule</strong> tab, pick <strong>By Initiative</strong>, then click <strong>+ New Initiative</strong>.</li>
+    <li><strong>Category</strong> is already set to <strong>Team Task</strong>.</li>
+    <li><strong>Team:</strong> pick <strong>Finance</strong>.</li>
+    <li><strong>Initiative:</strong> type <strong>Winter Showcase</strong>. Spell it the same way every time; that's how tasks group together.</li>
+    <li><strong>Step:</strong> click <strong>Budget</strong>. The task name fills in as <em>Winter Showcase — Budget</em>.</li>
+    <li><strong>Responsible:</strong> pick the Treasurer.</li>
+    <li><strong>Start Date</strong> and <strong>Due Date:</strong> the first week.</li>
+    <li>Click <strong>Save Task</strong>. A new <em>Winter Showcase</em> card appears.</li>
+  </ol>
+  <h3>Add the rest</h3>
+  <ol>
+    <li>On the <em>Winter Showcase</em> card, click <strong>+ Task</strong>. The initiative is filled in for you.</li>
+    <li>Pick the team and step, the person and the dates, then <strong>Save Task</strong>.</li>
+    <li>Repeat for each piece of work: Finance Approve, Events Plan, Book and Run, Print Design and Print, Social Media Draft, Post and Report.</li>
+  </ol>
+  <p>You don't need every step for every team. Add the steps that actually happen.</p>
+  <h3>Connect the handoffs</h3>
+  <p>Where one person's work is the next person's starting point, add a handoff:</p>
+  <ol>
+    <li>Click <strong>Edit</strong> on the task, e.g. <em>Print — Design</em>.</li>
+    <li>Click <strong>Show Advanced Options</strong>.</li>
+    <li><strong>Handoff To:</strong> pick the Social Media Lead, who needs the poster to announce the event.</li>
+    <li>Save. The handoff now shows in the <strong>Handoffs</strong> panel as Pending.</li>
+  </ol>
+  <h3>Run it week by week</h3>
+  <ul>
+    <li>Each person moves their own task along: <strong>To Do → In Progress → In Review → Done</strong>.</li>
+    <li>When a task with a handoff is marked Done, the next person knows they can start.</li>
+    <li>Glance at the card's badge and progress bar. A red <strong>Overdue</strong> badge means something is late.</li>
+    <li>Open the <strong>Gantt Chart</strong> to see the whole timeline and drag dates if plans change.</li>
+    <li>Add the poster PDF or post link as a <strong>Deliverable</strong> so everyone can find the final files.</li>
+  </ul>
+  <h3>Tips</h3>
+  <ul>
+    <li>One initiative per real-world thing. <em>Winter Showcase</em> and <em>Winter Showcase 2026</em> would make two cards.</li>
+    <li>Use <strong>General</strong> tasks for one-off jobs that aren't part of a team process, like <em>Council meeting agenda</em>.</li>
+    <li>Keep step names as they are; they tell everyone where the work is at a glance.</li>
+  </ul>
+
+  <h2 id="funding">Funding (Studio Management projects)</h2>
+  <p>The <strong>Funding</strong> tab keeps track of grants, awards, sponsorships and other money your group could apply for, and puts the deadlines on your schedule. It only appears in Studio Management projects.</p>
+  <figure><img src="manual/funding.webp" width="1600" height="1206" alt="The Funding tab: profile, funding list and suggested funders" loading="lazy"></figure>
+  <h3>1. Set up the funding profile (owners)</h3>
+  <p>Click <strong>Set up</strong> (or <strong>Edit</strong>) on the <strong>Funding profile</strong> card and pick everything that applies:</p>
+  <ul>
+    <li><strong>Who we are:</strong> student club or council, non-profit or community group, small studio or company, or individual artist.</li>
+    <li><strong>Industry:</strong> animation, film and TV, games, interactive / XR, music, visual arts, design, community and events.</li>
+    <li><strong>Where:</strong> country, province, city, and your school if you have one.</li>
+    <li><strong>What the money is for</strong> and <strong>kinds of funding</strong> (grants, bursaries, competitions, sponsorships, tax credits, placements).</li>
+  </ul>
+  <p>Workprint uses the profile to choose which funders to suggest. A student council and a studio see different lists. The project creator and any co-owner can change the profile.</p>
+  <h3>2. Pick funders</h3>
+  <ul>
+    <li><strong>Suggested for you</strong> shows starter funders that fit your profile: national and Ontario arts and media funders, local city grants, school funding, competitions and research placements. Click <strong>Show all</strong> to see the full list.</li>
+    <li>Click <strong>☆</strong> to save a funder to <strong>Our funding list</strong>, then type in the real <strong>deadline</strong> from the funder's website.</li>
+    <li>Click <strong>+ Add Funder</strong> for anything not in the list, like a local business sponsor.</li>
+  </ul>
+  <p>Programs, amounts and dates change every year. Always check the funder's own site before applying.</p>
+  <h3>The weekly scout</h3>
+  <p>Every Monday morning, Workprint searches the web for open funding that fits your profile and lists what it finds under <strong>New from the weekly scout</strong>. Each card shows the funder, amount, deadline (if the page gave one), who can apply and why it fits. The scout skips anything already in your starter list or your funding list, so it only shows new leads.</p>
+  <ul>
+    <li>Click <strong>☆</strong> to save it to <strong>Our funding list</strong>. Saved funders stay put when suggestions refresh.</li>
+    <li>Click <strong>Dismiss</strong> to hide it. It won't come back.</li>
+    <li>Owners can click <strong>Run now</strong> for an extra search, once a day per project. It takes a minute or two.</li>
+  </ul>
+  <div class="note">The scout can misread a page, so treat its cards as leads: open <strong>Visit site</strong> and confirm the details before you apply.</div>
+  <h3>3. Track it</h3>
+  <p>Each funder in <strong>Our funding list</strong> shows the amount, the deadline with days left, and a status: <strong>Watching</strong>, <strong>Applying</strong>, <strong>Submitted</strong>, <strong>Awarded</strong> or <strong>Not this time</strong>. Deadlines also show on the <strong>Calendar</strong> as dashed gold chips.</p>
+  <h3>4. Add it to the schedule</h3>
+  <p>Click <strong>Add to schedule</strong> on a funder with a deadline. Workprint creates a <em>Grant:</em> initiative on the <strong>Grants</strong> team with five steps, counted back from the deadline:</p>
+  <div class="tbl"><table>
+    <tr><th>Step</th><th>What happens</th></tr>
+    <tr><td>Research</td><td>Read the rules, check you're eligible, collect examples</td></tr>
+    <tr><td>Draft</td><td>Write the application</td></tr>
+    <tr><td>Budget</td><td>Build the budget the funder asks for</td></tr>
+    <tr><td>Review</td><td>Someone else checks it, the same as Approve for a post</td></tr>
+    <tr><td>Submit</td><td>Send it before the deadline (high priority)</td></tr>
+  </table></div>
+  <p>Then assign who's responsible for each step. If you win, add a <strong>Report</strong> task for the funder's final report once you know its date.</p>
+
+  <h2 id="production">Production projects</h2>
+  <p>Production projects track two kinds of work: <strong>assets</strong> (characters, props, sets) moving through a pipeline, and <strong>shots</strong> moving through departments.</p>
+  <figure><img src="manual/production.webp" width="1600" height="1028" alt="A Production project: asset pipeline and shots" loading="lazy"></figure>
+  <h3>Asset pipeline</h3>
+  <p>Each asset, e.g. <em>Hero Character</em>, gets one task per stage. Its card shows a progress bar and a badge: Ready, In Progress, or Blocked (something is overdue).</p>
+  <div class="tbl"><table>
+    <tr><th>Asset type</th><th>Stages, in order</th></tr>
+    <tr><td>Character</td><td>Design → Modelling → Surfacing → Rigging</td></tr>
+    <tr><td>Prop</td><td>Design → Modelling → Surfacing</td></tr>
+    <tr><td>Environment</td><td>Design → Modelling → Surfacing → Dressing</td></tr>
+    <tr><td>Vehicle</td><td>Design → Modelling → Surfacing → Rigging</td></tr>
+    <tr><td>FX Element</td><td>Design → Development → Sign-off</td></tr>
+  </table></div>
+  <p>The <strong>Assets</strong> button above the list shows only the pipeline; <strong>All Tasks</strong> shows assets and shots together.</p>
+  <h3>Sequences and shots</h3>
+  <ol>
+    <li>In the sidebar, click the ▶ arrow beside the project, then <strong>+ Add Sequence</strong>. Number in tens: SQ010, SQ020.</li>
+    <li>Under a sequence, click <strong>+ Add Shot</strong> (SH010, SH020). Give it start and due dates so it shows on the Gantt chart.</li>
+    <li>Click a shot to open its <strong>shot page</strong>.</li>
+  </ol>
+  <h3>The shot page</h3>
+  <ul>
+    <li><strong>Status:</strong> Pending, In Progress, In Review, Approved, Final.</li>
+    <li><strong>Storyboard Notes and Shot Details</strong> (frame count, camera, framing, angle) save when you click away.</li>
+    <li><strong>Shot Tasks:</strong> add Layout, Animation, CFX, FX, Lighting, Rendering, Compositing or your own. Each shot task has its own status: Ready to Start, In Progress, Supervisor Review, Approved, Final. Sending a task back from review raises its version (v1 → v2).</li>
+    <li><strong>Asset Readiness:</strong> click <strong>+ Link Asset</strong> to list the assets in the shot. A warning shows if any of them is still in progress or overdue.</li>
+  </ul>
+
+  <h2 id="calendar">Calendar and Gantt chart</h2>
+  <p>Both show the same tasks as the Schedule. Change a date in one and it changes everywhere.</p>
+  <h3>Calendar</h3>
+  <ul>
+    <li>One month at a time. Use ←, → and <strong>Today</strong> to move.</li>
+    <li>Each task sits on its due date, coloured by status. Today has a red outline.</li>
+    <li><strong>Drag a task to another day</strong> to change its due date. Click it to edit it.</li>
+    <li>In Production projects, shot tasks show too; clicking one opens its shot.</li>
+  </ul>
+  <figure><img src="manual/calendar.webp" width="1600" height="1028" alt="The Calendar tab" loading="lazy"></figure>
+  <h3>Gantt chart</h3>
+  <p>The Gantt chart is a timeline: one row per task, one bar from its start date to its due date.</p>
+  <ul>
+    <li>It shows about two months, starting a week before today. ← and → move two weeks; <strong>Today</strong> jumps back.</li>
+    <li><strong>Drag a bar</strong> to move the task. <strong>Drag either end</strong> to change the start or due date. Click a bar to edit it.</li>
+    <li>Tasks without a due date don't appear.</li>
+    <li>Today's column is shaded. A bar with a coloured <strong>outline</strong> is overdue; a <strong>faded</strong> bar is done.</li>
+    <li>Click a section header to fold it. Production projects also show shots, grouped by sequence.</li>
+    <li>On a touch screen, press and hold a bar for a moment before dragging it. The same works for tasks on the Calendar.</li>
+  </ul>
+  <figure><img src="manual/gantt.webp" width="1600" height="1028" alt="The Gantt chart with team colours, today shaded and an overdue bar outlined" loading="lazy"></figure>
+  <h3>Bar colours</h3>
+  <p>Bars are coloured by team (or asset type), and the key above the chart shows which colour is which.</p>
+  <ul>
+    <li><strong>Owners set the team colours</strong> in <strong>Admin → Projects → Edit</strong>, under <strong>Gantt colours</strong>. Click a swatch to change it, or <strong>Reset to theme</strong> to go back. Everyone on the project sees these colours.</li>
+    <li><strong>Any task can have its own colour.</strong> In the Add Task window, pick a swatch under <strong>Gantt Bar Colour</strong>. <strong>Auto</strong> goes back to the team colour.</li>
+    <li>Until an owner picks colours, the bars use the colours of each person's own scheme.</li>
+  </ul>
+  <figure class="narrow"><img src="manual/gantt-colours.webp" width="840" height="1136" alt="Gantt Colours in the Edit Project window" loading="lazy"></figure>
+
+  <h2 id="people">People: invites, roles and Team Members</h2>
+  <p>A project has two lists of people:</p>
+  <ul>
+    <li><strong>Current Members</strong> (in the Invite window): people with an account who can open the project.</li>
+    <li><strong>Team Members</strong> (in Admin; called Production Team in Production projects): the crew list. These names fill the Responsible dropdown, the handoffs and the email buttons.</li>
+  </ul>
+  <p>When someone joins with an invite, Workprint adds them to both lists for you.</p>
+  <h3>Invite people</h3>
+  <ol>
+    <li>Go to <strong>Admin → Projects</strong> and click <strong>Invite</strong> on the project.</li>
+    <li>Optional: pick a role under <strong>Pre-select Role</strong>. Everyone who joins with this link gets that role and isn't asked.</li>
+    <li>Click <strong>Copy</strong> and paste the link into an email, a Teams post or your course page. One link works for everyone and lasts 90 days.</li>
+  </ol>
+  <figure class="narrow"><img src="manual/invite.webp" width="1080" height="1136" alt="The Invite window: role, link, and Current Members" loading="lazy"></figure>
+  <p>Your link starts with <code>https://getworkprint.app/?invite=</code> followed by the code. Each owner gets their own code for each project, so two co-owners may share different links. All of them work. Anyone who has the link or code can join, so share it only where you mean to.</p>
+  <h3>Join a project</h3>
+  <ol>
+    <li>Open the invite link.</li>
+    <li>Sign in, or create an account.</li>
+    <li>Type your name as the team should see it.</li>
+    <li>If asked, type your role. Not sure? Leave it blank and you join as <strong>Member</strong>; the owner can change it later.</li>
+    <li>The project opens and appears in your sidebar.</li>
+  </ol>
+  <p>Lost the link? On the sign-in screen click <strong>Have an invite code? Click here</strong> and type the code. You can join as many projects as you have codes for, from any owner, with the same account.</p>
+  <h3>Roles</h3>
+  <div class="tbl"><table>
+    <tr><th>Role</th><th>Can do</th></tr>
+    <tr><td>Project creator</td><td>Everything, including deleting the project. Can't be changed</td></tr>
+    <tr><td>Owner (co-owner)</td><td>The Admin tab, Team Members, invites, roles, Gantt colours, the funding profile, removing people</td></tr>
+    <tr><td>Any other role (Member, Treasurer…)</td><td>Work on the Schedule, Calendar, Gantt chart and Funding list</td></tr>
+  </table></div>
+  <p>Owners change a role with the dropdown beside each person in the Invite window. Choose <strong>Owner (co-owner)</strong> to share the running of the project; Workprint asks you to confirm. Changing a role also updates that person in Team Members. Nobody can make themselves an owner with an invite.</p>
+  <p><strong>Remove</strong> takes someone off the project. They stay in Team Members in case they're still on the crew; delete them there if they've left.</p>
+  <h3>Team Members</h3>
+  <p>In <strong>Admin → Team Members</strong>, click <strong>+ Add</strong> to add someone by hand, for example a volunteer without an account. Use <strong>Link to someone who has joined</strong> to fill in a member's name and email, or type a name and an email yourself. Click <strong>Edit</strong> on anyone to fix their name, role or email.</p>
+  <h3>Email and Teams</h3>
+  <ul>
+    <li><strong>Email all</strong> (Admin) and <strong>Email everyone</strong> (Invite window) open your own email app with the whole team in BCC.</li>
+    <li><strong>Teams chat</strong> opens a Microsoft Teams group chat with the team.</li>
+    <li>Each person has their own <strong>Email</strong> and <strong>Teams chat</strong> links.</li>
+    <li>These only include people with an email on file: joined members, and Team Members you gave an email.</li>
+  </ul>
+
+  <h2 id="admin">The Admin tab</h2>
+  <p>Only the project creator and co-owners see the Admin tab. Every section folds with its ▼ arrow.</p>
+  <div class="tbl"><table>
+    <tr><th>Section</th><th>Studio Management name</th><th>Production name</th><th>Use it for</th></tr>
+    <tr><td>Projects</td><td>Projects</td><td>Projects</td><td>Every project you're in, with Edit, Export, Invite and Delete. <strong>Click a project's row</strong> to switch to it; the sections below change to that project, and its name shows in each header</td></tr>
+    <tr><td>Notes from outside</td><td>Feedback &amp; Suggestions</td><td>Client Feedback</td><td>Ideas and requests to act on, with who, when and priority</td></tr>
+    <tr><td>Getting the word out</td><td>Announcements</td><td>Marketing</td><td>Announcements and promotion</td></tr>
+    <tr><td>Meetings</td><td>Meetings</td><td>Meetings</td><td>Upcoming meetings and notes</td></tr>
+    <tr><td>People</td><td>Team Members</td><td>Production Team</td><td>The crew list (see <a href="#people">People</a>)</td></tr>
+  </table></div>
+  <figure><img src="manual/admin.webp" width="1600" height="1028" alt="The Admin tab" loading="lazy"></figure>
+  <h3>Backups</h3>
+  <ul>
+    <li><strong>Export Archive (JSON):</strong> a complete copy of the project. Make one before big changes and at the end of each term.</li>
+    <li><strong>Export Report (CSV):</strong> the project's tasks, shots and people as rows, for Excel or Google Sheets.</li>
+    <li><strong>Import Archive:</strong> rebuilds a project from a JSON archive as a new project marked “(Imported)”. The original is untouched.</li>
+  </ul>
+  <h3>Deleting a project</h3>
+  <p><strong>Delete</strong> removes the project and everything in it for good. Only the project creator can do it, and Workprint asks first. Export an archive before you delete.</p>
+
+  <h2 id="help">Shortcuts, troubleshooting and good habits</h2>
+  <div class="tbl"><table>
+    <tr><th>Shortcut</th><th>Does</th></tr>
+    <tr><td>Ctrl+K (Cmd+K on Mac)</td><td>Search tasks and shots in the current project</td></tr>
+    <tr><td>Esc</td><td>Close any open window or the search</td></tr>
+    <tr><td>Click outside a window</td><td>Close it without saving</td></tr>
+  </table></div>
+  <h3>If something goes wrong</h3>
+  <div class="tbl"><table>
+    <tr><th>Problem</th><th>Fix</th></tr>
+    <tr><td>The confirmation or reset email didn't arrive</td><td>Check spam or junk (school mail may hold it in quarantine), wait a minute, then try again. Emails come from noreply@getworkprint.app</td></tr>
+    <tr><td>I joined but don't see the project</td><td>Click <strong>Have an invite code? Click here</strong> and type the code from the link</td></tr>
+    <tr><td>“This invite code is invalid or has expired”</td><td>Ask the owner for the current link; codes last 90 days</td></tr>
+    <tr><td>My name isn't in the Responsible list</td><td>Ask an owner to add you in <strong>Admin → Team Members</strong></td></tr>
+    <tr><td>I can't see the Admin tab</td><td>Only the creator and co-owners can. Ask an owner to change your role</td></tr>
+    <tr><td>Email all says there are no emails</td><td>Give your Team Members an email, or have people join with an invite</td></tr>
+    <tr><td>A save shows a red error</td><td>You may not be allowed to make that change. Ask an owner</td></tr>
+    <tr><td>Run now says the scout already ran</td><td>It runs once a day per project. Try again tomorrow, or wait for Monday's run</td></tr>
+    <tr><td>A task is missing from the Gantt chart</td><td>Give it a due date, then check the dates with ← and →</td></tr>
+  </table></div>
+  <h3>Good habits</h3>
+  <ul>
+    <li>Give every task a due date and a Responsible person.</li>
+    <li>Type initiative names exactly the same way each time, so tasks group together.</li>
+    <li>Add a handoff wherever someone is waiting on someone else.</li>
+    <li>Export an archive before big clean-ups and at the end of each term.</li>
+  </ul>
+  <p>What Workprint stores and who can see it: <a href="about.html">About and privacy</a>. Questions: <a href="mailto:hello@getworkprint.app">hello@getworkprint.app</a>.</p>
+
+  <footer>Last updated November 12, 2026 · <a href="/">getworkprint.app</a></footer>
+</main>
+</div>
+</body>
+</html>
