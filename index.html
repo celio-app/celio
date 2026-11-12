@@ -343,6 +343,26 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:11px 
 .st-del{background:none;border:none;cursor:pointer;color:var(--text4);font-size:.75rem;padding:2px 4px;border-radius:3px;opacity:0;}
 .shot-task-row:hover .st-del{opacity:1;}
 .st-del:hover{background:var(--bg4);color:#ef4444;}
+.st-expand{background:none;border:none;color:var(--text3);font-size:.62rem;cursor:pointer;padding:2px 4px;width:18px;}
+.shot-task-row.st-open{background:var(--bg3);border-bottom-color:transparent;}
+.st-rv-chip{font-size:.68rem;font-weight:700;padding:3px 9px;border-radius:999px;border:1px solid var(--border);background:var(--bg2);color:var(--text2);cursor:pointer;margin-right:8px;white-space:nowrap;}
+.st-rv-chip.wait{color:var(--prog);border-color:color-mix(in srgb,var(--prog) 45%,transparent);}
+.st-rv-chip.ok{color:var(--done);border-color:color-mix(in srgb,var(--done) 45%,transparent);}
+.st-rv-chip.chg{color:var(--late);border-color:color-mix(in srgb,var(--late) 45%,transparent);}
+.st-review{padding:4px 14px 14px 40px;background:var(--bg3);border-bottom:1px solid var(--border2);}
+.st-rv-help{font-size:.78rem;color:var(--text3);margin:4px 0 8px;}
+.st-rv-line{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+.st-rv-line .inp{flex:1;min-width:0;padding:6px 10px;font-size:.78rem;}
+.st-rv-notes{margin-top:8px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:4px 10px 8px;max-height:280px;overflow:auto;}
+.st-rv-round{font-size:.62rem;letter-spacing:1.4px;font-weight:700;color:var(--text4);margin:8px 0 2px;}
+.st-rv-note{display:flex;gap:8px;align-items:flex-start;font-size:.78rem;padding:5px 4px;border-radius:6px;cursor:pointer;}
+.st-rv-note input{margin-top:3px;}
+.st-rv-note.ok{background:color-mix(in srgb,var(--done) 10%,transparent);}
+.st-rv-note.chg{background:color-mix(in srgb,var(--late) 10%,transparent);}
+.st-rv-note.done .st-rv-body{text-decoration:line-through;opacity:.55;}
+.st-rv-who{font-weight:700;color:var(--text);margin-right:6px;}
+.st-rv-t{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.7rem;color:var(--purple);margin-right:6px;}
+.st-rv-body{color:var(--text2);white-space:pre-wrap;}
 .add-shot-task-btn{display:flex;align-items:center;gap:6px;padding:9px 14px;cursor:pointer;color:var(--purple);font-size:.78rem;font-weight:700;border:none;background:none;width:100%;border-top:1px solid var(--border2);}
 .add-shot-task-btn:hover{background:var(--bg3);}
 .version-badge { background: var(--bg3); border: 1px solid var(--border); color: var(--text3); font-size: .65rem; padding: 2px 5px; border-radius: 4px; font-weight: 800; margin-left: 6px; }
@@ -2184,6 +2204,7 @@ window.deleteShot = async function(id) {
 };
 
 window.openShot=async function(id){
+  openShotReview=null;
   var sh=shots.find(function(x){return x.id===id;});if(!sh)return;
   activeShot=sh;
   if(isMobile())closeMobileSidebar();
@@ -2242,37 +2263,97 @@ async function loadShotTasks(){
   renderShotTasks();
 }
 
+var openShotReview=null, shotReviewNotes={};
 function renderShotTasks(){
   var el=document.getElementById("shot-tasks-list");
   if(!activeShotTasks.length){el.innerHTML='<div style="text-align:center;padding:20px;color:var(--text4);font-size:.8rem">No tasks yet — click + Add Task to assign pipeline work to this shot.</div><button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';return;}
   var html="";
   activeShotTasks.forEach(function(st){
-    var vNum = st.version || 1;
-    html+='<div class="shot-task-row">';
-    html+='<div style="flex:1;min-width:0"><div class="st-type">'+escH(st.task_type)+' <span class="version-badge">v'+vNum+'</span></div>';
+    var vNum = st.version || 1, isOpen = openShotReview===st.id;
+    var rl=reviewsReady?reviewFor("shot_task",st.id):null;
+    html+='<div class="shot-task-row'+(isOpen?' st-open':'')+'">';
+    html+='<button class="st-expand" title="'+(isOpen?'Hide review':'Show review')+'" onclick="toggleShotReview(\''+st.id+'\')">'+(isOpen?'&#9660;':'&#9654;')+'</button>';
+    html+='<div style="flex:1;min-width:0;cursor:pointer" onclick="toggleShotReview(\''+st.id+'\')"><div class="st-type">'+escH(st.task_type)+' <span class="version-badge">v'+vNum+'</span></div>';
     if(st.department)html+='<div class="st-dept">'+escH(st.department)+'</div></div>';
     else html+='</div>';
     if(st.assignee)html+='<span class="chip" style="font-size:.7rem; margin-right:8px">'+escH(st.assignee)+'</span>';
     if(st.due_date)html+='<span style="font-size:.72rem;color:var(--text3); margin-right:8px">'+fmtDate(st.due_date)+'</span>';
-    
+    if(reviewsReady)html+='<button class="st-rv-chip'+(rl&&rl.active?(rl.decision==="approved"?' ok':rl.decision==="changes"?' chg':' wait'):'')+'" onclick="toggleShotReview(\''+st.id+'\')" title="Review">'+(rl&&rl.active?(rl.decision==="approved"?'&#10003; Approved':rl.decision==="changes"?'Changes requested':'In review')+' · '+reviewNoteCount(rl)+' notes':'&#9655; Review')+'</button>';
     var selHtml = '<select class="shot-status-sel" style="padding:2px 6px; font-size:.7rem; margin-right:8px; border-radius:4px" onchange="updateShotTaskStatus(\''+st.id+'\', this.value)">';
-    var opts = [
-        {v:"ready", l:"Ready"},{v:"inprogress", l:"In Progress"},
-        {v:"review", l:"In Review"},{v:"approved", l:"Approved"},{v:"final", l:"Final"}
-    ];
-    opts.forEach(function(o){
-        selHtml += '<option value="'+o.v+'" '+(st.status===o.v?'selected':'')+'>'+o.l+'</option>';
+    [{v:"ready", l:"Ready"},{v:"inprogress", l:"In Progress"},{v:"review", l:"In Review"},{v:"approved", l:"Approved"},{v:"final", l:"Final"}].forEach(function(o){
+      selHtml += '<option value="'+o.v+'" '+(st.status===o.v?'selected':'')+'>'+o.l+'</option>';
     });
-    selHtml += '</select>';
-    
-    html+= selHtml;
-    var rl=reviewsReady?reviewFor("shot_task",st.id):null;
-    if(reviewsReady)html+='<button class="btn btn-ghost btn-sm" style="font-size:.68rem;padding:2px 8px;margin-right:6px" title="Review link" onclick="openReviewModal(\'shot_task\',\''+st.id+'\')">'+(rl?(rl.decision==="approved"?"&#10003; Approved":rl.decision==="changes"?"Changes":"In review")+' · '+reviewNoteCount(rl):"&#9655; Review")+'</button>';
+    html+= selHtml+'</select>';
     html+='<button class="st-del" onclick="deleteShotTask(\''+st.id+'\')">&#215;</button></div>';
+    if(isOpen)html+='<div class="st-review" id="st-review-'+st.id+'">'+shotReviewPanel(st,rl)+'</div>';
   });
   html+='<button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';
   el.innerHTML=html;
 }
+function shotReviewPanel(st,l){
+  if(!reviewsReady)return '<div class="st-rv-help">Reviews aren\'t set up yet.</div>';
+  var id=st.id, h='';
+  if(!l||!l.active){
+    h+='<div class="st-rv-help">'+(l?'This review link is turned off. Paste a link to turn it back on.':'Get a link your supervisor or client can watch and comment on. Paste the playblast or render link (YouTube, Vimeo, Google Drive, Dropbox, or a direct .mp4).')+'</div>';
+    h+='<div class="st-rv-line"><input class="inp" id="st-rv-url-'+id+'" placeholder="https://…" value="'+escH(l?l.media_url:"")+'"><button class="btn btn-primary btn-sm" onclick="shotReviewSubmit(\''+id+'\')">'+(l?'Turn back on':'Create review link')+'</button></div>';
+    if(l)h+=shotReviewNotesHtml(l);
+    return h;
+  }
+  var state=l.decision==="approved"?'<strong style="color:var(--done)">Approved</strong> by '+escH(l.decided_by||"")+' on version '+l.round+'.':l.decision==="changes"?'<strong style="color:var(--late)">Changes requested</strong> by '+escH(l.decided_by||"")+' on version '+l.round+'. Paste the next version below.':'Version '+l.round+' is waiting for review.';
+  h+='<div class="st-rv-help">'+state+'</div>';
+  h+='<div class="st-rv-line"><input class="inp" readonly value="'+escH(reviewUrl(l))+'" onclick="this.select()"><button class="btn btn-ghost btn-sm" onclick="copyText(\''+reviewUrl(l)+'\')">Copy link</button><a class="btn btn-ghost btn-sm" href="'+reviewUrl(l)+'" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">Open</a></div>';
+  h+='<div class="st-rv-line"><input class="inp" id="st-rv-url-'+id+'" placeholder="New version link https://…" value=""><button class="btn btn-ghost btn-sm" onclick="shotReviewSubmit(\''+id+'\')">Send new version</button><button class="btn btn-ghost btn-sm" style="color:var(--text3)" onclick="shotReviewOff(\''+id+'\')">Turn off</button></div>';
+  h+=shotReviewNotesHtml(l);
+  return h;
+}
+function shotReviewNotesHtml(l){
+  var notes=shotReviewNotes[l.id];
+  if(!notes)return '<div class="st-rv-help" style="margin-top:8px">Loading notes…</div>';
+  if(!notes.length)return '<div class="st-rv-help" style="margin-top:8px">No notes yet.</div>';
+  var byRound={};notes.forEach(function(n){(byRound[n.round]=byRound[n.round]||[]).push(n);});
+  return '<div class="st-rv-notes">'+Object.keys(byRound).map(Number).sort(function(a,b){return b-a;}).map(function(r){
+    return '<div class="st-rv-round">VERSION '+r+(r===l.round?' · CURRENT':'')+'</div>'+byRound[r].map(function(n){
+      var t=n.t_seconds!=null?'<span class="st-rv-t">'+Math.floor(n.t_seconds/60)+':'+String(Math.floor(n.t_seconds%60)).padStart(2,"0")+'</span>':'';
+      var cls=n.kind==="approved"?' ok':n.kind==="changes"?' chg':'';
+      return '<label class="st-rv-note'+cls+(n.resolved?' done':'')+'">'+(n.kind==="note"?'<input type="checkbox" '+(n.resolved?'checked':'')+' onchange="shotReviewResolve(\''+l.id+'\',\''+n.id+'\',this.checked)" title="Mark as fixed">':'<span style="width:13px"></span>')+'<span style="min-width:0"><span class="st-rv-who">'+escH(n.author_name)+'</span>'+t+'<span class="st-rv-body">'+escH(n.body)+'</span></span></label>';
+    }).join("");
+  }).join("")+'</div>';
+}
+async function loadShotReviewNotes(l){
+  var r=await sb.from("review_notes").select("*").eq("link_id",l.id).order("round",{ascending:false}).order("t_seconds",{ascending:true,nullsFirst:false}).order("created_at",{ascending:true});
+  shotReviewNotes[l.id]=r.error?[]:(r.data||[]);
+  var box=document.getElementById("st-review-"+openShotReview);
+  if(box){var st=activeShotTasks.find(function(x){return x.id===openShotReview;});if(st)box.innerHTML=shotReviewPanel(st,reviewFor("shot_task",st.id));}
+}
+window.toggleShotReview=async function(id){
+  openShotReview=openShotReview===id?null:id;
+  renderShotTasks();
+  if(openShotReview){
+    await loadReviews();renderShotTasks();
+    var l=reviewFor("shot_task",id);if(l)loadShotReviewNotes(l);
+  }
+};
+window.shotReviewSubmit=async function(id){
+  var url=(document.getElementById("st-rv-url-"+id)||{}).value||"";
+  url=url.trim();
+  if(!/^https:\/\//i.test(url)){showToast("Paste a link that starts with https://","error");return;}
+  var ok=await reviewSubmit("shot_task",id,url);
+  if(ok){var l=reviewFor("shot_task",id);renderShotTasks();renderReviews();if(l)loadShotReviewNotes(l);}
+};
+window.shotReviewOff=async function(id){
+  var l=reviewFor("shot_task",id);if(!l)return;
+  if(!confirm("Turn off this review link? Anyone who opens it will see that it's no longer available. Notes are kept."))return;
+  var r=await sb.from("review_links").update({active:false}).eq("id",l.id);
+  if(!dbOk(r))return;l.active=false;showToast("Review link turned off");renderShotTasks();renderReviews();
+};
+window.shotReviewResolve=async function(linkId,noteId,val){
+  var r=await sb.from("review_notes").update({resolved:val}).eq("id",noteId);
+  if(!dbOk(r))return;
+  var n=(shotReviewNotes[linkId]||[]).find(function(x){return x.id===noteId;});if(n)n.resolved=val;
+  var box=document.getElementById("st-review-"+openShotReview);var st=activeShotTasks.find(function(x){return x.id===openShotReview;});
+  if(box&&st)box.innerHTML=shotReviewPanel(st,reviewFor("shot_task",st.id));
+};
+window.copyText=function(t){try{navigator.clipboard.writeText(t).then(function(){showToast("Link copied");},function(){prompt("Copy this link:",t);});}catch(e){prompt("Copy this link:",t);}};
 
 window.updateShotTaskStatus = async function(id, newStatus) {
   var st = activeShotTasks.find(function(x) { return x.id === id; });
@@ -2451,7 +2532,7 @@ function renderReviews(){
   var list=reviews.filter(function(l){return l.active;}).sort(function(a,b){return (a.decision?1:0)-(b.decision?1:0)||String(b.created_at).localeCompare(String(a.created_at));});
   if(!list.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No reviews yet. Open a task and click Send for review.</div>';return;}
   el.innerHTML=list.map(function(l){
-    return '<div class="hitem" style="cursor:pointer" onclick="openReviewModal(\''+l.target_kind+'\',\''+l.target_id+'\')"><div class="hrow"><span style="font-weight:600;font-size:.8rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(reviewTargetName(l))+'</span><span style="margin-left:auto">'+reviewPill(l)+'</span></div><div class="htask">v'+l.round+' · '+reviewNoteCount(l)+' notes'+(l.decided_by?' · '+escH(l.decided_by):'')+'</div></div>';
+    return '<div class="hitem" style="cursor:pointer" onclick="goToReview(\''+l.target_kind+'\',\''+l.target_id+'\')"><div class="hrow"><span style="font-weight:600;font-size:.8rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(reviewTargetName(l))+'</span><span style="margin-left:auto">'+reviewPill(l)+'</span></div><div class="htask">v'+l.round+' · '+reviewNoteCount(l)+' notes'+(l.decided_by?' · '+escH(l.decided_by):'')+'</div></div>';
   }).join("");
 }
 window.openReviewModal=function(kind,id){
@@ -2479,34 +2560,46 @@ window.openReviewModal=function(kind,id){
   }
   document.getElementById("review-modal").classList.add("open");
 };
+window.goToReview=async function(kind,id){
+  if(kind==="shot_task"){var st=shotTasks.find(function(x){return x.id===id;});if(st){await openShot(st.shot_id);openShotReview=null;await toggleShotReview(id);return;}}
+  openReviewModal(kind,id);
+};
 window.closeReviewModal=function(){document.getElementById("review-modal").classList.remove("open");};
 window.copyReviewLink=function(){var i=document.getElementById("rv-link");i.select();i.setSelectionRange(0,99999);try{navigator.clipboard.writeText(i.value);}catch(e){document.execCommand("copy");}showToast("Review link copied");};
 async function setTargetReviewStatus(kind,id){
   if(kind==="task"){var t=tasks.find(function(x){return x.id===id;});if(t&&t.status!=="done"&&t.status!=="review"){var r=await sb.from("tasks").update({status:"review"}).eq("id",id);if(!r.error)t.status="review";}}
   else{var st=shotTasks.find(function(x){return x.id===id;});var r2=await sb.from("shot_tasks").update({status:"review"}).eq("id",id);if(!r2.error){if(st)st.status="review";var a=activeShotTasks.find(function(x){return x.id===id;});if(a)a.status="review";}}
 }
-window.saveReview=async function(){
-  var url=document.getElementById("rv-url").value.trim();
-  if(!/^https:\/\//i.test(url)){showToast("Paste a link that starts with https://","error");return;}
-  var l=reviewFor(rvKind,rvTarget), r;
+function reviewTitleFor(kind,id){
+  if(kind==="task"){var t=tasks.find(function(x){return x.id===id;});return t?t.name:"Task";}
+  var st=shotTasks.find(function(x){return x.id===id;})||activeShotTasks.find(function(x){return x.id===id;});
+  var sh=st?shots.find(function(x){return x.id===st.shot_id;}):null;
+  return (sh?sh.code+" — ":"")+(st?st.task_type:"Shot task");
+}
+async function reviewSubmit(kind,id,url){
+  var l=reviewFor(kind,id), r;
   if(!l){
-    var title=document.getElementById("rv-title").textContent.replace(/^Review: /,"");
-    r=await sb.from("review_links").insert({project_id:activeProject.id,target_kind:rvKind,target_id:rvTarget,title:title,media_url:url}).select("*, review_notes(count)").single();
-    if(!dbOk(r))return;
+    r=await sb.from("review_links").insert({project_id:activeProject.id,target_kind:kind,target_id:id,title:reviewTitleFor(kind,id),media_url:url}).select("*, review_notes(count)").single();
+    if(!dbOk(r))return false;
     reviews.push(r.data);
-    await setTargetReviewStatus(rvKind,rvTarget);
+    await setTargetReviewStatus(kind,id);
     showToast("Review link ready. Copy it and send it to your reviewers.");
   } else if(!l.active){
     r=await sb.from("review_links").update({active:true,media_url:url,expires_at:new Date(Date.now()+90*864e5).toISOString()}).eq("id",l.id).select("*, review_notes(count)").single();
-    if(!dbOk(r))return;Object.assign(l,r.data);showToast("Link is back on");
+    if(!dbOk(r))return false;Object.assign(l,r.data);showToast("Link is back on");
   } else {
-    var changed=url!==l.media_url;
-    if(!changed&&!l.decision){showToast("Paste the new version's link first, or just copy the review link.","error");return;}
+    if(url===l.media_url&&!l.decision){showToast("Paste the new version's link first, or just copy the review link.","error");return false;}
     r=await sb.from("review_links").update({media_url:url,round:l.round+1,decision:null,decided_by:null,decided_at:null,expires_at:new Date(Date.now()+90*864e5).toISOString()}).eq("id",l.id).select("*, review_notes(count)").single();
-    if(!dbOk(r))return;Object.assign(l,r.data);
-    await setTargetReviewStatus(rvKind,rvTarget);
+    if(!dbOk(r))return false;Object.assign(l,r.data);
+    await setTargetReviewStatus(kind,id);
     showToast("Version "+l.round+" sent. Reviewers use the same link.");
   }
+  return true;
+}
+window.saveReview=async function(){
+  var url=document.getElementById("rv-url").value.trim();
+  if(!/^https:\/\//i.test(url)){showToast("Paste a link that starts with https://","error");return;}
+  if(!(await reviewSubmit(rvKind,rvTarget,url)))return;
   openReviewModal(rvKind,rvTarget);
   refreshAfterReview();
 };
