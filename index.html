@@ -718,6 +718,9 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
 .tc-sw{width:24px;height:24px;border-radius:6px;border:2px solid transparent;cursor:pointer;padding:0;}
 .tc-sw.active{border-color:var(--text);}
 .tc-auto{font-size:.72rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;}
+.sb-about{display:block;text-align:center;font-size:.7rem;color:var(--text3);text-decoration:none;margin-top:6px;white-space:nowrap;overflow:hidden;}
+.sidebar-nav.collapsed .sb-about{display:none;}
+.sb-about:hover{color:var(--text);text-decoration:underline;}
 .tc-auto.active{border-color:var(--text);color:var(--text);font-weight:700;}
 </style>
 </head>
@@ -769,6 +772,7 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
     <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <button class="btn-ghost" style="width:100%;padding:10px;font-size:.85rem;color:var(--text3)" onclick="showInviteCodeInput()">Have an invite code? Click here</button>
     </div>
+    <div style="text-align:center;margin-top:12px;font-size:.75rem"><a href="about.html" style="color:var(--text3)">About and privacy</a></div>
   </div>
   </div>
 </div>
@@ -797,6 +801,7 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
           <button class="sb-btn" onclick="openSchemeMenu(event)" id="theme-btn" title="Colour scheme">&#9673; <span>Theme</span></button>
           <button class="sb-btn" onclick="doSignOut()">&#8859; <span>Sign Out</span></button>
         </div>
+        <a href="about.html" target="_blank" rel="noopener" class="sb-about" title="About and privacy"><span>About and privacy</span></a>
       </div>
     </nav>
 
@@ -1994,7 +1999,12 @@ window.saveFundProfile=async function(){
   p.country=document.getElementById("fp-country").value;p.province=document.getElementById("fp-prov").value;
   p.city=document.getElementById("fp-city").value.trim();p.school=document.getElementById("fp-school").value.trim();
   if(!p.org||!p.org.length){showToast("Pick at least one option under Who we are.","error");return;}
-  var r=await sb.from("projects").update({funding_profile:p}).eq("id",activeProject.id);
+  // Saved through a database function so co-owners can save too; falls back to a direct update if it isn't installed yet.
+  var r=await sb.rpc("workprint_save_funding_profile",{pid:activeProject.id,profile:p});
+  if(r.error&&(r.error.code==="PGRST202"||/could not find the function/i.test(r.error.message||""))){
+    r=await sb.from("projects").update({funding_profile:p}).eq("id",activeProject.id).select("id");
+    if(!r.error&&(!r.data||!r.data.length)){showToast("Only project owners can change the funding profile.","error");return;}
+  }
   if(!dbOk(r))return;
   activeProject.funding_profile=p;var pp=projects.find(function(x){return x.id===activeProject.id;});if(pp)pp.funding_profile=p;
   fundShowAll=false;closeFundProfile();showToast("Funding profile saved");renderFunding();
