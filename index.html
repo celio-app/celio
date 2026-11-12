@@ -718,7 +718,10 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
 .tc-sw{width:24px;height:24px;border-radius:6px;border:2px solid transparent;cursor:pointer;padding:0;}
 .tc-sw.active{border-color:var(--text);}
 .tc-auto{font-size:.72rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;}
-.sb-about{display:block;text-align:center;font-size:.7rem;color:var(--text3);text-decoration:none;margin-top:6px;white-space:nowrap;overflow:hidden;}
+.hdr-help{display:inline-flex;align-items:center;gap:5px;font-size:.8rem;font-weight:600;color:var(--text2);text-decoration:none;border:1px solid var(--border);border-radius:999px;padding:5px 12px;background:var(--bg2);}
+.hdr-help:hover{color:var(--text);border-color:var(--text3);}
+@media(max-width:600px){.hdr-help span{display:none;}}
+.sb-about{display:block;text-align:center;font-size:.76rem;color:var(--text3);text-decoration:none;margin-top:6px;white-space:nowrap;overflow:hidden;}
 .sidebar-nav.collapsed .sb-about{display:none;}
 .sb-about a{color:var(--text3);text-decoration:none;}.sb-about a:hover{color:var(--text);text-decoration:underline;}
 .tc-auto.active{border-color:var(--text);color:var(--text);font-weight:700;}
@@ -801,7 +804,7 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
           <button class="sb-btn" onclick="openSchemeMenu(event)" id="theme-btn" title="Colour scheme">&#9673; <span>Theme</span></button>
           <button class="sb-btn" onclick="doSignOut()">&#8859; <span>Sign Out</span></button>
         </div>
-        <div class="sb-about"><a href="manual.html" target="_blank" rel="noopener" title="Manual">Help</a> · <a href="about.html" target="_blank" rel="noopener" title="About and privacy">Privacy</a></div>
+        <div class="sb-about"><a href="manual.html" target="_blank" rel="noopener" title="Manual">Manual</a> · <a href="about.html" target="_blank" rel="noopener" title="About and privacy">Privacy</a></div>
       </div>
     </nav>
 
@@ -813,7 +816,10 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
             <div class="proj-badge"><span class="dot" style="background:var(--purple)"></span><span>Select a project</span></div>
           </div>
         </div>
-        <div id="hdr-actions"></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <a class="hdr-help" href="manual.html" target="_blank" rel="noopener" title="Open the Workprint manual">? <span>Help</span></a>
+          <div id="hdr-actions"></div>
+        </div>
       </header>
 
       <div class="nav-tabs" id="nav-tabs" style="display:none">
@@ -860,6 +866,7 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
             <div class="right-col">
               <div class="panel"><div class="panel-header"><h2>Handoffs</h2></div><div id="handoff-list"></div></div>
               <div class="panel"><div class="panel-header"><h2 id="deliv-hdr">Final Assets</h2></div><div id="asset-list"></div></div>
+              <div class="panel"><div class="panel-header"><h2>Reviews</h2></div><div id="review-list"></div></div>
             </div>
           </div>
         </div>
@@ -1069,9 +1076,30 @@ html:not([data-scheme="classic"]) .auth-msg.error{color:var(--late);}html:not([d
         <div><label class="flbl">Deliverable URL (optional)</label><input id="f-deliverable-url" class="inp" placeholder="https://..."></div>
       </div>
     </div>
+    <div class="form-row" id="task-review-row" style="display:none"></div>
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="review-modal">
+  <div class="modal" style="width:500px">
+    <div class="modal-title" id="rv-title">Review link</div>
+    <p style="font-size:.82rem;color:var(--text3);margin:6px 0 14px">Anyone with the link can watch, leave notes, and approve or request changes. Nothing is uploaded to Workprint; the video or image stays where it is.</p>
+    <div class="form-row"><label class="flbl">Video or image link</label><input id="rv-url" class="inp" placeholder="https://… YouTube, Vimeo, Google Drive, Dropbox, or a direct .mp4 / .png link"></div>
+    <div class="form-row" style="font-size:.76rem;color:var(--text3);margin-top:-6px">Make sure the file is shared so anyone with its link can view it (unlisted on YouTube or Vimeo is fine).</div>
+    <div id="rv-existing" style="display:none">
+      <div class="form-row"><label class="flbl">Review link to send</label>
+        <div style="display:flex;gap:6px"><input id="rv-link" class="inp" readonly onclick="this.select()"><button class="btn btn-ghost btn-sm" onclick="copyReviewLink()">Copy</button><a class="btn btn-ghost btn-sm" id="rv-open" target="_blank" rel="noopener" style="text-decoration:none;display:inline-flex;align-items:center">Open</a></div>
+      </div>
+      <div id="rv-state" style="font-size:.84rem;color:var(--text2);margin:6px 0 12px"></div>
+    </div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" id="rv-off" onclick="turnOffReview()" style="margin-right:auto;display:none">Turn off link</button>
+      <button class="btn btn-ghost" onclick="closeReviewModal()">Close</button>
+      <button class="btn btn-primary" id="rv-save" onclick="saveReview()">Create review link</button>
     </div>
   </div>
 </div>
@@ -2238,6 +2266,8 @@ function renderShotTasks(){
     selHtml += '</select>';
     
     html+= selHtml;
+    var rl=reviewsReady?reviewFor("shot_task",st.id):null;
+    if(reviewsReady)html+='<button class="btn btn-ghost btn-sm" style="font-size:.68rem;padding:2px 8px;margin-right:6px" title="Review link" onclick="openReviewModal(\'shot_task\',\''+st.id+'\')">'+(rl?(rl.decision==="approved"?"&#10003; Approved":rl.decision==="changes"?"Changes":"In review")+' · '+reviewNoteCount(rl):"&#9655; Review")+'</button>';
     html+='<button class="st-del" onclick="deleteShotTask(\''+st.id+'\')">&#215;</button></div>';
   });
   html+='<button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';
@@ -2393,6 +2423,106 @@ window.saveAssetLinks=async function(){
   showToast("Assets linked!");
 };
 
+// ── Review links ──
+var reviews=[],reviewsReady=false,rvKind=null,rvTarget=null;
+async function loadReviews(){
+  if(!activeProject){reviews=[];return;}
+  var r=await sb.from("review_links").select("*, review_notes(count)").eq("project_id",activeProject.id);
+  if(r.error){reviews=[];reviewsReady=false;return;}
+  reviews=r.data||[];reviewsReady=true;
+}
+function reviewFor(kind,id){return reviews.find(function(l){return l.target_kind===kind&&l.target_id===id;})||null;}
+function reviewNoteCount(l){var c=l&&l.review_notes&&l.review_notes[0];return c?c.count:0;}
+function reviewUrl(l){return location.origin+"/review.html?r="+l.token;}
+function reviewPill(l){
+  if(!l.active)return '<span class="pend" style="opacity:.6">Link off</span>';
+  if(l.decision==="approved")return '<span class="conf">Approved</span>';
+  if(l.decision==="changes")return '<span class="pend" style="color:var(--late)">Changes</span>';
+  return '<span class="pend">Waiting</span>';
+}
+function reviewTargetName(l){
+  if(l.target_kind==="task"){var t=tasks.find(function(x){return x.id===l.target_id;});return t?t.name:l.title;}
+  var st=shotTasks.find(function(x){return x.id===l.target_id;});if(!st)return l.title;
+  var sh=shots.find(function(x){return x.id===st.shot_id;});return (sh?sh.code+" — ":"")+st.task_type;
+}
+function renderReviews(){
+  var el=document.getElementById("review-list");if(!el)return;
+  if(!reviewsReady){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">Reviews aren\'t set up yet.</div>';return;}
+  var list=reviews.filter(function(l){return l.active;}).sort(function(a,b){return (a.decision?1:0)-(b.decision?1:0)||String(b.created_at).localeCompare(String(a.created_at));});
+  if(!list.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No reviews yet. Open a task and click Send for review.</div>';return;}
+  el.innerHTML=list.map(function(l){
+    return '<div class="hitem" style="cursor:pointer" onclick="openReviewModal(\''+l.target_kind+'\',\''+l.target_id+'\')"><div class="hrow"><span style="font-weight:600;font-size:.8rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(reviewTargetName(l))+'</span><span style="margin-left:auto">'+reviewPill(l)+'</span></div><div class="htask">v'+l.round+' · '+reviewNoteCount(l)+' notes'+(l.decided_by?' · '+escH(l.decided_by):'')+'</div></div>';
+  }).join("");
+}
+window.openReviewModal=function(kind,id){
+  if(!reviewsReady){showToast("Reviews need a quick database update first.","error");return;}
+  rvKind=kind;rvTarget=id;
+  var l=reviewFor(kind,id), name, url="";
+  if(kind==="task"){var t=tasks.find(function(x){return x.id===id;});name=t?t.name:"Task";url=t&&t.asset_url||"";}
+  else{var st=shotTasks.find(function(x){return x.id===id;})||activeShotTasks.find(function(x){return x.id===id;});var sh=st?shots.find(function(x){return x.id===st.shot_id;}):null;name=(sh?sh.code+" — ":"")+(st?st.task_type:"Shot task");}
+  document.getElementById("rv-title").textContent="Review: "+name;
+  document.getElementById("rv-url").value=l?l.media_url:url;
+  document.getElementById("rv-url").dataset.orig=l?l.media_url:"";
+  var ex=document.getElementById("rv-existing");
+  if(l){
+    ex.style.display="";
+    document.getElementById("rv-link").value=reviewUrl(l);
+    document.getElementById("rv-open").href=reviewUrl(l);
+    var st2=!l.active?"This link is turned off.":l.decision==="approved"?"Version "+l.round+" was approved by "+escH(l.decided_by||"")+".":l.decision==="changes"?"Changes were requested on version "+l.round+" by "+escH(l.decided_by||"")+". Paste the new version's link above and click Send new version.":"Version "+l.round+" is waiting for review.";
+    document.getElementById("rv-state").innerHTML=st2+" "+reviewNoteCount(l)+" notes so far.";
+    document.getElementById("rv-save").textContent=l.active?"Send new version":"Turn link back on";
+    document.getElementById("rv-off").style.display=l.active?"":"none";
+  } else {
+    ex.style.display="none";
+    document.getElementById("rv-save").textContent="Create review link";
+    document.getElementById("rv-off").style.display="none";
+  }
+  document.getElementById("review-modal").classList.add("open");
+};
+window.closeReviewModal=function(){document.getElementById("review-modal").classList.remove("open");};
+window.copyReviewLink=function(){var i=document.getElementById("rv-link");i.select();i.setSelectionRange(0,99999);try{navigator.clipboard.writeText(i.value);}catch(e){document.execCommand("copy");}showToast("Review link copied");};
+async function setTargetReviewStatus(kind,id){
+  if(kind==="task"){var t=tasks.find(function(x){return x.id===id;});if(t&&t.status!=="done"&&t.status!=="review"){var r=await sb.from("tasks").update({status:"review"}).eq("id",id);if(!r.error)t.status="review";}}
+  else{var st=shotTasks.find(function(x){return x.id===id;});var r2=await sb.from("shot_tasks").update({status:"review"}).eq("id",id);if(!r2.error){if(st)st.status="review";var a=activeShotTasks.find(function(x){return x.id===id;});if(a)a.status="review";}}
+}
+window.saveReview=async function(){
+  var url=document.getElementById("rv-url").value.trim();
+  if(!/^https:\/\//i.test(url)){showToast("Paste a link that starts with https://","error");return;}
+  var l=reviewFor(rvKind,rvTarget), r;
+  if(!l){
+    var title=document.getElementById("rv-title").textContent.replace(/^Review: /,"");
+    r=await sb.from("review_links").insert({project_id:activeProject.id,target_kind:rvKind,target_id:rvTarget,title:title,media_url:url}).select("*, review_notes(count)").single();
+    if(!dbOk(r))return;
+    reviews.push(r.data);
+    await setTargetReviewStatus(rvKind,rvTarget);
+    showToast("Review link ready. Copy it and send it to your reviewers.");
+  } else if(!l.active){
+    r=await sb.from("review_links").update({active:true,media_url:url,expires_at:new Date(Date.now()+90*864e5).toISOString()}).eq("id",l.id).select("*, review_notes(count)").single();
+    if(!dbOk(r))return;Object.assign(l,r.data);showToast("Link is back on");
+  } else {
+    var changed=url!==l.media_url;
+    if(!changed&&!l.decision){showToast("Paste the new version's link first, or just copy the review link.","error");return;}
+    r=await sb.from("review_links").update({media_url:url,round:l.round+1,decision:null,decided_by:null,decided_at:null,expires_at:new Date(Date.now()+90*864e5).toISOString()}).eq("id",l.id).select("*, review_notes(count)").single();
+    if(!dbOk(r))return;Object.assign(l,r.data);
+    await setTargetReviewStatus(rvKind,rvTarget);
+    showToast("Version "+l.round+" sent. Reviewers use the same link.");
+  }
+  openReviewModal(rvKind,rvTarget);
+  refreshAfterReview();
+};
+window.turnOffReview=async function(){
+  var l=reviewFor(rvKind,rvTarget);if(!l)return;
+  if(!confirm("Turn off this review link? Anyone who opens it will see that it's no longer available. Notes are kept."))return;
+  var r=await sb.from("review_links").update({active:false}).eq("id",l.id);
+  if(!dbOk(r))return;l.active=false;showToast("Review link turned off");openReviewModal(rvKind,rvTarget);refreshAfterReview();
+};
+function refreshAfterReview(){
+  renderReviews();
+  if(document.getElementById("modal").classList.contains("open")&&editTaskId)fillTaskReviewRow(editTaskId);
+  if(typeof renderShotTasks==="function"&&activeShot)renderShotTasks();
+  var active=document.querySelector(".tab-content.active");if(active&&active.id==="tab-schedule")renderSchedule();
+}
+
 async function loadTasks(){
   if(!activeProject)return;
   var r=await sb.from("tasks").select("*").eq("project_id",activeProject.id).order("due_date",{ascending:true,nullsFirst:false});
@@ -2404,6 +2534,7 @@ async function loadTasks(){
   var shotIds=shots.filter(function(s){return s.project_id===activeProject.id;}).map(function(s){return s.id;});
   if(shotIds.length){var rst=await sb.from("shot_tasks").select("*").in("shot_id",shotIds);shotTasks=rst.data||[];}
   else{shotTasks=[];}
+  await loadReviews();
   await loadFunders();
   var active=document.querySelector(".tab-content.active");
   var name=active?active.id.replace("tab-",""):"schedule";
@@ -2486,7 +2617,7 @@ window.renderSchedule=function(){
   if(isOrg()){
     renderOrgSections(assetTasks);
     if(shotSec){shotSec.innerHTML="";shotSec.style.display="none";}
-    renderHandoffs();renderAssetDeliverables();
+    renderHandoffs();renderAssetDeliverables();renderReviews();
     return;
   }
   renderAssetSections(assetTasks);
@@ -2497,6 +2628,7 @@ window.renderSchedule=function(){
   })();
   renderHandoffs();
   renderAssetDeliverables();
+  renderReviews();
 };
 
 function renderAssetSections(assetTasks){
@@ -2911,6 +3043,7 @@ window.openModal=function(id,forceCat,forceAssetType,forceAssetName){
   document.getElementById("f-name").dataset.auto="";
   editTaskId=id;
   document.getElementById("modal-title").textContent=id?"Edit Task":"Add Task";
+  fillTaskReviewRow(id);
   if(id){
     var t=tasks.find(function(x){return x.id===id;});
     if(t){
@@ -2976,6 +3109,13 @@ function renderTaskColorRow(){
 }
 window.pickTaskColor=function(c,keep){selectedTaskColor=c;if(!keep)renderTaskColorRow();else document.querySelectorAll("#tc-row .tc-auto,#tc-row .tc-sw").forEach(function(b){b.classList.remove("active");});};
 window.closeModal=function(){document.getElementById("modal").classList.remove("open");};
+function fillTaskReviewRow(id){
+  var row=document.getElementById("task-review-row");if(!row)return;
+  if(!id||!reviewsReady){row.style.display="none";row.innerHTML="";return;}
+  var l=reviewFor("task",id);
+  row.style.display="";
+  row.innerHTML='<label class="flbl">Review</label><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'+(l?reviewPill(l)+'<span style="font-size:.78rem;color:var(--text3)">'+reviewNoteCount(l)+' notes · v'+l.round+'</span><button class="btn btn-ghost btn-sm" type="button" onclick="openReviewModal(\'task\',\''+id+'\')">Manage</button>':'<button class="btn btn-ghost btn-sm" type="button" onclick="openReviewModal(\'task\',\''+id+'\')">&#9655; Send for review</button><span style="font-size:.76rem;color:var(--text3)">Get a link people can watch and comment on</span>')+'</div>';
+}
 
 window.saveTask = async function(){
   var name = document.getElementById("f-name").value.trim();
