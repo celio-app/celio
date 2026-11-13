@@ -2629,11 +2629,12 @@ window.sendFeedback=async function(){
   if(!fbKind){showToast("Pick one: broken, idea or confusing.","error");return;}
   if(!body){showToast("Type a few words first.","error");document.getElementById("fb-body").focus();return;}
   var btn=document.getElementById("fb-send");btn.disabled=true;
-  var r=await sb.from("app_feedback").insert({kind:fbKind,body:body,context:fbContext(),user_email:currentUser&&currentUser.email||null,user_id:currentUser.id}).select("id").single();
+  var fid=(crypto.randomUUID?crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,function(c){var r=Math.random()*16|0;return (c==="x"?r:(r&3|8)).toString(16);}));
+  var r=await sb.from("app_feedback").insert({id:fid,kind:fbKind,body:body,context:fbContext(),user_email:currentUser&&currentUser.email||null,user_id:currentUser.id});
   btn.disabled=false;
   if(r.error){showToast(/relation|does not exist|schema cache/i.test(r.error.message)?"Feedback isn't switched on yet.":r.error.message,"error");return;}
   closeFeedback();showToast("Thanks! Your feedback was sent.");
-  try{sb.functions.invoke("feedback-notify",{body:{id:r.data.id}});}catch(e){}
+  try{sb.functions.invoke("feedback-notify",{body:{id:fid}});}catch(e){}
 };
 window.openFbInbox=async function(){
   closeFeedback();
