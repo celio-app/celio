@@ -769,6 +769,19 @@ body.tpl-org .nav-tab-cut{display:none;}
 .gantt-legend span{display:inline-flex;align-items:center;gap:5px;}
 .gantt-legend i{width:11px;height:11px;border-radius:3px;display:inline-block;}
 .gantt-bar.gb-is-done{opacity:.5;}
+.gantt-bar.gb-sel{outline:2.5px solid var(--text);outline-offset:2px;z-index:4;box-shadow:0 0 0 5px color-mix(in srgb,var(--text) 12%,transparent);}
+.gantt-bar.gb-sel::before{content:"\2713";display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;border-radius:50%;background:var(--text);color:var(--bg2);font-size:.6rem;margin-right:5px;flex-shrink:0;}
+.gantt-selbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--purple-dim);border:1px solid color-mix(in srgb,var(--purple) 35%,transparent);color:var(--text);border-radius:10px;padding:7px 12px;margin:0 0 10px;font-size:.8rem;}
+.gantt-selbar b{color:var(--purple);}
+.sd-grid{display:grid;grid-template-columns:auto 1fr;gap:10px 12px;align-items:center;margin-bottom:12px;font-size:.84rem;}
+.sd-amt{display:flex;gap:6px;align-items:center;}
+.sd-amt input{width:84px;}
+.sd-scope label{display:flex;gap:8px;align-items:center;padding:7px 10px;border:1px solid var(--border);border-radius:8px;margin-bottom:6px;cursor:pointer;font-size:.84rem;color:var(--text2);}
+.sd-scope label.on{border-color:var(--purple);background:var(--purple-dim);color:var(--text);}
+.sd-scope input[type=date]{margin-left:auto;padding:3px 6px;font-size:.78rem;}
+.sd-preview{background:var(--bg3);border-radius:8px;padding:10px 12px;font-size:.82rem;color:var(--text2);min-height:40px;}
+.undo-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--text);color:var(--bg2);padding:9px 10px 9px 16px;border-radius:999px;font-size:.85rem;display:flex;align-items:center;gap:12px;z-index:300;box-shadow:0 6px 24px rgba(0,0,0,.25);}
+.undo-toast button{background:none;border:1px solid currentColor;color:inherit;border-radius:999px;padding:3px 12px;font:inherit;font-weight:700;cursor:pointer;}
 .gc-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 14px;margin-top:6px;}
 .gc-item{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--text2);}
 .gc-item input[type=color]{width:34px;height:26px;border:1px solid var(--border);border-radius:6px;padding:0;background:none;cursor:pointer;}
@@ -968,15 +981,17 @@ body.tpl-org .nav-tab-cut{display:none;}
           <div class="gantt-header">
             <div style="display:flex;align-items:center">
               <h2>Gantt Chart</h2>
-              <span class="gantt-tip">&#8212; drag bars to move &middot; drag edges to resize</span>
+              <span class="gantt-tip">&#8212; drag bars to move &middot; drag edges to resize &middot; Shift-click to select several</span>
             </div>
             <div class="cal-nav">
               <button class="btn btn-ghost btn-sm" onclick="ganttPrev()">&#8592;</button>
               <span class="cal-month-label" id="gantt-label"></span>
               <button class="btn btn-ghost btn-sm" onclick="ganttNext()">&#8594;</button>
               <button class="btn btn-ghost btn-sm" onclick="ganttToday()">Today</button>
+              <button class="btn btn-ghost btn-sm" onclick="openShiftDates()" title="Move many tasks at once">&#8644; Shift dates</button>
             </div>
           </div>
+          <div class="gantt-selbar" id="gantt-selbar" style="display:none"></div>
           <div class="gantt-legend" id="gantt-legend"></div>
           <div class="gantt-container" style="overflow-x:auto">
             <div class="gantt-inner" id="gantt-inner"></div>
@@ -1154,6 +1169,28 @@ body.tpl-org .nav-tab-cut{display:none;}
     <div class="form-actions">
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="shift-modal">
+  <div class="modal" style="width:470px">
+    <div class="modal-title">Shift dates</div>
+    <p style="font-size:.82rem;color:var(--text3);margin:6px 0 14px">Move a block of work later or earlier. Start and due dates move together, so every bar keeps its length.</p>
+    <div class="sd-grid">
+      <span>Move by</span>
+      <div class="sd-amt"><input type="number" id="sd-n" class="inp" value="7" min="1" max="999" oninput="shiftPreview()"><select id="sd-unit" class="inp" style="width:auto" onchange="shiftPreview()"><option value="1">days</option><option value="7">weeks</option></select><select id="sd-dir" class="inp" style="width:auto" onchange="shiftPreview()"><option value="1">later</option><option value="-1">earlier</option></select></div>
+    </div>
+    <div class="sd-scope" id="sd-scope">
+      <label data-v="sel"><input type="radio" name="sd-scope" value="sel" onchange="shiftPreview()"> <span>Only the selected bars (<span id="sd-selcount">0</span>)</span></label>
+      <label data-v="after"><input type="radio" name="sd-scope" value="after" onchange="shiftPreview()"> <span>Everything starting on or after</span><input type="date" id="sd-after" class="inp" onchange="shiftPick('after')"></label>
+      <label data-v="all"><input type="radio" name="sd-scope" value="all" onchange="shiftPreview()"> <span>Everything in this project</span></label>
+    </div>
+    <label id="sd-done-row" style="display:flex;gap:8px;align-items:center;font-size:.82rem;color:var(--text2);margin:6px 0 12px;cursor:pointer"><input type="checkbox" id="sd-done" onchange="shiftPreview()"> Also move work that's already done</label>
+    <div class="sd-preview" id="sd-preview"></div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" onclick="closeShiftDates()">Cancel</button>
+      <button class="btn btn-primary" id="sd-go" onclick="applyShiftDates()">Shift</button>
     </div>
   </div>
 </div>
@@ -3724,7 +3761,9 @@ function renderGantt() {
     if (mode === "move") touchAsMouse(el);
     el.addEventListener("mousedown", function(e) {
       if (mode === "move" && (e.target.classList.contains("gantt-resize-handle") || e.target.classList.contains("gantt-resize-handle-left"))) return;
+      if (e.shiftKey||e.metaKey||e.ctrlKey) return;
       e.preventDefault();
+      if (mode === "move" && ganttSel.task[task.id] && ganttSelCount() > 1) { ganttGroupDrag(e); return; }
       var bar = row.querySelector(".gantt-bar"); if (bar) bar.classList.add("dragging");
       var startX = e.clientX, cs = origSi, ce = origEi;
       var _moved = false;
@@ -3803,7 +3842,8 @@ function renderGantt() {
         var si = t.start_date ? dateToCol(t.start_date) : ei;
         var vs = Math.max(0, si), ve = Math.min(DAYS-1, ei);
         if (ve >= 0 && vs <= DAYS-1) {
-          var bar = document.createElement("div"); bar.className = "gantt-bar " + ganttBarCls(t); styleBar(bar, taskBarColor(t), t.status==="done"?"done":(daysUntil(t.due_date)<0?"late":""));
+          var bar = document.createElement("div"); bar.className = "gantt-bar " + ganttBarCls(t) + (ganttSel.task[t.id]?" gb-sel":""); styleBar(bar, taskBarColor(t), t.status==="done"?"done":(daysUntil(t.due_date)<0?"late":""));
+          bar.dataset.k = "task"; bar.dataset.id = t.id;
           bar.style.left = (vs * COL_W) + "px"; bar.style.width = ((ve-vs+1) * COL_W - 4) + "px";
           bar.textContent = lbl; bar.title = lbl + " | Due: " + fmtDate(t.due_date);
           var lh2 = document.createElement("div"); lh2.className = "gantt-resize-handle-left"; bar.appendChild(lh2);
@@ -3816,7 +3856,7 @@ function renderGantt() {
             bar.addEventListener("mousedown",function(e){_mx=e.clientX;_my=e.clientY;});
             bar.addEventListener("mouseup",function(e){
               var dx=e.clientX-_mx, dy=e.clientY-_my;
-              if(Math.sqrt(dx*dx+dy*dy)<5) openModal(tid);
+              if(Math.sqrt(dx*dx+dy*dy)<5){ if(e.shiftKey||e.metaKey||e.ctrlKey) toggleGanttSel("task",tid); else openModal(tid); }
             });
           })(t.id);
           row.appendChild(bar);
@@ -3865,7 +3905,8 @@ function renderGantt() {
             var isDone = sh.status === "approved" || sh.status === "final";
             var isLate = !isDone && daysUntil(sh.due_date) < 0;
             var barCls = isDone ? "gb-shot-done" : isLate ? "gb-shot-late" : "gb-shot";
-            var bar2 = document.createElement("div"); bar2.className = "gantt-bar " + barCls; styleBar(bar2, shotBarColor(sh), isDone?"done":(isLate?"late":""));
+            var bar2 = document.createElement("div"); bar2.className = "gantt-bar " + barCls + (ganttSel.shot[sh.id]?" gb-sel":""); styleBar(bar2, shotBarColor(sh), isDone?"done":(isLate?"late":""));
+            bar2.dataset.k = "shot"; bar2.dataset.id = sh.id;
             bar2.style.left = (vs2 * COL_W) + "px"; bar2.style.width = ((ve2-vs2+1) * COL_W - 4) + "px";
             var lbl2 = sh.code + (sh.description ? " \u2014 " + sh.description : "");
             bar2.textContent = lbl2; bar2.title = lbl2 + " | Due: " + fmtDate(sh.due_date);
@@ -3873,6 +3914,8 @@ function renderGantt() {
             touchAsMouse(bar2);
             (function(shot, csi, cei) {
               bar2.addEventListener("mousedown", function(e) {
+                if (e.shiftKey||e.metaKey||e.ctrlKey) return;
+                if (ganttSel.shot[shot.id] && ganttSelCount() > 1) { e.preventDefault(); ganttGroupDrag(e); return; }
                 e.preventDefault(); bar2.style.cursor = "grabbing";
                 var startX = e.clientX, sp = cei - csi;
                 function onMove(ev) {
@@ -3899,7 +3942,7 @@ function renderGantt() {
               bar2.addEventListener("mousedown",function(e){_mx2=e.clientX;_my2=e.clientY;});
               bar2.addEventListener("mouseup",function(e){
                 var dx=e.clientX-_mx2, dy=e.clientY-_my2;
-                if(Math.sqrt(dx*dx+dy*dy)<5) openShot(sid);
+                if(Math.sqrt(dx*dx+dy*dy)<5){ if(e.shiftKey||e.metaKey||e.ctrlKey) toggleGanttSel("shot",sid); else openShot(sid); }
               });
             })(sh.id);
             row.appendChild(bar2);
@@ -3912,6 +3955,135 @@ function renderGantt() {
 
   chartDiv.appendChild(rowsDiv);
   inner.innerHTML = ""; inner.appendChild(labelsDiv); inner.appendChild(chartDiv);
+  renderGanttSelbar();
+}
+
+// ── Gantt: select several bars, drag them together, shift blocks of dates ──
+var ganttSel={task:{},shot:{}};
+function ganttSelCount(){return Object.keys(ganttSel.task).length+Object.keys(ganttSel.shot).length;}
+window.toggleGanttSel=function(k,id){if(ganttSel[k][id])delete ganttSel[k][id];else ganttSel[k][id]=1;
+  document.querySelectorAll('.gantt-bar[data-k="'+k+'"][data-id="'+id+'"]').forEach(function(b){b.classList.toggle("gb-sel",!!ganttSel[k][id]);});
+  renderGanttSelbar();};
+window.clearGanttSel=function(){ganttSel={task:{},shot:{}};document.querySelectorAll(".gantt-bar.gb-sel").forEach(function(b){b.classList.remove("gb-sel");});renderGanttSelbar();};
+function renderGanttSelbar(){
+  var el=document.getElementById("gantt-selbar");if(!el)return;
+  var n=ganttSelCount();
+  if(!n){el.style.display="none";el.innerHTML="";return;}
+  el.style.display="flex";
+  el.innerHTML='<span><b>'+n+'</b> selected. Drag any of them to move them all, or</span><button class="btn btn-primary btn-sm" onclick="openShiftDates(\'sel\')">Shift by days…</button><button class="btn btn-ghost btn-sm" onclick="clearGanttSel()">Clear</button>';
+}
+function addDaysYMD(ymd,n){if(!ymd)return ymd;var d=new Date(ymd+"T00:00:00");d.setDate(d.getDate()+n);return fmtYMD(d);}
+function ganttTaskOnChart(t){return t.due_date&&!{team:1,meetings:1,client:1,marketing:1}[t.category];}
+function itemStart(x){return x.start_date||x.due_date;}
+// Everything a shift could touch, in the shape {k, id, start_date, due_date, done}
+function shiftCandidates(){
+  var out=[],pid=activeProject&&activeProject.id;
+  tasks.forEach(function(t){if(ganttTaskOnChart(t))out.push({k:"task",id:t.id,start_date:t.start_date,due_date:t.due_date,done:t.status==="done",name:t.name});});
+  var projShots=shots.filter(function(s){return s.project_id===pid;});
+  projShots.forEach(function(s){if(s.due_date||s.start_date)out.push({k:"shot",id:s.id,start_date:s.start_date,due_date:s.due_date,done:s.status==="approved"||s.status==="final",name:s.code});});
+  var shotIds={};projShots.forEach(function(s){shotIds[s.id]=1;});
+  shotTasks.forEach(function(st){if(shotIds[st.shot_id]&&(st.due_date||st.start_date))out.push({k:"shot_task",id:st.id,shot_id:st.shot_id,start_date:st.start_date,due_date:st.due_date,done:st.status==="approved"||st.status==="final",name:st.task_type});});
+  return out;
+}
+function shiftTargets(scope,after,includeDone){
+  var all=shiftCandidates();
+  var pick;
+  if(scope==="sel"){
+    var selShots=ganttSel.shot;
+    pick=all.filter(function(x){return (x.k==="task"&&ganttSel.task[x.id])||(x.k==="shot"&&selShots[x.id])||(x.k==="shot_task"&&selShots[x.shot_id]);});
+    return pick; // explicit selection moves even finished work
+  }
+  if(scope==="after"){if(!after)return [];pick=all.filter(function(x){return itemStart(x)>=after;});}
+  else pick=all;
+  if(!includeDone)pick=pick.filter(function(x){return !x.done;});
+  return pick;
+}
+var shiftScope="all";
+window.openShiftDates=function(scope){
+  var n=ganttSelCount();
+  shiftScope=scope||(n?"sel":"after");
+  document.getElementById("sd-selcount").textContent=n;
+  document.querySelector('#sd-scope label[data-v="sel"]').style.display=n?"":"none";
+  if(shiftScope==="sel"&&!n)shiftScope="after";
+  var af=document.getElementById("sd-after");if(!af.value)af.value=fmtYMD(new Date());
+  document.querySelectorAll('input[name="sd-scope"]').forEach(function(r){r.checked=r.value===shiftScope;});
+  document.getElementById("shift-modal").classList.add("open");
+  shiftPreview();setTimeout(function(){var i=document.getElementById("sd-n");i.focus();i.select();},50);
+};
+window.closeShiftDates=function(){document.getElementById("shift-modal").classList.remove("open");};
+window.shiftPick=function(v){document.querySelectorAll('input[name="sd-scope"]').forEach(function(r){r.checked=r.value===v;});shiftPreview();};
+function shiftDays(){var n=parseInt(document.getElementById("sd-n").value,10)||0;return n*(+document.getElementById("sd-unit").value)*(+document.getElementById("sd-dir").value);}
+window.shiftPreview=function(){
+  var r=document.querySelector('input[name="sd-scope"]:checked');shiftScope=r?r.value:"all";
+  document.querySelectorAll("#sd-scope label").forEach(function(l){l.classList.toggle("on",l.dataset.v===shiftScope);});
+  document.getElementById("sd-done-row").style.display=shiftScope==="sel"?"none":"flex";
+  var days=shiftDays(),list=shiftTargets(shiftScope,document.getElementById("sd-after").value,document.getElementById("sd-done").checked);
+  var p=document.getElementById("sd-preview"),go=document.getElementById("sd-go");
+  if(!days||!list.length){p.innerHTML=!days?"Type how many days to move.":"Nothing matches. Try a different choice above.";go.disabled=true;return;}
+  go.disabled=false;
+  var c={task:0,shot:0,shot_task:0};list.forEach(function(x){c[x.k]++;});
+  var parts=[];if(c.task)parts.push(c.task+" task"+(c.task>1?"s":""));if(c.shot)parts.push(c.shot+" shot"+(c.shot>1?"s":""));if(c.shot_task)parts.push(c.shot_task+" shot task"+(c.shot_task>1?"s":""));
+  var starts=list.map(itemStart).filter(Boolean).sort(),ends=list.map(function(x){return x.due_date||x.start_date;}).filter(Boolean).sort();
+  var a=starts[0],b=ends[ends.length-1];
+  p.innerHTML='Moves <strong>'+parts.join(", ")+'</strong> '+Math.abs(days)+' day'+(Math.abs(days)>1?'s':'')+' '+(days>0?'later':'earlier')+'.<br><span style="color:var(--text3)">'+fmtDate(a)+' – '+fmtDate(b)+' becomes </span><strong>'+fmtDate(addDaysYMD(a,days))+' – '+fmtDate(addDaysYMD(b,days))+'</strong>';
+  go.textContent="Shift "+list.length;
+};
+window.applyShiftDates=async function(){
+  var days=shiftDays(),list=shiftTargets(shiftScope,document.getElementById("sd-after").value,document.getElementById("sd-done").checked);
+  if(!days||!list.length)return;
+  closeShiftDates();
+  await bulkShift(list,days);
+};
+var TBL={task:"tasks",shot:"shots",shot_task:"shot_tasks"};
+async function writeDates(items){
+  var fails=0;
+  for(var i=0;i<items.length;i+=20){
+    var res=await Promise.all(items.slice(i,i+20).map(function(x){var p={};if(x.start_date!==undefined)p.start_date=x.start_date||null;if(x.due_date!==undefined)p.due_date=x.due_date||null;return sb.from(TBL[x.k]).update(p).eq("id",x.id);}));
+    res.forEach(function(r){if(r.error)fails++;});
+  }
+  return fails;
+}
+function applyLocal(items){
+  items.forEach(function(x){
+    var arr=x.k==="task"?tasks:x.k==="shot"?shots:shotTasks;
+    var o=arr.find(function(y){return y.id===x.id;});if(o){o.start_date=x.start_date||null;o.due_date=x.due_date||null;}
+    if(x.k==="shot_task"){var a=activeShotTasks.find(function(y){return y.id===x.id;});if(a){a.start_date=x.start_date||null;a.due_date=x.due_date||null;}}
+  });
+}
+async function bulkShift(list,days){
+  var before=list.map(function(x){return {k:x.k,id:x.id,start_date:x.start_date||null,due_date:x.due_date||null};});
+  var after=before.map(function(x){return {k:x.k,id:x.id,start_date:x.start_date?addDaysYMD(x.start_date,days):null,due_date:x.due_date?addDaysYMD(x.due_date,days):null};});
+  applyLocal(after);renderGantt();
+  var fails=await writeDates(after);
+  if(fails)showToast(fails+" item"+(fails>1?"s":"")+" couldn't be moved. You may not have permission for them.","error");
+  undoToast("Moved "+(list.length-fails)+" item"+(list.length-fails===1?"":"s")+" "+Math.abs(days)+" day"+(Math.abs(days)===1?"":"s")+" "+(days>0?"later":"earlier"),async function(){
+    applyLocal(before);renderGantt();var f2=await writeDates(before);showToast(f2?"Some dates couldn't be restored.":"Moved back.",f2?"error":undefined);loadTasks();
+  });
+  loadTasks();
+}
+function undoToast(msg,onUndo){
+  var old=document.getElementById("undo-toast");if(old)old.remove();
+  var t=document.createElement("div");t.id="undo-toast";t.className="undo-toast";
+  t.innerHTML='<span>'+escH(msg)+'</span><button type="button">Undo</button>';
+  t.querySelector("button").onclick=function(){t.remove();onUndo();};
+  document.body.appendChild(t);
+  setTimeout(function(){if(t.parentNode)t.remove();},12000);
+}
+// Drag several selected bars together
+function ganttGroupDrag(e){
+  var bars=[].slice.call(document.querySelectorAll(".gantt-bar.gb-sel"));
+  var orig=bars.map(function(b){return parseFloat(b.style.left)||0;});
+  bars.forEach(function(b){b.classList.add("dragging");});
+  var startX=e.clientX,dd=0;
+  function onMove(ev){dd=Math.round((ev.clientX-startX)/COL_W);bars.forEach(function(b,i){b.style.left=(orig[i]+dd*COL_W)+"px";});}
+  async function onUp(){
+    document.removeEventListener("mousemove",onMove);document.removeEventListener("mouseup",onUp);
+    bars.forEach(function(b){b.classList.remove("dragging");});
+    bars.forEach(function(b){b.dataset.ganttDragged="1";});
+    if(!dd){bars.forEach(function(b,i){b.style.left=orig[i]+"px";});return;}
+    await bulkShift(shiftTargets("sel"),dd);
+  }
+  document.addEventListener("mousemove",onMove);document.addEventListener("mouseup",onUp);
 }
 
 window.ganttPrev  = function() { ganttStart = (isNaN(ganttStart) ? -7 : ganttStart) - 14; sessionStorage.setItem("celio-gantt-offset", ganttStart); renderGantt(); };
