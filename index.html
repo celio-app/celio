@@ -777,6 +777,19 @@ body.tpl-org .nav-tab-cut{display:none;}
 .tc-sw.active{border-color:var(--text);}
 .tc-auto{font-size:.72rem;padding:4px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;}
 .hdr-help{display:inline-flex;align-items:center;gap:5px;font-size:.8rem;font-weight:600;color:var(--text2);text-decoration:none;border:1px solid var(--border);border-radius:999px;padding:5px 12px;background:var(--bg2);}
+.hdr-help{cursor:pointer;font-family:inherit;}
+.fb-kinds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:12px;}
+.fb-kind{border:1.5px solid var(--border);background:var(--bg2);border-radius:10px;padding:10px 8px;font-size:.8rem;font-weight:700;color:var(--text2);cursor:pointer;text-align:center;font-family:inherit;}
+.fb-kind span{display:block;font-size:1.2rem;margin-bottom:2px;}
+.fb-kind.on{border-color:var(--purple);color:var(--purple);background:var(--purple-dim);}
+.fb-item{border:1px solid var(--border2);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--bg2);}
+.fb-item.done{opacity:.55;}
+.fb-meta{font-size:.72rem;color:var(--text3);margin-top:6px;}
+.fb-body{font-size:.86rem;color:var(--text);white-space:pre-wrap;margin-top:4px;}
+.fb-tag{font-size:.68rem;font-weight:800;letter-spacing:.5px;padding:2px 8px;border-radius:999px;}
+.fb-tag.broken{background:color-mix(in srgb,var(--late) 15%,transparent);color:var(--late);}
+.fb-tag.idea{background:color-mix(in srgb,var(--done) 15%,transparent);color:var(--done);}
+.fb-tag.confusing{background:color-mix(in srgb,var(--review) 18%,transparent);color:var(--review);}
 .hdr-help:hover{color:var(--text);border-color:var(--text3);}
 @media(max-width:600px){.hdr-help span{display:none;}}
 .sb-about{display:block;text-align:center;font-size:.76rem;color:var(--text3);text-decoration:none;margin-top:6px;white-space:nowrap;overflow:hidden;}
@@ -875,6 +888,7 @@ body.tpl-org .nav-tab-cut{display:none;}
           </div>
         </div>
         <div style="display:flex;align-items:center;gap:8px">
+          <button class="hdr-help" type="button" onclick="openFeedback()" title="Tell us what's broken, confusing, or could be better">&#9998; <span>Feedback</span></button>
           <a class="hdr-help" href="manual.html" target="_blank" rel="noopener" title="Open the Workprint manual">? <span>Help</span></a>
           <div id="hdr-actions"></div>
         </div>
@@ -1141,6 +1155,34 @@ body.tpl-org .nav-tab-cut{display:none;}
       <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
       <button class="btn btn-primary" onclick="saveTask()">Save Task</button>
     </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="fb-modal">
+  <div class="modal" style="width:460px">
+    <div class="modal-title">Send feedback</div>
+    <p style="font-size:.82rem;color:var(--text3);margin:6px 0 14px">Thanks for testing Workprint. Every note is read.</p>
+    <div class="fb-kinds">
+      <button type="button" class="fb-kind" data-k="broken" onclick="pickFbKind('broken')"><span>&#9888;</span>Something's broken</button>
+      <button type="button" class="fb-kind" data-k="idea" onclick="pickFbKind('idea')"><span>&#10024;</span>Idea</button>
+      <button type="button" class="fb-kind" data-k="confusing" onclick="pickFbKind('confusing')"><span>?</span>This was confusing</button>
+    </div>
+    <div class="form-row"><textarea id="fb-body" class="inp" style="font-family:inherit;resize:vertical" rows="5" maxlength="4000" placeholder="What happened, or what would make this better?"></textarea></div>
+    <div style="font-size:.74rem;color:var(--text3);margin:-4px 0 12px">We'll also note which screen you're on and your browser, so we can find the problem.</div>
+    <div class="form-actions">
+      <button class="btn btn-ghost" id="fb-inbox-btn" style="margin-right:auto;display:none" onclick="openFbInbox()">View all feedback</button>
+      <button class="btn btn-ghost" onclick="closeFeedback()">Cancel</button>
+      <button class="btn btn-primary" id="fb-send" onclick="sendFeedback()">Send</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="fb-inbox">
+  <div class="modal" style="width:680px">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px"><div class="modal-title" style="margin:0">Feedback</div>
+      <select id="fb-filter" class="inp" style="width:auto;margin-left:auto;padding:5px 8px" onchange="renderFbInbox()"><option value="open">New and seen</option><option value="new">New only</option><option value="all">Everything</option></select></div>
+    <div id="fb-list"></div>
+    <div class="form-actions"><button class="btn btn-ghost" onclick="document.getElementById('fb-inbox').classList.remove('open')">Close</button></div>
   </div>
 </div>
 
@@ -2559,6 +2601,59 @@ window.saveAssetLinks=async function(){
   var assetTasks=tasks.filter(function(t){return t.category==="asset"&&t.project_id===activeShot.project_id;});
   renderShotAssets(assetTasks);
   showToast("Assets linked!");
+};
+
+// ── Feedback ──
+var fbKind=null,fbIsAdmin=null,fbItems=[];
+function fbContext(){
+  var ua=navigator.userAgent,br=/Edg\//.test(ua)?"Edge":/OPR\//.test(ua)?"Opera":/Chrome\//.test(ua)?"Chrome":/Firefox\//.test(ua)?"Firefox":/Safari\//.test(ua)?"Safari":"Other";
+  var os=/iPad|Macintosh.*Mobile/.test(ua)||(/Macintosh/.test(ua)&&navigator.maxTouchPoints>1)?"iPad":/iPhone/.test(ua)?"iPhone":/Android/.test(ua)?"Android":/Windows/.test(ua)?"Windows":/Mac OS X/.test(ua)?"Mac":/Linux/.test(ua)?"Linux":"Other";
+  var act=document.querySelector(".tab-content.active"),tab=act?act.id.replace("tab-",""):"";
+  if(tab==="milestones")tab="admin";
+  var view=activeShot?"shot page "+(activeShot.code||""):"";
+  var openModal=[].slice.call(document.querySelectorAll(".modal-bg.open")).map(function(m){return m.id;}).filter(function(id){return id!=="fb-modal";})[0]||"";
+  return {tab:tab,view:view||(openModal?"with "+openModal+" open":""),project_type:activeProject?(isOrg()?"Studio Management":"Production"):"no project",
+    browser:br,os:os,screen:innerWidth+"x"+innerHeight,theme:document.documentElement.getAttribute("data-scheme")||"",installed:(matchMedia&&matchMedia("(display-mode: standalone)").matches)?"yes":"no",ua:ua.slice(0,300)};
+}
+window.openFeedback=async function(){
+  fbKind=null;document.querySelectorAll(".fb-kind").forEach(function(b){b.classList.remove("on");});
+  document.getElementById("fb-body").value="";
+  document.getElementById("fb-modal").classList.add("open");
+  if(fbIsAdmin===null){var r=await sb.rpc("workprint_is_app_admin");fbIsAdmin=!r.error&&r.data===true;}
+  document.getElementById("fb-inbox-btn").style.display=fbIsAdmin?"":"none";
+};
+window.closeFeedback=function(){document.getElementById("fb-modal").classList.remove("open");};
+window.pickFbKind=function(k){fbKind=k;document.querySelectorAll(".fb-kind").forEach(function(b){b.classList.toggle("on",b.dataset.k===k);});document.getElementById("fb-body").focus();};
+window.sendFeedback=async function(){
+  var body=document.getElementById("fb-body").value.trim();
+  if(!fbKind){showToast("Pick one: broken, idea or confusing.","error");return;}
+  if(!body){showToast("Type a few words first.","error");document.getElementById("fb-body").focus();return;}
+  var btn=document.getElementById("fb-send");btn.disabled=true;
+  var r=await sb.from("app_feedback").insert({kind:fbKind,body:body,context:fbContext(),user_email:currentUser&&currentUser.email||null,user_id:currentUser.id}).select("id").single();
+  btn.disabled=false;
+  if(r.error){showToast(/relation|does not exist|schema cache/i.test(r.error.message)?"Feedback isn't switched on yet.":r.error.message,"error");return;}
+  closeFeedback();showToast("Thanks! Your feedback was sent.");
+  try{sb.functions.invoke("feedback-notify",{body:{id:r.data.id}});}catch(e){}
+};
+window.openFbInbox=async function(){
+  closeFeedback();
+  document.getElementById("fb-list").innerHTML='<div style="font-size:.84rem;color:var(--text3);padding:10px 0">Loading…</div>';
+  document.getElementById("fb-inbox").classList.add("open");
+  var r=await sb.from("app_feedback").select("*").order("created_at",{ascending:false}).limit(500);
+  fbItems=r.error?[]:(r.data||[]);renderFbInbox();
+};
+window.renderFbInbox=function(){
+  var f=document.getElementById("fb-filter").value;
+  var list=fbItems.filter(function(x){return f==="all"||(f==="new"?x.status==="new":x.status!=="done");});
+  var lbl={broken:"BROKEN",idea:"IDEA",confusing:"CONFUSING"};
+  document.getElementById("fb-list").innerHTML=list.length?list.map(function(x){
+    var c=x.context||{},when=new Date(x.created_at).toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+    return '<div class="fb-item'+(x.status==="done"?' done':'')+'"><div style="display:flex;align-items:center;gap:8px"><span class="fb-tag '+escH(x.kind)+'">'+lbl[x.kind]+'</span><span style="font-size:.78rem;color:var(--text2);font-weight:600">'+escH(x.user_email||"")+'</span>'+(x.status==="new"?'<span style="font-size:.68rem;font-weight:800;color:var(--purple)">NEW</span>':'')+'<span style="margin-left:auto;display:flex;gap:4px">'+(x.status!=="seen"&&x.status!=="done"?'<button class="btn btn-ghost btn-sm" onclick="setFb(\''+x.id+'\',\'seen\')">Mark seen</button>':'')+(x.status!=="done"?'<button class="btn btn-ghost btn-sm" onclick="setFb(\''+x.id+'\',\'done\')">Done</button>':'<button class="btn btn-ghost btn-sm" onclick="setFb(\''+x.id+'\',\'seen\')">Reopen</button>')+'</span></div><div class="fb-body">'+escH(x.body)+'</div><div class="fb-meta">'+when+' · '+escH([c.tab,c.view,c.project_type].filter(Boolean).join(" · "))+' · '+escH([c.browser,c.os,c.screen].filter(Boolean).join(" · "))+(c.installed==="yes"?' · installed app':'')+'</div></div>';
+  }).join(""):'<div style="font-size:.84rem;color:var(--text3);padding:10px 0">Nothing here.</div>';
+};
+window.setFb=async function(id,st){
+  var r=await sb.from("app_feedback").update({status:st}).eq("id",id);if(!dbOk(r))return;
+  var x=fbItems.find(function(i){return i.id===id;});if(x)x.status=st;renderFbInbox();
 };
 
 // ── The Cut ──
