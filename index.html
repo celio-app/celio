@@ -1523,6 +1523,16 @@ function clearPendingInviteCode() {
   history.replaceState({}, "", url.pathname + (qs ? "?" + qs : "") + url.hash);
 }
 
+// Progress for one asset: counts every stage in its type's pipeline (plus any extra stages added),
+// with partial credit for work under way (In Progress 25%, In Review 75%, Done 100%).
+function assetProgress(type,stageTasks){
+  var pipe=(PIPELINE_STAGES[type]||[]).slice(),credit={todo:0,inprogress:.25,review:.75,done:1};
+  var best={};
+  stageTasks.forEach(function(t){var k=t.pipeline_stage||t.name||"";var c=credit[t.status]||0;if(!(k in best)||c>best[k])best[k]=c;if(pipe.indexOf(k)<0)pipe.push(k);});
+  if(!pipe.length)return 0;
+  var sum=pipe.reduce(function(a,k){return a+(best[k]||0);},0);
+  return Math.round(sum/pipe.length*100);
+}
 var PIPELINE_STAGES={
   character:["Design","Modelling","Surfacing","Rigging"],
   prop:["Design","Modelling","Surfacing"],
@@ -3064,16 +3074,18 @@ function renderAssetSections(assetTasks){
     names.forEach(function(name){
       var stageTasks=byType[at][name];
       var total=stageTasks.length,done=stageTasks.filter(function(t){return t.status==="done";}).length;
-      var pct=total?Math.round(done/total*100):0;
+      var pct=assetProgress(at,stageTasks);
       var anyLate=stageTasks.some(function(t){return t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;});
-      var isReady=done===total&&total>0;
+      var isReady=pct>=100;
       var key=at+"|"+name;var isCollapsed=uiState.assetGroupCollapsed[key]!==false;
       var card=document.createElement("div");card.className="asset-card";
       var hdr=document.createElement("div");hdr.className="asset-card-hdr";
       var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
       var nameSpan=document.createElement("span");nameSpan.className="asset-card-name";nameSpan.textContent=name;
+      var anyActive=stageTasks.some(function(t){return t.status==="inprogress"||t.status==="review"||t.status==="done";});
       var badge=document.createElement("span");badge.className="asset-status-badge "+(isReady?"asb-ready":anyLate?"asb-blocked":"asb-inprog");
-      badge.textContent=isReady?"Ready":anyLate?"Blocked":"In Progress";
+      badge.textContent=isReady?"Ready":anyLate?"Overdue":anyActive?"In Progress":"Not Started";
+      badge.title=isReady?"Every pipeline stage is done":anyLate?"A stage is past its due date and not done":"";
       var pbar=document.createElement("div");pbar.className="asset-prog-bar";
       var pfill=document.createElement("div");pfill.className="asset-prog-fill";pfill.style.width=pct+"%";pbar.appendChild(pfill);
       var ppct=document.createElement("span");ppct.className="asset-prog-pct";ppct.textContent=pct+"%";

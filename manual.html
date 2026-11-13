@@ -335,7 +335,8 @@
   <p>Production projects track two kinds of work: <strong>assets</strong> (characters, props, sets) moving through a pipeline, and <strong>shots</strong> moving through departments.</p>
   <figure><img src="manual/production.webp" width="1600" height="1028" alt="A Production project: asset pipeline and shots" loading="lazy"></figure>
   <h3>Asset pipeline</h3>
-  <p>Each asset, e.g. <em>Hero Character</em>, gets one task per stage. Its card shows a progress bar and a badge: Ready, In Progress, or Blocked (something is overdue).</p>
+  <p>Each asset, e.g. <em>Hero Character</em>, gets one task per stage. Its card shows a progress bar and a badge: Not Started, In Progress, Overdue (a stage is past its due date) or Ready (every stage done).</p>
+  <p>The progress bar counts every stage in the asset type's pipeline, even ones you haven't added yet. A stage In Progress counts a quarter, In Review three quarters, and Done the full stage. So a Character with Design done and Modelling in review is at 44%: (1 + 0.75) out of 4 stages.</p>
   <div class="tbl"><table>
     <tr><th>Asset type</th><th>Stages, in order</th></tr>
     <tr><td>Character</td><td>Design → Modelling → Surfacing → Rigging</td></tr>
