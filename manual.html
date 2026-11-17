@@ -53,6 +53,7 @@
   @media(max-width:880px){.layout{grid-template-columns:minmax(0,1fr);gap:0;}nav.toc{position:static;max-height:none;border-bottom:1px solid var(--line);padding-bottom:18px;columns:2;}nav.toc .lbl{column-span:all;}}
   @media(max-width:520px){nav.toc{columns:1;}}
   @media print{nav.toc,.open{display:none;}.layout{display:block;}h2{break-before:page;}figure{break-inside:avoid;}}
+  figure.cover{margin:0 0 22px;}figure.cover img{border-radius:12px;box-shadow:none;border:none;}figure.cover figcaption{font-size:.78rem;color:var(--ink3);margin-top:8px;font-style:italic;}
 </style>
 </head>
 <body>
@@ -88,6 +89,7 @@
 </nav>
 
 <main>
+  <figure class="cover"><img src="manual/cover.webp" width="1600" height="900" alt="A colour frame from the short film IFS_KDH_001: Choco peeks out of his door among the flowers"><figcaption>From <em>IFS_KDH_001</em>, the example film used throughout this manual.</figcaption></figure>
   <h1>Workprint manual</h1>
   <p class="lede">A shared schedule for teams: who is doing what, by when, and who is waiting on whom.</p>
   <p>Open Workprint at <a href="/">getworkprint.app</a>. This manual covers every screen, in plain words, with pictures from the app.</p>
@@ -346,7 +348,7 @@
 
   <h2 id="production">Production projects</h2>
   <p>Production projects track two kinds of work: <strong>assets</strong> (characters, props, sets) moving through a pipeline, and <strong>shots</strong> moving through departments.</p>
-  <figure><img src="manual/production.webp" width="1600" height="1028" alt="A Production project: asset pipeline and shots" loading="lazy"></figure>
+  <figure><img src="manual/production.webp" width="1600" height="1028" alt="A Production project: the asset pipeline, with the character Choco open showing its picture, files link, the shots it appears in and its four stages" loading="lazy"></figure>
   <h3>Asset pipeline</h3>
   <p>Each asset, e.g. <em>Hero Character</em>, gets one task per stage. Its card shows a progress bar and a badge: Not Started, In Progress, Overdue (a stage is past its due date) or Ready (every stage done).</p>
   <p>The progress bar counts every stage in the asset type's pipeline, even ones you haven't added yet. A stage In Progress counts a quarter, In Review three quarters, and Done the full stage. So a Character with Design done and Modelling in review is at 44%: (1 + 0.75) out of 4 stages.</p>
@@ -365,6 +367,7 @@
     <li>Under a sequence, click <strong>+ Add Shot</strong>. The next code is filled in for you too. Give the shot start and due dates so it shows on the Gantt chart.</li>
     <li>Click a shot to open its <strong>shot page</strong>.</li>
   </ol>
+  <figure><img src="manual/shots.webp" width="1600" height="1028" alt="Shot Progression: six shots with pictures from the storyboard, and the sequence running time 0:11 of 0:11" loading="lazy"></figure>
   <h3>Shot codes</h3>
   <p>Workprint picks up the style you already use (SH, SQ010_SH, three digits, steps of 10) and fills in the next free code. Beside it, the <strong>position</strong> list offers every place a new shot can go: <em>At the end</em>, <em>Before SH010</em>, <em>After SH020</em> and so on. Picking “After SH020” gives an in-between code like SH025, so the shots stay in film order. You can still type any code yourself.</p>
   <p>To start a sequence quickly, set <strong>How many shots</strong> to, say, 8: Workprint adds SH010 to SH080 in one go. Add descriptions on each shot afterwards.</p>
@@ -380,6 +383,7 @@
   </ul>
 
   <h3>Pictures and file locations</h3>
+  <figure><img src="manual/shot-page.webp" width="1600" height="434" alt="The top of a shot page: the shot's picture, a server path under Files, and the asset warning" loading="lazy"></figure>
   <p>Every shot and every asset can have a small picture and a link to where its files live. The picture shows in the lists, on the shot page and in the Cut.</p>
   <ol>
     <li>Grab a frame: a storyboard panel, or a screen grab of Maya with <strong>Win + Shift + S</strong> (Windows) or <strong>Cmd + Ctrl + Shift + 4</strong> (Mac).</li>
@@ -418,6 +422,7 @@
     <li><strong>Where each shot is</strong> shows every shot in sequence order, with one bar per shot task: grey ready, blue in progress, gold in review, green approved. Click a shot to open it.</li>
   </ul>
   <p>Approving or sending back a cut doesn't change any task; it records the decision on that version.</p>
+  <figure><img src="manual/cut.webp" width="1600" height="1028" alt="The Cut tab: the animatic playing, its version notes, and every shot with its picture and the film's running time" loading="lazy"></figure>
 
   <h2 id="calendar">Calendar and Gantt chart</h2>
   <p>Both show the same tasks as the Schedule. Change a date in one and it changes everywhere.</p>
