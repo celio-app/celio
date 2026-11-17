@@ -167,6 +167,12 @@
 
   <h2 id="schedule">The Schedule tab</h2>
   <p>The Schedule tab is home base: the counters at the top, the work in the middle, Handoffs and Deliverables on the right.</p>
+  <h3>My work</h3>
+  <p>Click <strong>&#9733; My work</strong> above the list to see only what's assigned to you in this project: tasks and shot tasks, grouped into Overdue, Due in the next 7 days, Later and No due date, plus anything that's <strong>Ready for you to start</strong>. Change a status right there, or click a task to open it.</p>
+  <p>The first time, Workprint asks <em>Which of the team is you?</em> Pick your name from Team Members and click <strong>That's me</strong>. If you joined with an invite, you're already matched. If your name isn't in the list, ask an owner to add you in Admin → Team Members with your email.</p>
+  <h3>Notifications</h3>
+  <p>The bell at the top right shows a red count when something needs you: a task assigned to you, something overdue, a handoff that's ready for you, or a review decision on your work. Opening it marks them as seen. Workprint also checks for changes every couple of minutes, so review decisions and teammates' updates appear without reloading.</p>
+  <p>Tick <strong>Email me a summary every Monday</strong> in the bell to get one email a week with what's overdue, what's due that week and what's ready for you, across all your projects. Untick it to stop.</p>
   <h3>Counters</h3>
   <div class="tbl"><table>
     <tr><th>Counter</th><th>Counts</th></tr>
@@ -184,9 +190,16 @@
   <p>Change a task's status from the dropdown in its row. Every task moves the same way:</p>
   <figure><img src="manual/status-flow.webp" width="1600" height="369" alt="To Do, In Progress, In Review, Done, with a loop back for changes" loading="lazy"></figure>
   <h3>Handoffs</h3>
-  <p>A handoff says “when I finish, this person is next.” It shows in the <strong>Handoffs</strong> panel as <em>Pending</em> until the task is Done, so the next person can see what's coming. In the list, the task also shows “→ hands off to …” under its name.</p>
+  <p>A handoff says “when I finish, this person is next.” The <strong>Handoffs</strong> panel shows each one as:</p>
+  <ul>
+    <li><strong>Waiting on</strong> someone: the work before it isn't done yet.</li>
+    <li><strong>Ready for</strong> someone: the work before it is done, so the next person can start. Their row is highlighted, and it appears in their My work and bell. They click <strong>Got it</strong> to clear it.</li>
+  </ul>
+  <p>Finished handoffs disappear from the panel a week after their due date. In <strong>Production</strong> projects, handoffs between pipeline stages are automatic: when Modelling is marked Done, the Surfacing lead sees <em>Ready for</em> them without anyone setting it up.</p>
+  <h3>Starts after</h3>
+  <p>Under <strong>Show Advanced Options</strong>, <strong>Starts after</strong> links a task to the one before it (Post starts after Approve). The task shows “&#8627; after …” in the list, and the Gantt chart draws an arrow between them. If a task's dates move so that the next one would start too early, Workprint offers to <strong>Move them</strong>, along with anything further down the chain. A red &#9888; means a task starts before the one it follows is due.</p>
   <h3>Deliverables</h3>
-  <p>A deliverable is the thing a task produces: a poster PDF, a post link, a model file. Add its name and a link under <strong>Show Advanced Options</strong>. It shows in the <strong>Deliverables</strong> panel (called <strong>Final Assets</strong> in Production projects). Links must start with http:// or https://.</p>
+  <p>A deliverable is the thing a task produces: a poster PDF, a post link, a model file. Add its name and a link under <strong>Show Advanced Options</strong>. It shows in the <strong>Deliverables</strong> panel. In Production projects, every pipeline stage can carry its file (for example hero_rig_v03.mb), and an asset appears in <strong>Final Assets</strong> once all its stages are done, linking to the last stage's file. Links must start with http:// or https://.</p>
 
   <h2 id="addtask">The Add Task window</h2>
   <p>Open it with <strong>+ Add Task</strong>, a group's <strong>+ Task</strong> button, or <strong>Edit</strong> on any row. The words change a little with the template; Studio Management words come first below.</p>
@@ -254,7 +267,7 @@
     <li>On the <strong>Schedule</strong> tab, pick <strong>By Initiative</strong>, then click <strong>+ New Initiative</strong>.</li>
     <li><strong>Category</strong> is already set to <strong>Team Task</strong>.</li>
     <li><strong>Team:</strong> pick <strong>Finance</strong>.</li>
-    <li><strong>Initiative:</strong> type <strong>Winter Showcase</strong>. Spell it the same way every time; that's how tasks group together.</li>
+    <li><strong>Initiative:</strong> type <strong>Winter Showcase</strong>. Tasks with the same initiative name group together. Capitals and extra spaces don't matter, and you can pick an existing name as you type.</li>
     <li><strong>Step:</strong> click <strong>Budget</strong>. The task name fills in as <em>Winter Showcase — Budget</em>.</li>
     <li><strong>Responsible:</strong> pick the Treasurer.</li>
     <li><strong>Start Date</strong> and <strong>Due Date:</strong> the first week.</li>
@@ -345,7 +358,7 @@
     <tr><td>Vehicle</td><td>Design → Modelling → Surfacing → Rigging</td></tr>
     <tr><td>FX Element</td><td>Design → Development → Sign-off</td></tr>
   </table></div>
-  <p>The <strong>Assets</strong> button above the list shows only the pipeline; <strong>All Tasks</strong> shows assets and shots together.</p>
+  <p>The <strong>Assets</strong> button above the list shows only the pipeline; <strong>All Tasks</strong> shows assets and shots together. A shot's progress bar works the same way as an asset's: In Progress counts a quarter, In Review three quarters, Approved or Final the whole task, counted against every kind of shot task used in the project. So a shot with only an approved Layout, in a film that also uses Animation and Lighting, is at 33%.</p>
   <h3>Sequences and shots</h3>
   <ol>
     <li>In the sidebar, click the ▶ arrow beside the project, then <strong>+ Add Sequence</strong>. Number in tens: SQ010, SQ020.</li>
@@ -354,9 +367,9 @@
   </ol>
   <h3>The shot page</h3>
   <ul>
-    <li><strong>Status:</strong> Pending, In Progress, In Review, Approved, Final.</li>
+    <li><strong>Status:</strong> To Do, In Progress, In Review, Approved, Final. The shot follows its shot tasks: it moves to In Progress when work starts, In Review when anything is in review, and Approved or Final when every shot task is. You can still change it by hand.</li>
     <li><strong>Storyboard Notes and Shot Details</strong> (frame count, camera, framing, angle) save when you click away.</li>
-    <li><strong>Shot Tasks:</strong> add Layout, Animation, CFX, FX, Lighting, Rendering, Compositing or your own. Each shot task has its own status: Ready to Start, In Progress, Supervisor Review, Approved, Final. Sending a task back from review raises its version (v1 → v2).</li>
+    <li><strong>Shot Tasks:</strong> add Layout, Animation, CFX, FX, Lighting, Rendering, Compositing or your own. Each shot task has its own status: To Do, In Progress, In Review, Approved, Final. Sending a task back from review raises its version (v1 → v2).</li>
     <li><strong>Asset Readiness:</strong> click <strong>+ Link Asset</strong> to list the assets in the shot. A warning shows if any of them is still in progress or overdue.</li>
   </ul>
 
@@ -509,7 +522,7 @@
   <h3>Good habits</h3>
   <ul>
     <li>Give every task a due date and a Responsible person.</li>
-    <li>Type initiative names exactly the same way each time, so tasks group together.</li>
+    <li>Need to fix an initiative's name, or combine two? Click <strong>Rename</strong> on its card. Typing the name of another initiative merges them.</li>
     <li>Add a handoff wherever someone is waiting on someone else.</li>
     <li>Export an archive before big clean-ups and at the end of each term.</li>
   </ul>
