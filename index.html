@@ -4851,7 +4851,8 @@ function thumbFromLink(u){
   if(!u||!/^https:\/\//i.test(u))return null;
   var y=ytId(u);if(y)return "https://i.ytimg.com/vi/"+y+"/mqdefault.jpg";
   var d=driveId(u);if(d)return "https://drive.google.com/thumbnail?id="+d+"&sz=w480";
-  if(/\.(png|jpe?g|webp|gif)(\?|#|$)/i.test(u))return u;
+  if(/dropbox\.com\/(s|scl)\//i.test(u))return u.replace(/([?&])dl=0/,"$1raw=1").replace(/^([^?]*)$/,"$1?raw=1");
+  if(/\.(png|jpe?g|webp|gif|avif)(\?|#|$)/i.test(u))return u;
   if(/vimeo\.com\//i.test(u))return vimeoThumbs[u]||null;
   return null;
 }
@@ -4908,8 +4909,8 @@ function mediaStripHtml(kind,ref,big){
   var m=metaFor(kind,ref),src=m.thumb_url||reviewThumb(kind,ref),auto=!m.thumb_url&&!!src;
   var frame='<div class="thumb-drop'+(big?' big':'')+(src?' has':'')+'" tabindex="0" data-mi="'+i+'" onclick="armThumb(this,event)" onpaste="pasteThumb(event,'+i+')" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="dropThumb(event,'+i+')">'
     +(src?'<img src="'+escH(src)+'" alt="" onerror="this.parentNode.classList.remove(\'has\');this.remove()">':'')
-    +'<div class="thumb-hint"><b>Paste or drop a frame</b><span>Click here, then Ctrl+V</span></div>'
-    +'<div class="thumb-armed">Press <b>Ctrl+V</b> to paste<br><button type="button" onclick="event.stopPropagation();pickThumbFile('+i+')">or choose a file</button></div>'
+    +'<div class="thumb-hint"><b>Paste or drop a frame</b><span>or an image link · click, then Ctrl+V</span></div>'
+    +'<div class="thumb-armed">Press <b>Ctrl+V</b> to paste an image or a link<br><button type="button" onclick="event.stopPropagation();pickThumbFile('+i+')">or choose a file</button></div>'
     +(src?'<div class="thumb-tools">'+(auto?'<span title="Taken from the latest review video">From review</span>':'<button type="button" onclick="event.stopPropagation();setThumb('+i+',null)">Remove</button>')+'</div>':'')
     +'</div>';
   return '<div class="media-strip'+(big?' big':'')+'">'+frame+'<div class="media-files" id="mf-'+i+'">'+filesHtml(i,m.files_url)+'</div></div>';
@@ -4970,7 +4971,8 @@ window.uploadThumb=async function(i,file){
 window.linkThumb=async function(i,u){
   var t=thumbFromLink(u);
   if(!t&&/vimeo\.com\//i.test(u))t=await new Promise(function(res){fetchVimeoThumb(u,res);});
-  if(!t){showToast("That link doesn't give a picture. Paste a YouTube, Vimeo or Google Drive link, or an image.","error");return;}
+  if(!t){var ok=await new Promise(function(res){var im=new Image();var to=setTimeout(function(){res(false);},8000);im.onload=function(){clearTimeout(to);res(im.naturalWidth>0);};im.onerror=function(){clearTimeout(to);res(false);};im.src=u;});if(ok)t=u;}
+  if(!t){showToast("That link doesn't open as a picture. Use a link straight to an image, or a YouTube, Vimeo, Google Drive or Dropbox link.","error");return;}
   await setThumb(i,t);
 };
 window.setThumb=async function(i,url){
