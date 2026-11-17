@@ -361,16 +361,22 @@
   <p>The <strong>Assets</strong> button above the list shows only the pipeline; <strong>All Tasks</strong> shows assets and shots together. A shot's progress bar works the same way as an asset's: In Progress counts a quarter, In Review three quarters, Approved or Final the whole task, counted against every kind of shot task used in the project. So a shot with only an approved Layout, in a film that also uses Animation and Lighting, is at 33%.</p>
   <h3>Sequences and shots</h3>
   <ol>
-    <li>In the sidebar, click the ▶ arrow beside the project, then <strong>+ Add Sequence</strong>. Number in tens: SQ010, SQ020.</li>
-    <li>Under a sequence, click <strong>+ Add Shot</strong> (SH010, SH020). Give it start and due dates so it shows on the Gantt chart.</li>
+    <li>In the sidebar, click the ▶ arrow beside the project, then <strong>+ Add Sequence</strong>. The code is filled in for you (SQ010, then SQ020…).</li>
+    <li>Under a sequence, click <strong>+ Add Shot</strong>. The next code is filled in for you too. Give the shot start and due dates so it shows on the Gantt chart.</li>
     <li>Click a shot to open its <strong>shot page</strong>.</li>
   </ol>
+  <h3>Shot codes</h3>
+  <p>Workprint picks up the style you already use (SH, SQ010_SH, three digits, steps of 10) and fills in the next free code. Beside it, the <strong>position</strong> list offers every place a new shot can go: <em>At the end</em>, <em>Before SH010</em>, <em>After SH020</em> and so on. Picking “After SH020” gives an in-between code like SH025, so the shots stay in film order. You can still type any code yourself.</p>
+  <p>To start a sequence quickly, set <strong>How many shots</strong> to, say, 8: Workprint adds SH010 to SH080 in one go. Add descriptions on each shot afterwards.</p>
+  <h3>Running time</h3>
+  <p>Type a <strong>Frame Count</strong> on each shot page and Workprint adds them up. Each sequence shows its length beside its shot count (<em>3 shots · 0:42</em>), and Shot Progression and the Cut show the whole film's running time. A small + means some shots don't have a frame count yet.</p>
+  <p>The frame rate is set per project (24 fps unless you change it in <strong>Edit</strong> on the project). A sequence can also have a <strong>planned length</strong>, set in its edit window. It then shows as <em>0:42 of 0:45</em>, and turns red when the edit runs long.</p>
   <h3>The shot page</h3>
   <ul>
     <li><strong>Status:</strong> To Do, In Progress, In Review, Approved, Final. The shot follows its shot tasks: it moves to In Progress when work starts, In Review when anything is in review, and Approved or Final when every shot task is. You can still change it by hand.</li>
     <li><strong>Storyboard Notes and Shot Details</strong> (frame count, camera, framing, angle) save when you click away.</li>
     <li><strong>Shot Tasks:</strong> add Layout, Animation, CFX, FX, Lighting, Rendering, Compositing or your own. Each shot task has its own status: To Do, In Progress, In Review, Approved, Final. Sending a task back from review raises its version (v1 → v2).</li>
-    <li><strong>Asset Readiness:</strong> click <strong>+ Link Asset</strong> to list the assets in the shot. A warning shows if any of them is still in progress or overdue.</li>
+    <li><strong>Asset Readiness:</strong> click <strong>+ Link Asset</strong> to list the assets in the shot. A warning shows if any of them is still in progress or overdue. The link works both ways: each asset then shows <em>in 3 shots</em>, its open card lists them (click one to jump there), and a late asset's tag says how many shots it's holding up.</li>
   </ul>
 
   <h3>Pictures and file locations</h3>
@@ -505,6 +511,9 @@
     <li><strong>Export Report (CSV):</strong> the project's tasks, shots and people as rows, for Excel or Google Sheets.</li>
     <li><strong>Import Archive:</strong> rebuilds a project from a JSON archive as a new project marked “(Imported)”. The original is untouched.</li>
   </ul>
+  <h3>Wrapping a finished project</h3>
+  <p>When a film is finished, the owner clicks <strong>Wrap</strong> on its row. The project moves to <strong>Wrapped</strong> at the bottom of the sidebar and becomes read-only: the team can still open it and look, but nothing can be changed. A banner at the top says so, and the owner can <strong>Unwrap</strong> it any time.</p>
+  <p>Wrapping offers <strong>Download archive</strong>: a zip with the full schedule and every shot and asset picture, good for portfolios. To keep Workprint free for everyone, pictures in wrapped projects are cleared 6 months after wrapping. The schedule itself stays.</p>
   <h3>Deleting a project</h3>
   <p><strong>Delete</strong> removes the project and everything in it for good. Only the project creator can do it, and Workprint asks first. Export an archive before you delete.</p>
 
