@@ -858,6 +858,19 @@ body.tpl-org .nav-tab-cut{display:none;}
 .sidebar-nav.collapsed .sb-about{display:none;}
 .sb-about a{color:var(--text3);text-decoration:none;}.sb-about a:hover{color:var(--text);text-decoration:underline;}
 .tc-auto.active{border-color:var(--text);color:var(--text);font-weight:700;}
+
+/* Readability: each asset reads as its own block */
+.asset-card{border:none;border-top:1px solid var(--border2);}
+.asset-card-hdr{border-top:none;padding:12px 16px 12px 22px;position:relative;}
+.asset-card-name{font-family:Georgia,'Times New Roman',serif;font-size:1.02rem;font-weight:700;letter-spacing:.01em;}
+.asset-card-hdr .shot-arrow{color:var(--text3);}
+.asset-card:has(.asset-card-hdr .shot-arrow.open){margin:8px 10px;border:1px solid var(--border);border-radius:10px;box-shadow:var(--card-shadow);}
+.asset-card:has(.asset-card-hdr .shot-arrow.open) > .asset-card-hdr{background:color-mix(in srgb,var(--purple) 7%,var(--bg2));border-bottom:1px solid var(--border2);}
+.asset-card:has(.asset-card-hdr .shot-arrow.open) > .asset-card-hdr::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--purple);}
+.asset-card .asset-body-table th{background:transparent;font-size:.62rem;letter-spacing:.06em;color:var(--text4);padding:8px 12px 4px;border-bottom:1px solid var(--border2);}
+.asset-card .asset-body-table td{border-top:none;border-bottom:1px solid var(--border2);}
+.asset-card .asset-body-table tr:last-child td{border-bottom:none;}
+.type-group-hdr .asset-group-name,.type-group-hdr{font-size:.8rem;}
 </style>
 </head>
 <body>
@@ -3202,7 +3215,7 @@ function renderAssetSections(assetTasks){
         arrow.classList.toggle("open",show);uiState.assetGroupCollapsed[k]=!show;saveUIState();
       };})(key);
       var tbl=document.createElement("table");tbl.className="asset-body-table";
-      tbl.innerHTML="<colgroup><col style='width:160px'><col style='width:90px'><col style='width:80px'><col style='width:90px'><col style='width:130px'><col></colgroup><thead><tr><th>Stage</th><th>Lead</th><th>Start</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>";
+      tbl.innerHTML="<colgroup><col style='width:140px'><col style='width:125px'><col style='width:80px'><col style='width:90px'><col style='width:130px'><col></colgroup><thead><tr><th>Stage</th><th>Lead</th><th>Start</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>";
       var tbody=document.createElement("tbody");
       stageTasks.forEach(function(t){
         var tr=document.createElement("tr");
