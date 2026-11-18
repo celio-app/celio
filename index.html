@@ -2173,6 +2173,8 @@ function resetAppState(){
 }
 
 function bootApp(session){
+  // Ask the browser to keep our storage (and the saved sign-in) instead of clearing it when space runs low
+  try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
   currentUser=session.user;
   _bootedUserId=session.user.id;
   loadUIState();
