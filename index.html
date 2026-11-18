@@ -822,6 +822,13 @@ body.tpl-org .nav-tab-cut{display:none;}
 .mw-ctx{font-size:.72rem;color:var(--text3);}
 .mw-due{font-size:.76rem;white-space:nowrap;}
 .mw-st{font-size:.72rem;font-weight:700;border:1px solid var(--border);border-radius:6px;padding:3px 6px;background:var(--bg2);color:var(--text);}
+.li-hint{color:var(--purple)!important;font-weight:700;text-decoration:underline}
+.mfa-on{font-size:.8rem;color:var(--text2);display:flex;gap:6px;align-items:flex-start;line-height:1.45}
+.mfa-on i{color:var(--done,#2e7d4f);flex-shrink:0;margin-top:2px}
+.mfa-steps{font-size:.8rem;color:var(--text2);margin:0 0 8px 18px;padding:0;line-height:1.5}
+.mfa-qr{background:#fff;border-radius:10px;padding:8px;width:184px;margin:4px 0 6px}
+.mfa-qr img{display:block}
+.mfa-key{font-family:ui-monospace,Menlo,monospace;font-size:.78rem;color:var(--text2);margin-bottom:10px;word-break:break-all;user-select:all}
 #f-notes,#af-notes{font-family:inherit;font-size:.86rem;line-height:1.45}
 .att-box{border:1.5px dashed var(--border2,var(--border));border-radius:10px;padding:8px;outline:none;transition:border-color .15s,background .15s}
 .att-box:focus,.att-box.over{border-color:var(--purple);background:color-mix(in srgb,var(--purple) 6%,transparent)}
@@ -1132,17 +1139,25 @@ a .wi-act-link{font-size:11px;margin-left:3px;margin-right:0;}
       <div class="form-row"><label>Email</label><input id="li-email" type="email" placeholder="you@example.com"></div>
       <div class="form-row"><label>Password</label><input id="li-pass" type="password" placeholder="password"></div>
       <button class="btn-auth" onclick="doSignIn()">Sign In</button>
-      <button type="button" class="btn-ghost" style="width:100%;margin-top:8px;padding:6px;font-size:.78rem;color:var(--text3);background:none;border:none;cursor:pointer" onclick="doForgotPassword()">Forgot password?</button>
+      <button type="button" id="li-forgot" class="btn-ghost" style="width:100%;margin-top:8px;padding:6px;font-size:.78rem;color:var(--text3);background:none;border:none;cursor:pointer" onclick="doForgotPassword()">Forgot password?</button>
+    </div>
+    <div id="mfa-form" style="display:none">
+      <div style="font-size:.95rem;font-weight:700;margin-bottom:6px;text-align:center">Two-step sign-in</div>
+      <div style="font-size:.8rem;color:var(--text3);text-align:center;margin-bottom:14px">Enter the 6-digit code from your authenticator app.</div>
+      <div class="form-row"><input id="mfa-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="text-align:center;letter-spacing:.3em;font-size:1.2rem" onkeydown="if(event.key==='Enter')doMfaVerify()"></div>
+      <button class="btn-auth" id="mfa-go" onclick="doMfaVerify()">Verify</button>
+      <button type="button" class="btn-ghost" style="width:100%;margin-top:8px;padding:6px;font-size:.78rem;color:var(--text3);background:none;border:none;cursor:pointer" onclick="doSignOut()">Use a different account</button>
+      <div style="font-size:.72rem;color:var(--text3);text-align:center;margin-top:10px">Lost your phone? Email <a href="mailto:hello@getworkprint.app" style="color:var(--purple)">hello@getworkprint.app</a> from your account's address.</div>
     </div>
     <div id="recovery-form" style="display:none">
       <div style="font-size:.85rem;font-weight:700;margin-bottom:10px;text-align:center">Set a new password</div>
-      <div class="form-row"><label>New password</label><input id="rp-pass" type="password" placeholder="Min 6 characters"></div>
+      <div class="form-row"><label>New password</label><input id="rp-pass" type="password" placeholder="8+ characters, letters and numbers"></div>
       <div class="form-row"><label>Confirm password</label><input id="rp-pass2" type="password" placeholder="Repeat password"></div>
       <button class="btn-auth" onclick="doUpdatePassword()">Save New Password</button>
     </div>
     <div id="signup-form" style="display:none">
       <div class="form-row"><label>Email</label><input id="su-email" type="email" placeholder="you@example.com"></div>
-      <div class="form-row"><label>Password</label><input id="su-pass" type="password" placeholder="Min 6 characters"></div>
+      <div class="form-row"><label>Password</label><input id="su-pass" type="password" placeholder="8+ characters, letters and numbers"></div>
       <button class="btn-auth" onclick="doSignUp()">Create Account</button>
     </div>
     <div class="auth-msg" id="auth-msg"></div>
@@ -1151,7 +1166,7 @@ a .wi-act-link{font-size:11px;margin-left:3px;margin-right:0;}
       <div id="invite-banner-code" style="font-size:.75rem;font-weight:700;color:var(--purple);letter-spacing:.5px;"></div>
       <div style="font-size:.75rem;color:var(--text3);margin-top:6px;">Sign in or create an account below to accept.</div>
     </div>
-    <div style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+    <div id="auth-invite-area" style="text-align:center;margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
       <button class="btn-ghost" style="width:100%;padding:10px;font-size:.85rem;color:var(--text3)" onclick="showInviteCodeInput()">Have an invite code? Click here</button>
     </div>
     <div style="text-align:center;margin-top:12px;font-size:.75rem;color:var(--text3)"><a href="manual.html" style="color:var(--text3)">Manual</a> · <a href="about.html" style="color:var(--text3)">About and privacy</a></div>
@@ -1517,6 +1532,7 @@ a .wi-act-link{font-size:11px;margin-left:3px;margin-right:0;}
     <div class="acct-sec"><h4>Colour scheme</h4><div class="acct-schemes" id="acct-schemes"></div></div>
     <div class="acct-sec" id="acct-digest-sec"><h4>Email</h4>
       <label class="acct-row" style="cursor:pointer"><input type="checkbox" id="acct-digest" onchange="setDigestPref(this.checked);var b=document.getElementById('bell-digest-cb');if(b)b.checked=this.checked;"> Email me a summary every Monday</label></div>
+    <div class="acct-sec" id="acct-mfa-sec"><h4>Two-step sign-in</h4><div id="acct-mfa"></div></div>
     <div class="acct-sec"><h4>Help and privacy</h4>
       <div class="acct-links"><a href="manual.html" target="_blank" rel="noopener">Manual</a><a href="about.html" target="_blank" rel="noopener">Privacy</a><button type="button" onclick="closeAccount();openFeedback()">Send feedback</button></div></div>
     <div class="acct-sec"><h4>Your data</h4>
@@ -2100,19 +2116,50 @@ window.toggleTheme=function(){var cur=document.documentElement.getAttribute("dat
 function setMsg(m,type){var el=document.getElementById("auth-msg");el.textContent=m;el.className="auth-msg"+(type?" "+type:"");}
 window.switchTab=function(n){document.getElementById("login-form").style.display=n===0?"block":"none";document.getElementById("signup-form").style.display=n===1?"block":"none";document.getElementById("atab0").classList.toggle("active",n===0);document.getElementById("atab1").classList.toggle("active",n===1);setMsg("","");};
 
+// Wrong-password cooldown: 5 misses → 30 s, then 1 min, then 5 min (kept on this device)
+var LI_WAITS=[30,60,300],_liTimer=null,_freshSignIn=false;
+function liKey(e){return "wp-li-"+e.toLowerCase();}
+function liGet(e){try{return JSON.parse(localStorage.getItem(liKey(e)))||{n:0,until:0};}catch(x){return {n:0,until:0};}}
+function liSet(e,st){try{localStorage.setItem(liKey(e),JSON.stringify(st));}catch(x){}}
+function liClear(e){try{localStorage.removeItem(liKey(e));}catch(x){}}
+function liFmt(sec){return sec>=60?Math.floor(sec/60)+":"+("0"+(sec%60)).slice(-2):sec+" seconds";}
+function liCountdown(e){
+  clearInterval(_liTimer);var btn=document.querySelector("#login-form .btn-auth");
+  function tick(){var left=Math.ceil((liGet(e).until-Date.now())/1000);
+    if(left<=0){clearInterval(_liTimer);btn.disabled=false;btn.textContent="Sign In";setMsg("You can try again now.","");return;}
+    btn.disabled=true;btn.textContent="Wait "+liFmt(left);
+    setMsg("Too many wrong passwords. Try again in "+liFmt(left)+", or reset your password below.","error");}
+  tick();_liTimer=setInterval(tick,1000);
+}
+function liHintForgot(on){var f=document.getElementById("li-forgot");if(f)f.classList.toggle("li-hint",!!on);}
 window.doSignIn=async function(){
   var e=document.getElementById("li-email").value.trim(),p=document.getElementById("li-pass").value;
   if(!e||!p){setMsg("Please enter email and password.","error");return;}
+  var st=liGet(e);if(st.until>Date.now()){liCountdown(e);return;}
   setMsg("Signing in...","");
+  _freshSignIn=true;
   var r=await sb.auth.signInWithPassword({email:e,password:p});
-  if(r.error){setMsg(r.error.message,"error");return;}
+  if(r.error){
+    _freshSignIn=false;
+    if(r.error.status===429){setMsg("Too many sign-in attempts from this network. Wait a few minutes and try again.","error");return;}
+    if(/invalid login credentials/i.test(r.error.message)){
+      st.n=(st.n||0)+1;
+      if(st.n>=5){st.until=Date.now()+LI_WAITS[Math.min(st.n-5,LI_WAITS.length-1)]*1000;liSet(e,st);liHintForgot(true);liCountdown(e);return;}
+      liSet(e,st);
+      if(st.n>=3){liHintForgot(true);setMsg("That email and password don't match. Forgot your password? Reset it below.","error");}
+      else setMsg("That email and password don't match.","error");
+      return;
+    }
+    setMsg(r.error.message,"error");return;
+  }
+  liClear(e);liHintForgot(false);
 };
 
 window.doSignUp = async function() {
   var e = document.getElementById("su-email").value.trim();
   var p = document.getElementById("su-pass").value;
   if (!e || !p) { setMsg("Fill in all fields.", "error"); return; }
-  if (p.length < 6) { setMsg("Password min 6 characters.", "error"); return; }
+  if (!pwStrong(p)) { setMsg("Use at least 8 characters, with letters and numbers.", "error"); return; }
   var pendingInvite = getPendingInviteCode();
   if (pendingInvite) { localStorage.setItem("celio-pending-invite", pendingInvite); }
   setMsg("Creating account...", "");
@@ -2121,6 +2168,7 @@ window.doSignUp = async function() {
   else { setMsg("Account created. Check your email if confirmation is required.", "success"); }
 };
 
+function pwStrong(p){return p.length>=8&&/[a-z]/i.test(p)&&/[0-9]/.test(p);}
 window.doSignOut=async function(){await sb.auth.signOut();};
 
 var _bootedUserId=null;
@@ -2147,7 +2195,7 @@ function showRecoveryForm(){
 
 window.doUpdatePassword=async function(){
   var p=document.getElementById("rp-pass").value,p2=document.getElementById("rp-pass2").value;
-  if(!p||p.length<6){setMsg("Password must be at least 6 characters.","error");return;}
+  if(!p||!pwStrong(p)){setMsg("Use at least 8 characters, with letters and numbers.","error");return;}
   if(p!==p2){setMsg("Passwords don't match.","error");return;}
   setMsg("Saving...","");
   var r=await sb.auth.updateUser({password:p});
@@ -2206,7 +2254,7 @@ sb.auth.onAuthStateChange(function(event,session){
     if(session){
       if(_recoveryMode){currentUser=session.user;showRecoveryForm();return;}
       if(_bootedUserId===session.user.id){currentUser=session.user;return;} // token refresh etc.
-      bootApp(session);
+      mfaGate(session);
     } else {
       resetAppState();
       document.getElementById("auth-screen").style.display="flex";
@@ -4673,6 +4721,7 @@ window.openAccount=async function(){
     if(r.error){sec.style.display="none";return;}digestPref=r.data?r.data.weekly_digest!==false:true;}
   sec.style.display="";cb.checked=digestPref;
 };
+var _openAcct0=window.openAccount;window.openAccount=async function(){var r=_openAcct0.apply(this,arguments);mfaRenderAcct();return r;};
 window.closeAccount=function(){document.getElementById("acct-modal").classList.remove("open");};
 window.saveAcctName=async function(){
   var v=document.getElementById("acct-name").value.trim();
@@ -5327,6 +5376,107 @@ window.openAdminModal=function(cat,editId){
   return r;
 };
 },0);
+
+// ── Two-step sign-in (authenticator app codes) and new-device emails ──
+async function mfaGate(session){
+  var need=false;
+  try{var a=await sb.auth.mfa.getAuthenticatorAssuranceLevel();need=!!(a.data&&a.data.nextLevel==="aal2"&&a.data.currentLevel!=="aal2");}catch(e){}
+  if(need){showMfaPrompt();return;}
+  var mf=document.getElementById("mfa-form");if(mf)mf.style.display="none";
+  bootApp(session);
+  if(_freshSignIn){_freshSignIn=false;signinAlert();}
+}
+window.showMfaPrompt=showMfaPrompt;function showMfaPrompt(){
+  document.getElementById("app-screen").style.display="none";
+  document.getElementById("auth-screen").style.display="flex";
+  document.getElementById("login-form").style.display="none";
+  document.getElementById("signup-form").style.display="none";
+  document.querySelector(".auth-tabs").style.display="none";
+  document.getElementById("mfa-form").style.display="block";
+  var ia=document.getElementById("auth-invite-area");if(ia)ia.style.display="none";
+  setMsg("","");var c=document.getElementById("mfa-code");c.value="";setTimeout(function(){c.focus();},50);
+}
+function hideMfaPrompt(){
+  document.getElementById("mfa-form").style.display="none";
+  var ia=document.getElementById("auth-invite-area");if(ia)ia.style.display="";
+  document.querySelector(".auth-tabs").style.display="";
+  switchTab(0);
+}
+window.doMfaVerify=async function(){
+  var code=document.getElementById("mfa-code").value.replace(/\D/g,"");
+  if(code.length!==6){setMsg("Enter the 6 digits from your authenticator app.","error");return;}
+  var btn=document.getElementById("mfa-go");btn.disabled=true;setMsg("Checking...","");
+  var f=await sb.auth.mfa.listFactors(),fac=f.data&&f.data.totp&&f.data.totp[0];
+  if(!fac){btn.disabled=false;setMsg("Couldn't find your authenticator. Email hello@getworkprint.app for help.","error");return;}
+  var r=await sb.auth.mfa.challengeAndVerify({factorId:fac.id,code:code});
+  btn.disabled=false;
+  if(r.error){setMsg(r.error.status===429?"Too many tries. Wait a minute and try again.":"That code didn't work. Codes change every 30 seconds, so try the newest one.","error");return;}
+  hideMfaPrompt();
+  // The verified session arrives through onAuthStateChange and boots the app
+};
+// Your account: turn two-step sign-in on or off
+var _mfaEnroll=null;
+async function mfaRenderAcct(){
+  var box=document.getElementById("acct-mfa");if(!box)return;
+  var f=await sb.auth.mfa.listFactors();
+  if(f.error){document.getElementById("acct-mfa-sec").style.display="none";return;}
+  document.getElementById("acct-mfa-sec").style.display="";
+  var on=f.data.totp&&f.data.totp.length;
+  if(on){box.innerHTML='<div class="acct-row" style="justify-content:space-between"><span class="mfa-on"><i class=wi-ui-check></i> On. You\'ll enter a code from your authenticator app when you sign in on a new device.</span></div><div class="acct-links" style="margin-top:8px"><button type="button" onclick="mfaAskOff()">Turn off</button></div><div id="mfa-off"></div>';return;}
+  if(_mfaEnroll){mfaShowEnroll();return;}
+  box.innerHTML='<div style="font-size:.8rem;color:var(--text2);line-height:1.45">Add a code from an authenticator app (Google Authenticator, Microsoft Authenticator, 1Password and similar) to your password, so a stolen password isn\'t enough to get in.</div><div class="acct-links" style="margin-top:8px"><button type="button" onclick="mfaStart()">Turn on</button></div>';
+}
+window.mfaStart=async function(){
+  var box=document.getElementById("acct-mfa");box.innerHTML='<div style="font-size:.8rem;color:var(--text3)">Setting up…</div>';
+  var f=await sb.auth.mfa.listFactors();
+  // Clear any half-finished setup from before
+  var stale=(f.data&&f.data.all||[]).filter(function(x){return x.factor_type==="totp"&&x.status!=="verified";});
+  for(var i=0;i<stale.length;i++)await sb.auth.mfa.unenroll({factorId:stale[i].id});
+  var r=await sb.auth.mfa.enroll({factorType:"totp",friendlyName:"Workprint "+Date.now()});
+  if(r.error){box.innerHTML='<div class="dep-note">Couldn\'t start: '+escH(r.error.message)+'</div>';return;}
+  _mfaEnroll={id:r.data.id,qr:r.data.totp.qr_code,secret:r.data.totp.secret};mfaShowEnroll();
+};
+function mfaShowEnroll(){
+  var e=_mfaEnroll,box=document.getElementById("acct-mfa");
+  box.innerHTML='<ol class="mfa-steps"><li>Open your authenticator app and add an account.</li><li>Scan this code, or type the key below it.</li></ol>'
+    +'<div class="mfa-qr"><img src="'+escH(e.qr)+'" alt="QR code for your authenticator app" width="168" height="168"></div>'
+    +'<div class="mfa-key" title="Setup key">'+escH(e.secret.replace(/(.{4})/g,"$1 ").trim())+'</div>'
+    +'<ol class="mfa-steps" start="3"><li>Type the 6-digit code it shows.</li></ol>'
+    +'<div class="acct-row"><input class="inp" id="mfa-new-code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456" style="flex:1;letter-spacing:.2em" onkeydown="if(event.key===\'Enter\')mfaConfirm()"><button class="btn btn-primary btn-sm" onclick="mfaConfirm()">Turn on</button><button class="btn btn-ghost btn-sm" onclick="mfaCancel()">Cancel</button></div><div id="mfa-new-msg" style="font-size:.76rem;margin-top:6px"></div>';
+}
+window.mfaConfirm=async function(){
+  var code=document.getElementById("mfa-new-code").value.replace(/\D/g,""),m=document.getElementById("mfa-new-msg");
+  if(code.length!==6){m.textContent="Enter the 6 digits from the app.";m.style.color="var(--late)";return;}
+  var r=await sb.auth.mfa.challengeAndVerify({factorId:_mfaEnroll.id,code:code});
+  if(r.error){m.textContent="That code didn't work. Try the newest one.";m.style.color="var(--late)";return;}
+  _mfaEnroll=null;showToast("Two-step sign-in is on.");mfaRenderAcct();
+};
+window.mfaCancel=async function(){var e=_mfaEnroll;_mfaEnroll=null;if(e)await sb.auth.mfa.unenroll({factorId:e.id});mfaRenderAcct();};
+window.mfaAskOff=function(){
+  document.getElementById("mfa-off").innerHTML='<div class="acct-row" style="margin-top:8px"><input class="inp" id="mfa-off-code" inputmode="numeric" maxlength="6" placeholder="Code from your app" style="flex:1;letter-spacing:.1em" onkeydown="if(event.key===\'Enter\')mfaOff()"><button class="btn btn-ghost btn-sm" onclick="mfaOff()">Turn off</button></div><div id="mfa-off-msg" style="font-size:.76rem;margin-top:6px;color:var(--text3)">Enter a current code to confirm.</div>';
+  document.getElementById("mfa-off-code").focus();
+};
+window.mfaOff=async function(){
+  var code=document.getElementById("mfa-off-code").value.replace(/\D/g,""),m=document.getElementById("mfa-off-msg");
+  var f=await sb.auth.mfa.listFactors(),fac=f.data&&f.data.totp&&f.data.totp[0];if(!fac)return mfaRenderAcct();
+  var v=await sb.auth.mfa.challengeAndVerify({factorId:fac.id,code:code});
+  if(v.error){m.textContent="That code didn't work.";m.style.color="var(--late)";return;}
+  var r=await sb.auth.mfa.unenroll({factorId:fac.id});
+  if(r.error){m.textContent="Couldn't turn it off: "+r.error.message;m.style.color="var(--late)";return;}
+  await sb.auth.refreshSession();showToast("Two-step sign-in is off.");mfaRenderAcct();
+};
+// New-device email: the server emails you when your account signs in somewhere new
+function deviceId(){try{var d=localStorage.getItem("wp-device");if(!d){d=attUid();localStorage.setItem("wp-device",d);}return d;}catch(e){return "";}}
+function deviceLabel(){
+  var u=navigator.userAgent,os=/iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1)?"iPad":/iPhone/.test(u)?"iPhone":/Android/.test(u)?"Android":/Windows/.test(u)?"Windows":/Mac OS X/.test(u)?"Mac":/CrOS/.test(u)?"Chromebook":/Linux/.test(u)?"Linux":"a device";
+  var br=/Edg\//.test(u)?"Edge":/Firefox\//.test(u)?"Firefox":/SamsungBrowser/.test(u)?"Samsung Internet":/Chrome\//.test(u)||/CriOS/.test(u)?"Chrome":/Safari\//.test(u)?"Safari":"a browser";
+  var app=(window.matchMedia&&matchMedia("(display-mode: standalone)").matches)||navigator.standalone?"the Workprint app on ":br+" on ";
+  return app+os;
+}
+async function signinAlert(){
+  var d=deviceId();if(!d)return;
+  try{await sb.functions.invoke("signin-alert",{body:{device:d,label:deviceLabel()}});}catch(e){}
+}
 
 // ── Gantt: select several bars, drag them together, shift blocks of dates ──
 var ganttSel={task:{},shot:{}};
