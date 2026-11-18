@@ -822,6 +822,46 @@ body.tpl-org .nav-tab-cut{display:none;}
 .mw-ctx{font-size:.72rem;color:var(--text3);}
 .mw-due{font-size:.76rem;white-space:nowrap;}
 .mw-st{font-size:.72rem;font-weight:700;border:1px solid var(--border);border-radius:6px;padding:3px 6px;background:var(--bg2);color:var(--text);}
+#f-notes,#af-notes{font-family:inherit;font-size:.86rem;line-height:1.45}
+.att-box{border:1.5px dashed var(--border2,var(--border));border-radius:10px;padding:8px;outline:none;transition:border-color .15s,background .15s}
+.att-box:focus,.att-box.over{border-color:var(--purple);background:color-mix(in srgb,var(--purple) 6%,transparent)}
+.att-tiles{display:flex;flex-wrap:wrap;gap:6px}
+.att-tiles:empty{display:none}
+.att-tiles:not(:empty)+.att-hint{margin-top:8px}
+.att-hint{display:flex;align-items:center;gap:8px;font-size:.74rem;color:var(--text3);flex-wrap:wrap}
+.att-hint b{color:var(--text2)}
+.att-hint .media-add{margin-left:auto}
+.att-tile{position:relative;width:64px;height:48px;border-radius:7px;overflow:hidden;background:var(--bg3,rgba(127,127,127,.12));flex-shrink:0;display:inline-block}
+.att-row .att-tile{width:40px;height:30px;border-radius:5px}
+.att-row{flex-wrap:wrap}
+.att-open{all:unset;cursor:zoom-in;display:block;width:100%;height:100%}
+.att-tile.is-link .att-open{cursor:pointer}
+.att-open img{width:100%;height:100%;object-fit:cover;display:block}
+.att-lk{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:3px!important;gap:2px;height:100%;font-size:.56rem;color:var(--text3);padding:0 3px;text-align:center;overflow:hidden;word-break:break-all;line-height:1.1}
+.att-play{position:absolute;inset:0;margin:auto;margin-top:7px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.6);pointer-events:none}
+.att-play::after{content:"";position:absolute;left:7px;top:5px;border:4px solid transparent;border-left:6px solid #fff;border-right:0}
+.att-x{all:unset;position:absolute;top:2px;right:2px;width:16px;height:16px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:9px}
+.att-busy{display:inline-flex;align-items:center;justify-content:center;font-size:.6rem;color:var(--text3);animation:attPulse 1s ease-in-out infinite alternate}
+@keyframes attPulse{from{opacity:.5}to{opacity:1}}
+.att-extra{margin-top:4px;min-width:0}
+.att-notes{font-size:.72rem;color:var(--text3);line-height:1.4;white-space:pre-line;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.att-notes a{color:var(--purple);text-decoration:none}
+.att-notes a:hover{text-decoration:underline}
+.att-row{display:flex;gap:4px;margin-top:4px;align-items:center}
+.att-more{all:unset;cursor:pointer;font-size:.68rem;color:var(--text3);padding:0 4px}
+.att-lb{position:fixed;inset:0;background:rgba(10,8,16,.86);z-index:9000;display:none;align-items:center;justify-content:center;padding:24px}
+.att-lb.open{display:flex}
+.att-lb-in{max-width:min(1200px,96vw);width:100%;display:flex;flex-direction:column;align-items:center;gap:10px}
+.att-lb-media{width:100%;display:flex;justify-content:center}
+.att-lb-media img{max-width:100%;max-height:80vh;border-radius:8px;display:block}
+.att-lb-media .ratio{position:relative;width:100%;max-width:min(1100px,calc(78vh*16/9));aspect-ratio:16/9;background:#000;border-radius:8px;overflow:hidden}
+.att-lb-media iframe,.att-lb-media video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.att-lb-out{color:#fff;text-align:center;font-size:.9rem;padding:40px}
+.att-lb-out a{color:#fff}
+.att-lb-bar{display:flex;align-items:center;gap:14px;color:#fff;font-size:.8rem}
+.att-lb-bar button,.att-lb-bar a{all:unset;cursor:pointer;color:#fff;opacity:.85;display:inline-flex;align-items:center;gap:5px}
+.att-lb-bar button:hover,.att-lb-bar a:hover{opacity:1}
+.att-lb-next i{transform:scaleX(-1)}
 .dep-note{font-size:.66rem;color:var(--text4);margin-top:2px;overflow:hidden;text-overflow:ellipsis;}
 .dep-clash{color:var(--late);font-weight:700;}
 .gantt-links{position:absolute;left:0;top:0;pointer-events:none;z-index:3;color:var(--text3);overflow:visible;}
@@ -1016,6 +1056,7 @@ body.tpl-org .nav-tab-cut{display:none;}
 .wi-ui-check{--wi:url(icons/ui-check.svg);}
 .wi-ui-chevron{--wi:url(icons/ui-chevron.svg);}
 .wi-ui-close{--wi:url(icons/ui-close.svg);}
+.wi-ui-picture{--wi:url(icons/ui-picture.svg);}
 .wi-ui-empty{--wi:url(icons/ui-empty.svg);}
 .wi-ui-invite{--wi:url(icons/ui-invite.svg);}
 .wi-ui-signout{--wi:url(icons/ui-signout.svg);}
@@ -1399,7 +1440,9 @@ a .wi-act-link{font-size:11px;margin-left:3px;margin-right:0;}
         <div class="pipeline-stages" id="pipeline-stages-grid"></div>
       </div>
     </div>
-    <div class="form-row"><label class="flbl">Task Name / Notes</label><input id="f-name" class="inp" placeholder="e.g. Final rig sign-off" oninput="this.dataset.auto=''"></div>
+    <div class="form-row"><label class="flbl" id="lbl-f-name">Task Name / Notes</label><input id="f-name" class="inp" placeholder="e.g. Final rig sign-off" oninput="this.dataset.auto=''"></div>
+    <div class="form-row" id="f-notes-row" style="display:none"><label class="flbl">Notes (optional)</label><textarea id="f-notes" class="inp" rows="2" style="resize:vertical" placeholder="Details, links, anything the team should know" onpaste="attPaste(event)"></textarea></div>
+    <div class="form-row" id="f-att-row" style="display:none"><label class="flbl">Pictures and video links</label><div id="f-att-slot"></div></div>
     <div class="form-row"><label class="flbl" id="lbl-lead">Lead / Artist</label><select id="f-lead" class="inp"></select></div>
     <div class="form-row-2">
       <div><label class="flbl">Start Date</label><input id="f-start" type="date" class="inp"></div>
@@ -3543,6 +3586,7 @@ function renderOrgSections(orgTasks){
       var c0=document.createElement("td");var tn=document.createElement("span");tn.className="org-task-name";tn.textContent=byTeam?t.name:shortTaskName(t);tn.title=t.name;c0.appendChild(tn);
       if(t.handoff_to){var ho=document.createElement("div");ho.style.cssText="font-size:.66rem;color:var(--text4);margin-top:2px";ho.textContent="→ hands off to "+t.handoff_to;c0.appendChild(ho);}
       if(t.depends_on){var dpn=document.createElement("div");dpn.innerHTML=depLabel(t);if(dpn.firstChild)c0.appendChild(dpn.firstChild);}
+      var _ax=attEntryExtra(t,t.notes);if(_ax)c0.appendChild(_ax);
       var c1=document.createElement("td");var gch=document.createElement("span");gch.className="chip";gch.style.fontSize=".7rem";gch.textContent=byTeam?(t.asset_name||"General"):teamLabel(t.asset_type);c1.appendChild(gch);
       var c2=document.createElement("td");var stg=document.createElement("span");stg.className="pipeline-stage-badge";stg.textContent=t.pipeline_stage||"—";c2.appendChild(stg);
       var c3=document.createElement("td");if(t.lead){c3.appendChild(mkPersonChip(t.lead));}else{c3.textContent="—";c3.style.color="var(--text4)";}
@@ -3873,6 +3917,8 @@ window.saveTask = async function(){
   if(selectedCat === "asset"){payload.asset_type=document.getElementById("f-asset-type").value; payload.asset_name=document.getElementById("f-asset-name").value.trim(); payload.pipeline_stage=selectedPipelineStage; payload.asset_name=canonicalAssetName(payload.asset_name); if(true){ if(!payload.asset_name&&isOrg())payload.asset_name="General"; payload.handoff_to=document.getElementById("f-handoff").value.trim()||null; payload.asset=document.getElementById("f-deliverable").value.trim()||null; payload.asset_url=document.getElementById("f-deliverable-url").value.trim()||null; } else { payload.handoff_to=null; payload.asset=null; payload.asset_url=null; }} 
   else {payload.handoff_to=document.getElementById("f-handoff").value.trim() || null; payload.asset=document.getElementById("f-deliverable").value.trim() || null; payload.asset_url=document.getElementById("f-deliverable-url").value.trim() || null; payload.asset_type=null; payload.asset_name=null; payload.pipeline_stage=null;}
   
+  if (attDraft&&attDraft.busy){showToast("Wait a moment, a picture is still being added.","error");return;}
+  if (attReady&&attDraft){payload.notes=document.getElementById("f-notes").value.trim()||null;payload.attachments=attDraft.list;}
   if (depReady) payload.depends_on = (document.getElementById("f-after")||{}).value || null;
   if (payload.depends_on && editTaskId && (payload.depends_on===editTaskId || followersOf(editTaskId).some(function(f){return f.id===payload.depends_on;}))) { showToast("That would make a loop: the other task already follows this one.","error"); return; }
   var _oldT = editTaskId ? tasks.find(function(t){return t.id===editTaskId;}) : null;
@@ -3885,6 +3931,7 @@ window.saveTask = async function(){
   if (result.error) { showToast("Error saving task: " + result.error.message, "error"); return; }
   if (editTaskId) { var idx = tasks.findIndex(function(t) { return t.id === editTaskId; }); if (idx >= 0 && result.data && result.data[0]) { tasks[idx] = result.data[0]; } } 
   else { if (result.data && result.data[0]) tasks.push(result.data[0]); }
+  attCommit();
   closeModal();
   showToast("Task saved!");
   var active = document.querySelector(".tab-content.active");
@@ -5121,6 +5168,164 @@ document.addEventListener("paste",function(e){
   e.preventDefault();uploadThumb(+fr.dataset.mi,img.getAsFile());
 });
 
+// ── Notes and pictures on tasks, announcements, feedback and meetings ──
+var attReady=null,attDraft=null,attReg=[],ATT_MAX=24;
+async function checkAttReady(){
+  if(attReady!==null)return attReady;
+  if(tasks.length){attReady=("attachments" in tasks[0]);return attReady;}
+  var r=await sb.from("tasks").select("attachments").limit(1);attReady=!r.error;return attReady;
+}
+function attList(t){return t&&Array.isArray(t.attachments)?t.attachments:[];}
+function attUid(){return crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random().toString(36).slice(2);}
+function attHost(u){try{return new URL(u).hostname.replace(/^www\./,"");}catch(e){return "";}}
+function attIsVideo(u){var m=cutMedia(u);return m.type==="frame"||m.type==="video";}
+// Bigger than a thumbnail so detail stays readable, still small to store
+async function shrinkBig(file){
+  var bmp=await createImageBitmap(file),tries=[[1600,.8],[1280,.74],[1000,.7]],blob=null,w=0,h=0;
+  for(var k=0;k<tries.length;k++){
+    var sc=Math.min(1,tries[k][0]/bmp.width,tries[k][0]/bmp.height);w=Math.max(1,Math.round(bmp.width*sc));h=Math.max(1,Math.round(bmp.height*sc));
+    var c=document.createElement("canvas");c.width=w;c.height=h;c.getContext("2d").drawImage(bmp,0,0,w,h);
+    blob=await new Promise(function(res){c.toBlob(res,"image/webp",tries[k][1]);});
+    if(!blob||blob.type!=="image/webp")blob=await new Promise(function(res){c.toBlob(res,"image/jpeg",tries[k][1]);});
+    if(blob&&blob.size<380000)break;
+  }
+  return {blob:blob,w:w,h:h};
+}
+function attTileHtml(a,reg,i,edit){
+  var inner;
+  if(a.t==="img")inner='<img src="'+escH(a.url)+'" alt="" loading="lazy">';
+  else{var th=thumbFromLink(a.url);var vid=attIsVideo(a.url);inner=th?'<img src="'+escH(th)+'" alt="" loading="lazy" onerror="this.remove()">':'<span class="att-lk">'+(vid?'':'<i class=wi-act-link></i>')+'<span>'+escH(attHost(a.url))+'</span></span>';if(attIsVideo(a.url))inner+='<span class="att-play"></span>';}
+  return '<span class="att-tile'+(a.t==="img"?"":" is-link")+'"><button type="button" class="att-open" onclick="attView('+reg+','+i+')" title="'+(a.t==="img"?"View picture":escH(a.url))+'">'+inner+'</button>'
+    +(edit?'<button type="button" class="att-x" title="Remove" onclick="attRemove('+i+')"><i class=wi-ui-close></i></button>':'')+'</span>';
+}
+// Edit box used in the task and admin modals
+function attBoxHtml(){
+  return '<div class="att-box" id="att-box" tabindex="0" onpaste="attPaste(event)" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="attDrop(event)">'
+    +'<div class="att-tiles" id="att-tiles"></div>'
+    +'<div class="att-hint"><i class=wi-ui-picture></i><span><b>Paste or drop pictures</b> or a video link here</span><button type="button" class="media-add" onclick="attPick()">Choose files</button></div></div>';
+}
+function attRenderBox(){
+  var el=document.getElementById("att-tiles");if(!el||!attDraft)return;
+  el.innerHTML=attDraft.list.map(function(a,i){return attTileHtml(a,-1,i,true);}).join("")+(attDraft.busy?'<span class="att-tile att-busy"><span>Adding…</span></span>':'');
+}
+function attStart(t,wrapId){
+  var bx=document.getElementById("att-box");if(bx)bx.remove();var sl=document.getElementById(wrapId.replace("-row","-slot"));if(sl)sl.innerHTML=attBoxHtml();
+  attDraft={list:attList(t).slice(),added:[],removed:[],busy:0};
+  var w=document.getElementById(wrapId);if(!w)return;
+  w.style.display=attReady?"":"none";if(attReady)attRenderBox();
+}
+async function attCommit(){
+  if(!attDraft)return;var gone=attDraft.removed.filter(Boolean);attDraft=null;
+  if(gone.length){try{await sb.storage.from("thumbs").remove(gone);}catch(e){}}
+}
+async function attDiscard(){
+  if(!attDraft)return;var gone=attDraft.added.filter(Boolean);attDraft=null;
+  if(gone.length){try{await sb.storage.from("thumbs").remove(gone);}catch(e){}}
+}
+function attFull(){if(attDraft.list.length+attDraft.busy>=ATT_MAX){showToast("That's the most pictures and links one item can hold ("+ATT_MAX+").","error");return true;}return false;}
+async function attUpload(file){
+  if(!attDraft||attFull())return;
+  if(isWrapped()){showToast("This project is wrapped, so it can't be changed.","error");return;}
+  var d=attDraft;d.busy++;attRenderBox();
+  try{
+    var s=await shrinkBig(file),ext=s.blob.type==="image/webp"?"webp":"jpg",path=activeProject.id+"/att/"+attUid()+"."+ext;
+    var up=await sb.storage.from("thumbs").upload(path,s.blob,{contentType:s.blob.type,cacheControl:"31536000",upsert:false});
+    if(up.error)throw up.error;
+    d.added.push(path);d.list.push({t:"img",url:sb.storage.from("thumbs").getPublicUrl(path).data.publicUrl,path:path,w:s.w,h:s.h});
+  }catch(err){showToast("Couldn't add the picture: "+(err.message||err),"error");}
+  d.busy--;if(attDraft===d)attRenderBox();
+}
+function attAddLink(u){
+  if(!attDraft||attFull())return;
+  if(attDraft.list.some(function(a){return a.url===u;})){showToast("That link is already here.");return;}
+  attDraft.list.push({t:"link",url:u});attRenderBox();
+  if(/vimeo\.com\//i.test(u))fetchVimeoThumb(u,function(){attRenderBox();});
+}
+function attFiles(fl){[].slice.call(fl||[]).filter(function(f){return /^image\//.test(f.type);}).forEach(attUpload);}
+window.attPaste=function(e){
+  var cd=e.clipboardData;if(!cd||!attDraft)return;
+  var imgs=[].slice.call(cd.items||[]).filter(function(it){return it.kind==="file"&&/^image\//.test(it.type);});
+  if(imgs.length){e.preventDefault();imgs.forEach(function(it){attUpload(it.getAsFile());});return;}
+  if(e.currentTarget&&e.currentTarget.id==="att-box"){var txt=(cd.getData("text")||"").trim();if(/^https?:\/\/\S+$/i.test(txt)){e.preventDefault();attAddLink(txt);}}
+};
+window.attDrop=function(e){
+  e.preventDefault();e.currentTarget.classList.remove("over");
+  if(e.dataTransfer.files&&e.dataTransfer.files.length){attFiles(e.dataTransfer.files);return;}
+  var u=(e.dataTransfer.getData("text/uri-list")||e.dataTransfer.getData("text")||"").split("\n")[0].trim();
+  if(/^https?:\/\//i.test(u))attAddLink(u);else showToast("Drop picture files or a link.","error");
+};
+window.attPick=function(){var inp=document.createElement("input");inp.type="file";inp.accept="image/*";inp.multiple=true;inp.onchange=function(){attFiles(inp.files);};inp.click();};
+window.attRemove=function(i){if(!attDraft)return;var a=attDraft.list.splice(i,1)[0];if(a&&a.path)attDraft.removed.push(a.path);attRenderBox();};
+
+// Notes text with clickable links; video links play in the viewer
+function attNotesHtml(s){
+  return escH(s).replace(/https?:\/\/[^\s<]+/g,function(m){var u=m.replace(/[.,;:)]+$/,""),rest=m.slice(u.length);return '<a href="'+u+'" target="_blank" rel="noopener" onclick="return attPlayLink(this)">'+u+'</a>'+rest;});
+}
+window.attPlayLink=function(a){var u=a.getAttribute("href");if(!attIsVideo(u))return true;attShow([{t:"link",url:u}],0);return false;};
+// What shows under a list entry: a line of notes and a row of small pictures
+function attEntryExtra(t,notes){
+  var list=attList(t);if(!notes&&!list.length)return null;
+  var el=document.createElement("div");el.className="att-extra";
+  var h=notes?'<div class="att-notes">'+attNotesHtml(notes)+'</div>':'';
+  if(list.length){var r=attReg.length;attReg.push(list);var max=t.category==="asset"||t.category==="general"?3:5;
+    h+='<div class="att-row">'+list.slice(0,max).map(function(a,i){return attTileHtml(a,r,i,false);}).join("")+(list.length>max?'<button type="button" class="att-more" onclick="attView('+r+','+max+')">+'+(list.length-max)+'</button>':'')+'</div>';}
+  el.innerHTML=h;el.onclick=function(e){e.stopPropagation();};
+  return el;
+}
+// Full-size viewer
+var attLb=null;
+window.attView=function(r,i){var list=r<0?(attDraft&&attDraft.list):attReg[r];if(list&&list[i])attShow(list,i);};
+function attShow(list,i){
+  if(!attLb){attLb=document.createElement("div");attLb.className="att-lb";attLb.innerHTML='<div class="att-lb-in"><div class="att-lb-media"></div><div class="att-lb-bar"><button type="button" class="att-lb-nav" data-d="-1"><i class=wi-ui-back></i></button><span class="att-lb-n"></span><button type="button" class="att-lb-nav att-lb-next" data-d="1"><i class=wi-ui-back></i></button><a class="att-lb-open" target="_blank" rel="noopener">Open original<i class=wi-act-link></i></a><button type="button" class="att-lb-x">Close</button></div></div>';
+    document.body.appendChild(attLb);
+    attLb.onclick=function(e){if(e.target===attLb||e.target.closest(".att-lb-x"))attClose();var n=e.target.closest(".att-lb-nav");if(n)attStep(+n.dataset.d);};
+    document.addEventListener("keydown",function(e){if(!attLb.classList.contains("open"))return;if(e.key==="Escape"){e.stopPropagation();attClose();}else if(e.key==="ArrowRight")attStep(1);else if(e.key==="ArrowLeft")attStep(-1);},true);
+  }
+  attLb._list=list;attLb._i=i;attLb.classList.add("open");attPaint();
+}
+function attStep(d){var l=attLb._list;if(l.length<2)return;attLb._i=(attLb._i+d+l.length)%l.length;attPaint();}
+function attClose(){attLb.classList.remove("open");attLb.querySelector(".att-lb-media").innerHTML="";}
+function attPaint(){
+  var a=attLb._list[attLb._i],box=attLb.querySelector(".att-lb-media"),h;
+  if(a.t==="img")h='<img src="'+escH(a.url)+'" alt="">';
+  else{var m=cutMedia(a.url);
+    if(m.type==="frame")h='<div class="ratio"><iframe src="'+escH(m.src)+'" allow="autoplay; fullscreen" allowfullscreen></iframe></div>';
+    else if(m.type==="video")h='<div class="ratio"><video controls playsinline autoplay src="'+escH(m.src)+'"></video></div>';
+    else if(m.type==="image")h='<img src="'+escH(m.src)+'" alt="">';
+    else h='<div class="att-lb-out">This link opens on its own site.<br><br><a href="'+safeUrl(a.url)+'" target="_blank" rel="noopener">Open '+escH(attHost(a.url)||"it")+'<i class=wi-act-link></i></a></div>';}
+  box.innerHTML=h;
+  var n=attLb._list.length;attLb.querySelector(".att-lb-n").textContent=n>1?(attLb._i+1)+" of "+n:"";
+  attLb.querySelectorAll(".att-lb-nav").forEach(function(b){b.style.display=n>1?"":"none";});
+  var o=attLb.querySelector(".att-lb-open");o.href=a.url;
+}
+// Deleting an item also clears its stored pictures
+var _attDelTask=window.deleteTask;
+window.deleteTask=async function(id){
+  var t=tasks.find(function(x){return x.id===id;}),paths=attList(t).map(function(a){return a.path;}).filter(Boolean);
+  await _attDelTask(id);
+  if(paths.length&&!tasks.some(function(x){return x.id===id;})){try{await sb.storage.from("thumbs").remove(paths);}catch(e){}}
+};
+var _attCloseModal=window.closeModal;window.closeModal=function(){attDiscard();_attCloseModal();};
+
+var _attOpenModal=window.openModal;
+window.openModal=function(id){
+  var r=_attOpenModal.apply(this,arguments);var t=id?tasks.find(function(x){return x.id===id;}):null;
+  document.getElementById("f-notes").value=t&&t.notes||"";
+  checkAttReady().then(function(){document.getElementById("f-notes-row").style.display=attReady?"":"none";document.getElementById("lbl-f-name").textContent=attReady?"Task name":"Task Name / Notes";attStart(t,"f-att-row");});
+  return r;
+};
+// The admin modal is defined further down, so hook it once the script has run
+setTimeout(function(){
+var _attCloseAdmin=window.closeAdminModal;window.closeAdminModal=function(){attDiscard();_attCloseAdmin();};
+var _attOpenAdmin=window.openAdminModal;
+window.openAdminModal=function(cat,editId){
+  var r=_attOpenAdmin.apply(this,arguments);var t=editId?tasks.find(function(x){return x.id===editId;}):null;
+  var team=(t?t.category:cat)==="team";
+  checkAttReady().then(function(){attStart(t,"af-att-row");if(team)document.getElementById("af-att-row").style.display="none";});
+  return r;
+};
+},0);
+
 // ── Gantt: select several bars, drag them together, shift blocks of dates ──
 var ganttSel={task:{},shot:{}};
 function ganttSelCount(){return Object.keys(ganttSel.task).length+Object.keys(ganttSel.shot).length;}
@@ -5639,7 +5844,7 @@ window.renderMilestones=function(){
         if(t.lead){var a=document.createElement("span");a.innerHTML='<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:3px"><circle cx="6" cy="4" r="2" stroke="currentColor" stroke-width="1.2"/><path d="M1 11c0-2.5 2-4 5-4s5 1.5 5 4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>'+escH(t.lead);meta.appendChild(a);}
         if(t.due_date){var d=daysUntil(t.due_date);var dm=document.createElement("span");dm.style.color=t.status==="done"?"var(--text4)":d<0?"#ef4444":d<=3?"#f59e0b":"var(--text4)";dm.innerHTML='<svg width="11" height="11" viewBox="0 0 12 12" fill="none" style="display:inline-block;vertical-align:middle;margin-right:3px"><rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1v2M8 1v2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><line x1="1" y1="5" x2="11" y2="5" stroke="currentColor" stroke-width="1"/></svg>'+(d<0&&t.status!=="done"?Math.abs(d)+"d overdue":fmtDate(t.due_date));meta.appendChild(dm);}
       }
-      if(cat!=="team"){main.appendChild(title);main.appendChild(meta);}
+      if(cat!=="team"){main.appendChild(title);main.appendChild(meta);var _ax=attEntryExtra(t,t.asset);if(_ax)main.appendChild(_ax);}
       var priCls={high:"admin-pri-high",med:"admin-pri-med",low:"admin-pri-low"};
       var pri=document.createElement("span");pri.className="admin-pri "+(priCls[t.priority]||"admin-pri-low");pri.textContent={high:"High",med:"Med",low:"Low"}[t.priority]||"";
       if (cat === "team") pri.style.display = "none";
@@ -5722,6 +5927,8 @@ window.saveAdminEntry = async function() {
     contact_email: adminCat === "team" ? (document.getElementById("af-email").value.trim() || null) : null,
     user_id: currentUser.id, project_id: activeProject.id
   };
+  if (attDraft&&attDraft.busy){showToast("Wait a moment, a picture is still being added.","error");return;}
+  if (attReady&&attDraft&&adminCat!=="team") payload.attachments = attDraft.list;
   var r;
   if (adminEditId) delete payload.user_id;
   if (adminEditId) r = await sb.from("tasks").update(payload).eq("id", adminEditId).select();
@@ -5733,6 +5940,7 @@ window.saveAdminEntry = async function() {
   } else {
     if (r.data && r.data[0]) tasks.push(r.data[0]);
   }
+  attCommit();
   closeAdminModal();
   showToast("Saved!");
   populateTeamDropdowns();
@@ -6171,7 +6379,8 @@ window.closeCelebration = function() {
             <label class="flbl" style="margin-top:10px">Email (optional)</label>
             <input id="af-email" class="inp" type="email" placeholder="name@example.com">
           </div>
-          <div><label class="flbl">Notes</label><textarea id="af-notes" class="inp" rows="2" style="resize:vertical"></textarea></div>
+          <div><label class="flbl">Notes</label><textarea id="af-notes" class="inp" rows="2" style="resize:vertical" onpaste="attPaste(event)"></textarea></div>
+          <div id="af-att-row" style="display:none"><label class="flbl">Pictures and video links</label><div id="af-att-slot"></div></div>
         </div>
         <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px">
           <button class="btn btn-ghost" onclick="closeAdminModal()">Cancel</button>
