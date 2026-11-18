@@ -1037,6 +1037,32 @@ h2 > .wi{font-size:20px;margin-right:8px;vertical-align:-4px;}
 .st-rv-chip .wi,.btn .wi{font-size:13px;margin-right:4px;vertical-align:-2px;}
 .dependency-banner .wi{font-size:17px;flex-shrink:0;}
 a .wi{font-size:13px;margin-right:3px;vertical-align:-2px;}
+
+/* Icon pack: unquoted shorthand (<i class=wi-name>) and chevrons */
+[class^="wi-"],[class*=" wi-"],.wic,.wid,.wiu{display:inline-block;width:1.15em;height:1.15em;background-color:currentColor;-webkit-mask:var(--wi) center/contain no-repeat;mask:var(--wi) center/contain no-repeat;vertical-align:-.2em;flex-shrink:0;font-style:normal;}
+.wic,.wid,.wiu{--wi:url(icons/ui-chevron.svg);width:1em;height:1em;vertical-align:-.12em;}
+.wid{transform:rotate(90deg);} .wiu{transform:rotate(-90deg);}
+.seq-arrow .wic,.shot-arrow .wic,.type-group-arrow .wic,.seq-shot-arrow .wic,.gantt-section-arrow .wic,.proj-expand .wic,.wrapped-hd .wic{font-size:10px;}
+.admin-collapse-arrow .wid,.admin-collapse-arrow .wiu{font-size:12px;}
+.adv-toggle .wic,.adv-toggle .wid{font-size:11px;margin-right:4px;}
+.btn [class^="wi-"],.media-add [class^="wi-"],button [class^="wi-"]{font-size:13px;margin-right:4px;vertical-align:-2px;}
+.tree-btn [class^="wi-"],.st-del [class^="wi-"],.shot-del-btn [class^="wi-"],.btn-del [class^="wi-"]:only-child{margin-right:0;}
+.media-lbl [class^="wi-"]{font-size:12px;margin-right:4px;vertical-align:-2px;}
+.thumb-hint .wi-ui-picture{font-size:20px;opacity:.6;margin-bottom:2px;}
+.rt [class^="wi-"]{font-size:12px;margin-right:4px;vertical-align:-2px;}
+.wrapped-hd [class^="wi-"]{font-size:12px;}
+a .wi-act-link{font-size:11px;margin-left:3px;margin-right:0;}
+.wi-act-copy{--wi:url(icons/act-copy.svg);}
+.wi-act-delete{--wi:url(icons/act-delete.svg);}
+.wi-act-download{--wi:url(icons/act-download.svg);}
+.wi-act-edit{--wi:url(icons/act-edit.svg);}
+.wi-act-shift{--wi:url(icons/act-shift.svg);}
+.wi-act-upload{--wi:url(icons/act-upload.svg);}
+.wi-act-wrap{--wi:url(icons/act-wrap.svg);}
+.wi-meta-depends{--wi:url(icons/meta-depends.svg);}
+.wi-meta-files{--wi:url(icons/meta-files.svg);}
+.wi-meta-time{--wi:url(icons/meta-time.svg);}
+.wi-ui-celebrate{--wi:url(icons/ui-celebrate.svg);}
 </style>
 </head>
 <body>
@@ -1221,7 +1247,7 @@ a .wi{font-size:13px;margin-right:3px;vertical-align:-2px;}
               <span class="cal-month-label" id="gantt-label"></span>
               <button class="btn btn-ghost btn-sm" onclick="ganttNext()">&#8594;</button>
               <button class="btn btn-ghost btn-sm" onclick="ganttToday()">Today</button>
-              <button class="btn btn-ghost btn-sm" onclick="openShiftDates()" title="Move many tasks at once">&#8644; Shift dates</button>
+              <button class="btn btn-ghost btn-sm" onclick="openShiftDates()" title="Move many tasks at once"><i class=wi-act-shift></i>Shift dates</button>
             </div>
           </div>
           <div class="gantt-selbar" id="gantt-selbar" style="display:none"></div>
@@ -1241,24 +1267,24 @@ a .wi{font-size:13px;margin-right:3px;vertical-align:-2px;}
             <div class="admin-sec-hdr" onclick="toggleAdminSection('projects')" style="cursor:pointer;">
               <span style="font-size:1.1rem"><i class="wi wi-admin-projects"></i></span>
               <span class="admin-sec-title">Projects</span>
-              <button class="btn btn-ghost btn-sm" onclick="promptProjectImport()">Import Archive</button>
-            <span class="admin-collapse-arrow open" id="admin-arrow-projects">&#9660;</span></div>
+              <button class="btn btn-ghost btn-sm" onclick="promptProjectImport()"><i class=wi-act-upload></i>Import Archive</button>
+            <span class="admin-collapse-arrow open" id="admin-arrow-projects"><i class=wid></i></span></div>
             <div class="admin-list" id="admin-list-projects"></div>
           </div>
           <div class="admin-section" id="admin-sec-client">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('client')" style="cursor:pointer;"><span style="font-size:1.1rem"><i class="wi wi-admin-client"></i></span><span class="admin-sec-title">Client Feedback</span><span class="admin-sec-proj"></span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('client')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-client">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('client')" style="cursor:pointer;"><span style="font-size:1.1rem"><i class="wi wi-admin-client"></i></span><span class="admin-sec-title">Client Feedback</span><span class="admin-sec-proj"></span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('client')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-client"><i class=wid></i></span></div>
             <div class="admin-list" id="admin-list-client"></div>
           </div>
           <div class="admin-section" id="admin-sec-marketing">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('marketing')" style="cursor:pointer;"><span style="font-size:1.1rem"><i class="wi wi-admin-marketing"></i></span><span class="admin-sec-title">Marketing</span><span class="admin-sec-proj"></span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('marketing')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-marketing">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('marketing')" style="cursor:pointer;"><span style="font-size:1.1rem"><i class="wi wi-admin-marketing"></i></span><span class="admin-sec-title">Marketing</span><span class="admin-sec-proj"></span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('marketing')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-marketing"><i class=wid></i></span></div>
             <div class="admin-list" id="admin-list-marketing"></div>
           </div>
           <div class="admin-section" id="admin-sec-meetings">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('meetings')" style="cursor:pointer;"><span style="font-size:1.1rem"><i class="wi wi-admin-meetings"></i></span><span class="admin-sec-title">Meetings</span><span class="admin-sec-proj"></span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('meetings')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-meetings">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('meetings')" style="cursor:pointer;"><span style="font-size:1.1rem"><i class="wi wi-admin-meetings"></i></span><span class="admin-sec-title">Meetings</span><span class="admin-sec-proj"></span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('meetings')">+ Add</button><span class="admin-collapse-arrow open" id="admin-arrow-meetings"><i class=wid></i></span></div>
             <div class="admin-list" id="admin-list-meetings"></div>
           </div>
           <div class="admin-section" id="admin-sec-team">
-            <div class="admin-sec-hdr" onclick="toggleAdminSection('team')" style="cursor:pointer;"><span style="font-size:1.1rem"><i class="wi wi-admin-team"></i></span><span class="admin-sec-title">Production Team</span><span class="admin-sec-proj"></span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('team')">+ Add</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();emailTeam()" title="Email everyone on this project"><i class="wi wi-act-email"></i>Email all</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();teamsTeam()" title="Group chat in Microsoft Teams">Teams chat</button><span class="admin-collapse-arrow open" id="admin-arrow-team">&#9660;</span></div>
+            <div class="admin-sec-hdr" onclick="toggleAdminSection('team')" style="cursor:pointer;"><span style="font-size:1.1rem"><i class="wi wi-admin-team"></i></span><span class="admin-sec-title">Production Team</span><span class="admin-sec-proj"></span><button class="btn btn-ghost btn-sm admin-owner-only" onclick="openAdminModal('team')">+ Add</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();emailTeam()" title="Email everyone on this project"><i class="wi wi-act-email"></i>Email all</button><button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();teamsTeam()" title="Group chat in Microsoft Teams">Teams chat</button><span class="admin-collapse-arrow open" id="admin-arrow-team"><i class=wid></i></span></div>
             <div class="admin-list" id="admin-list-team"></div>
           </div>
         </div>
@@ -1391,7 +1417,7 @@ a .wi{font-size:13px;margin-right:3px;vertical-align:-2px;}
     <div class="form-row"><label class="flbl">Status</label>
       <select id="f-status" class="inp"><option value="todo">To Do</option><option value="inprogress">In Progress</option><option value="review">In Review</option><option value="done">Done</option></select>
     </div>
-    <div class="adv-toggle" id="adv-toggle" onclick="toggleAdv()">&#9658; Show Advanced Options</div>
+    <div class="adv-toggle" id="adv-toggle" onclick="toggleAdv()"><i class=wic></i> Show Advanced Options</div>
     <div id="general-extra-fields" style="display:none">
       <div class="form-row" id="f-after-row" style="display:none"><label class="flbl">Starts after (optional)</label><select id="f-after" class="inp"></select><div style="font-size:.72rem;color:var(--text3);margin-top:4px">Links this task to the one before it. If that one moves later, Workprint offers to move this one too.</div></div>
       <div class="form-row"><label class="flbl">Handoff To (optional)</label><select id="f-handoff" class="inp"></select></div>
@@ -2184,7 +2210,7 @@ function renderSidebar(){
     var projSeqs=sequences.filter(function(s){return s.project_id===p.id;});
     html += '<div class="proj-row' + (isActive ? ' active' : '') + '">';
     html+='<div class="proj-row-main" onclick="selectProject(\''+p.id+'\')"><span class="proj-dot" style="background:'+p.color+'"></span><span class="proj-row-name">'+escH(p.name)+'</span></div>';
-    html+=(isOrg(p)?'':'<span class="proj-chevron'+(isExpanded?" open":"")+'" onclick="toggleProjExpand(\''+p.id+'\',event)">&#9658;</span>')+'</div>';
+    html+=(isOrg(p)?'':'<span class="proj-chevron'+(isExpanded?" open":"")+'" onclick="toggleProjExpand(\''+p.id+'\',event)"><i class=wic></i></span>')+'</div>';
     if(isExpanded){
       html+='<div class="proj-tree">';
       if(!projSeqs.length)html+='<div style="padding:4px 14px 4px 22px;font-size:.69rem;color:var(--text4)">No sequences yet</div>';
@@ -2192,14 +2218,14 @@ function renderSidebar(){
         var isSeqOpen=!uiState.seqOpen[p.id]||uiState.seqOpen[p.id][seq.id]!==false;
         var seqShots=shots.filter(function(s){return s.sequence_id===seq.id;});
         html+='<div class="seq-row" onclick="toggleSeq(\''+p.id+'\',\''+seq.id+'\')">';
-        html+='<span class="seq-arrow'+(isSeqOpen?" open":"")+'">&#9658;</span>';
+        html+='<span class="seq-arrow'+(isSeqOpen?" open":"")+'"><i class=wic></i></span>';
         html+='<span class="seq-code">'+escH(seq.code)+'</span>';
         if(seq.name)html+='<span class="seq-name-lbl">'+escH(seq.name)+'</span>';
-        html+='<span class="seq-btns"><button class="tree-btn" onclick="openSeqModal(\''+seq.id+'\',\''+p.id+'\');event.stopPropagation()">&#9998;</button><button class="tree-btn" onclick="deleteSeq(\''+seq.id+'\');event.stopPropagation()">&#215;</button></span></div>';
+        html+='<span class="seq-btns"><button class="tree-btn" onclick="openSeqModal(\''+seq.id+'\',\''+p.id+'\');event.stopPropagation()"><i class=wi-act-edit></i></button><button class="tree-btn" onclick="deleteSeq(\''+seq.id+'\');event.stopPropagation()"><i class=wi-act-delete></i></button></span></div>';
         if(isSeqOpen){
           seqShots.forEach(function(sh){
             var isActiveShot=activeShot&&activeShot.id===sh.id;
-            html+='<div class="shot-row'+(isActiveShot?" active":"")+'" onclick="openShot(\''+sh.id+'\')"><span class="shot-sdot" style="background:'+shotStatusColor(sh.status)+'"></span><span class="shot-code-lbl">'+escH(sh.code)+'</span>'+(sh.description?'<span class="shot-desc-lbl">'+escH(sh.description)+'</span>':'')+'<button class="shot-del-btn" onclick="deleteShot(\''+sh.id+'\');event.stopPropagation()">&#215;</button></div>';
+            html+='<div class="shot-row'+(isActiveShot?" active":"")+'" onclick="openShot(\''+sh.id+'\')"><span class="shot-sdot" style="background:'+shotStatusColor(sh.status)+'"></span><span class="shot-code-lbl">'+escH(sh.code)+'</span>'+(sh.description?'<span class="shot-desc-lbl">'+escH(sh.description)+'</span>':'')+'<button class="shot-del-btn" onclick="deleteShot(\''+sh.id+'\');event.stopPropagation()"><i class=wi-act-delete></i></button></div>';
           });
           html+='<button class="add-shot-row" onclick="openShotModal(\''+seq.id+'\');event.stopPropagation()">+ Add Shot</button>';
         }
@@ -2209,7 +2235,7 @@ function renderSidebar(){
   });
   if(_wrapped.length){
     var _wo=!!uiState.wrappedOpen;
-    html+='<div class="wrapped-hd" onclick="toggleWrappedList()"><span class="seq-arrow'+(_wo?' open':'')+'">&#9658;</span>Wrapped <span>'+_wrapped.length+'</span></div>';
+    html+='<div class="wrapped-hd" onclick="toggleWrappedList()"><span class="seq-arrow'+(_wo?' open':'')+'"><i class=wic></i></span><i class=wi-act-wrap></i>Wrapped <span>'+_wrapped.length+'</span></div>';
     if(_wo)_wrapped.forEach(function(p){var isActive=activeProject&&activeProject.id===p.id;html+='<div class="proj-row wrapped'+(isActive?' active':'')+'"><div class="proj-row-main" onclick="selectProject(\''+p.id+'\')"><span class="proj-dot" style="background:'+p.color+'"></span><span class="proj-row-name">'+escH(p.name)+'</span></div></div>';});
   }
   list.innerHTML=html;
@@ -2379,7 +2405,7 @@ window.renderFunding=function(){
       h+='<div class="fund-row"><div><div class="fund-name"><span class="fund-star-sm" title="Saved to your list">★</span>'+escH(f.name)+'</div><div class="fund-meta">'+escH([f.funder,fundLabel(FUND_TYPES,f.ftype||"grant")].filter(Boolean).join(" · "))+'</div></div>'+
          '<div class="fund-meta" style="font-size:.78rem;color:var(--text2)">'+escH(f.amount||"—")+'</div>'+fundDeadlineHtml(f)+'<div>'+st+'</div>'+
          '<div class="fund-acts">'+(url?'<a class="btn btn-ghost btn-sm" href="'+escH(url)+'" target="_blank" rel="noopener">Visit</a>':'')+
-         (sch?'<span class="fund-chip" title="Tasks are on the schedule">On schedule ✓</span>':'<button class="btn btn-ghost btn-sm" onclick="scheduleFunder(\''+f.id+'\')">Add to schedule</button>')+
+         (sch?'<span class="fund-chip" title="Tasks are on the schedule">On schedule <i class=wi-ui-check></i></span>':'<button class="btn btn-ghost btn-sm" onclick="scheduleFunder(\''+f.id+'\')">Add to schedule</button>')+
          '<button class="btn btn-ghost btn-sm" onclick="openFunderModal(\''+f.id+'\')">Edit</button></div></div>';
     });
     h+='</div>';
@@ -2619,7 +2645,7 @@ window.openShot=async function(id){
   var proj=projects.find(function(x){return x.id===sh.project_id;})||activeProject;
   if(!activeProject||activeProject.id!==sh.project_id){activeProject=proj; uiState.projExpanded[proj.id]=true; saveUIState(); localStorage.setItem("celio-proj-"+currentUser.id,proj.id);}
   document.getElementById("hdr-bc").innerHTML='<div class="breadcrumb"><span class="bc-proj" onclick="backToProject()">'+escH(proj.name)+'</span><span class="bc-sep">/</span><span class="bc-seq">'+escH(seq?seq.code:"")+'</span><span class="bc-sep">/</span><span class="bc-shot">'+escH(sh.code)+'</span></div>';
-  document.getElementById("hdr-actions").innerHTML='<button class="btn btn-ghost btn-sm" onclick="backToProject()">&#8592; Back</button>';
+  document.getElementById("hdr-actions").innerHTML='<button class="btn btn-ghost btn-sm" onclick="backToProject()"><i class=wi-ui-back></i>Back</button>';
   document.getElementById("sp-code").textContent=sh.code;
   document.getElementById("sp-seq-label").textContent=seq?seq.code+(seq.name?" \u2014 "+seq.name:""):"";
   document.getElementById("sp-desc").value=sh.description||"";
@@ -2680,19 +2706,19 @@ function renderShotTasks(){
     var vNum = st.version || 1, isOpen = openShotReview===st.id;
     var rl=reviewsReady?reviewFor("shot_task",st.id):null;
     html+='<div class="shot-task-row'+(isOpen?' st-open':'')+'">';
-    html+='<button class="st-expand" title="'+(isOpen?'Hide review':'Show review')+'" onclick="toggleShotReview(\''+st.id+'\')">'+(isOpen?'&#9660;':'&#9654;')+'</button>';
+    html+='<button class="st-expand" title="'+(isOpen?'Hide review':'Show review')+'" onclick="toggleShotReview(\''+st.id+'\')">'+(isOpen?'<i class=wid></i>':'<i class=wic></i>')+'</button>';
     html+='<div style="flex:1;min-width:0;cursor:pointer" onclick="toggleShotReview(\''+st.id+'\')"><div class="st-type">'+escH(st.task_type)+' <span class="version-badge">v'+vNum+'</span></div>';
     if(st.department)html+='<div class="st-dept">'+escH(st.department)+'</div></div>';
     else html+='</div>';
     if(st.assignee)html+='<span class="chip" style="font-size:.7rem; margin-right:8px">'+escH(st.assignee)+'</span>';
     if(st.due_date)html+='<span style="font-size:.72rem;color:var(--text3); margin-right:8px">'+fmtDate(st.due_date)+'</span>';
-    if(reviewsReady)html+='<button class="st-rv-chip'+(rl&&rl.active?(rl.decision==="approved"?' ok':rl.decision==="changes"?' chg':' wait'):'')+'" onclick="toggleShotReview(\''+st.id+'\')" title="Review">'+(rl&&rl.active?(rl.decision==="approved"?'&#10003; Approved':rl.decision==="changes"?'Changes requested':'In review')+' · '+reviewNoteCount(rl)+' notes':'<i class="wi wi-act-review"></i>Review')+'</button>';
+    if(reviewsReady)html+='<button class="st-rv-chip'+(rl&&rl.active?(rl.decision==="approved"?' ok':rl.decision==="changes"?' chg':' wait'):'')+'" onclick="toggleShotReview(\''+st.id+'\')" title="Review">'+(rl&&rl.active?(rl.decision==="approved"?'<i class=wi-ui-check></i>Approved':rl.decision==="changes"?'Changes requested':'In review')+' · '+reviewNoteCount(rl)+' notes':'<i class="wi wi-act-review"></i>Review')+'</button>';
     var selHtml = '<select class="shot-status-sel" style="padding:2px 6px; font-size:.7rem; margin-right:8px; border-radius:4px" onchange="updateShotTaskStatus(\''+st.id+'\', this.value)">';
     [{v:"ready", l:"To Do"},{v:"inprogress", l:"In Progress"},{v:"review", l:"In Review"},{v:"approved", l:"Approved"},{v:"final", l:"Final"}].forEach(function(o){
       selHtml += '<option value="'+o.v+'" '+(st.status===o.v?'selected':'')+'>'+o.l+'</option>';
     });
     html+= selHtml+'</select>';
-    html+='<button class="st-del" onclick="deleteShotTask(\''+st.id+'\')">&#215;</button></div>';
+    html+='<button class="st-del" onclick="deleteShotTask(\''+st.id+'\')"><i class=wi-act-delete></i></button></div>';
     if(isOpen)html+='<div class="st-review" id="st-review-'+st.id+'">'+shotReviewPanel(st,rl)+'</div>';
   });
   html+='<button class="add-shot-task-btn" onclick="openShotTaskModal()">+ Add Task</button>';
@@ -2899,7 +2925,7 @@ window.closeAssetLinkModal=function(){document.getElementById("asset-link-modal"
 function renderAssetSearchList(q,groups,sel){
   var keys=Object.keys(groups).filter(function(k){return !q||groups[k].name.toLowerCase().indexOf(q.toLowerCase())>=0;});
   if(!keys.length){document.getElementById("asset-search-list").innerHTML='<div style="padding:14px;text-align:center;color:var(--text4);font-size:.8rem">No assets found. Add asset tasks in the Schedule tab first.</div>';return;}
-  var html=keys.map(function(k){var g=groups[k];var isSel=assetLinkSelection.indexOf(k)>=0;return'<div class="asset-search-item'+(isSel?" selected":"")+'" onclick="toggleAssetLink(\''+k.replace(/'/g,"\\'")+'\')" data-key="'+k.replace(/"/g,"&quot;")+'"><div><div class="asi-name">'+escH(g.name)+'</div><div class="asi-type">'+assetTypeLabel(g.type)+'</div></div>'+(isSel?'<span class="asi-check">&#10003;</span>':'')+'</div>';}).join("");
+  var html=keys.map(function(k){var g=groups[k];var isSel=assetLinkSelection.indexOf(k)>=0;return'<div class="asset-search-item'+(isSel?" selected":"")+'" onclick="toggleAssetLink(\''+k.replace(/'/g,"\\'")+'\')" data-key="'+k.replace(/"/g,"&quot;")+'"><div><div class="asi-name">'+escH(g.name)+'</div><div class="asi-type">'+assetTypeLabel(g.type)+'</div></div>'+(isSel?'<span class="asi-check"><i class=wi-ui-check></i></span>':'')+'</div>';}).join("");
   document.getElementById("asset-search-list").innerHTML=html;
 }
 window.filterAssetSearch=function(q){renderAssetSearchList(q,window._assetGroups||{},assetLinkSelection);};
@@ -3004,7 +3030,7 @@ function cutPlayerHtml(c){
   if(md.type==="frame")return '<div class="cut-player"><div class="ratio"><iframe src="'+escH(md.src)+'" allow="autoplay; fullscreen" allowfullscreen></iframe></div></div>';
   if(md.type==="video")return '<div class="cut-player"><div class="ratio"><video controls playsinline preload="metadata" src="'+escH(md.src)+'"></video></div></div>';
   if(md.type==="image")return '<div class="cut-player"><img src="'+escH(md.src)+'" alt=""></div>';
-  return '<div class="cut-player"><div class="cut-out">'+(md.type==="tool"?'This cut is in '+escH(md.name)+'.':'This cut opens on its own site.')+'<br><br><a href="'+escH(md.url)+'" target="_blank" rel="noopener">Open it &#8599;</a></div></div>';
+  return '<div class="cut-player"><div class="cut-out">'+(md.type==="tool"?'This cut is in '+escH(md.name)+'.':'This cut opens on its own site.')+'<br><br><a href="'+escH(md.url)+'" target="_blank" rel="noopener">Open it<i class=wi-act-link></i></a></div></div>';
 }
 function cutDecisionFor(round){
   var l=cutLink();if(!l)return null;
@@ -3015,7 +3041,7 @@ function cutDecisionFor(round){
 function cutDecisionPill(round){var d=cutDecisionFor(round);return d==="approved"?'<span class="conf">Approved</span>':d==="changes"?'<span class="pend" style="color:var(--late)">Changes</span>':'';}
 function shotBoardHtml(){
   var seqs=sequences.filter(function(q){return q.project_id===activeProject.id;});
-  if(!seqs.length)return '<div style="font-size:.82rem;color:var(--text3)">No sequences yet. Add them from the sidebar (&#9654; next to the project).</div>';
+  if(!seqs.length)return '<div style="font-size:.82rem;color:var(--text3)">No sequences yet. Add them from the sidebar (the arrow next to the project).</div>';
   var order=SHOT_TASK_TYPES.filter(function(t){return t!=="Custom...";});
   var html='<div class="sb-legend"><span><i style="background:color-mix(in srgb,var(--todo) 45%,transparent)"></i>Ready</span><span><i style="background:var(--prog)"></i>In progress</span><span><i style="background:var(--review)"></i>In review</span><span><i style="background:var(--done)"></i>Approved</span><span>One bar per shot task, in pipeline order. Click a shot to open it.</span></div>';
   seqs.forEach(function(q){
@@ -3055,7 +3081,7 @@ function renderCut(){
   var view=cuts.find(function(c){return c.id===cutViewing;})||latest;
   html+='<div class="cut-grid"><div>';
   html+=cutPlayerHtml(view);
-  html+='<div class="cut-card" style="margin-top:12px"><h3>V'+view.version+' · '+escH(cutName(view).toUpperCase())+(view.id!==latest.id?' · OLDER VERSION':'')+'</h3><div class="cut-changed">'+(view.notes?escH(view.notes):'<span style="color:var(--text3)">No notes on what changed.</span>')+'</div><div style="margin-top:8px;font-size:.74rem;color:var(--text3)">Added '+cutDate(view)+(view.added_by?' by '+escH(view.added_by):'')+' · <a href="'+escH(view.media_url)+'" target="_blank" rel="noopener" style="color:var(--purple)">Open original &#8599;</a></div></div>';
+  html+='<div class="cut-card" style="margin-top:12px"><h3>V'+view.version+' · '+escH(cutName(view).toUpperCase())+(view.id!==latest.id?' · OLDER VERSION':'')+'</h3><div class="cut-changed">'+(view.notes?escH(view.notes):'<span style="color:var(--text3)">No notes on what changed.</span>')+'</div><div style="margin-top:8px;font-size:.74rem;color:var(--text3)">Added '+cutDate(view)+(view.added_by?' by '+escH(view.added_by):'')+' · <a href="'+escH(view.media_url)+'" target="_blank" rel="noopener" style="color:var(--purple)">Open original<i class=wi-act-link></i></a></div></div>';
   html+='<div class="cut-card"><h3>WHERE EACH SHOT IS '+filmTimeHtml()+'</h3>'+shotBoardHtml()+'</div>';
   html+='</div><div>';
   var dec=l?(l.decision==="approved"?'<span class="conf">Approved</span> by '+escH(l.decided_by||""):l.decision==="changes"?'<span class="pend" style="color:var(--late)">Changes requested</span> by '+escH(l.decided_by||""):'<span class="pend">Waiting for review</span>'):'';
@@ -3349,7 +3375,7 @@ function renderAssetSections(assetTasks){
   var h2=document.createElement("h2");h2.innerHTML='<i class="wi wi-sec-pipeline"></i>Asset Pipeline';
   var addBtn=document.createElement("button");addBtn.className="btn btn-primary btn-sm";
   addBtn.textContent="+ New Asset";addBtn.onclick=function(e){e.stopPropagation();openModal(null,"asset");};
-  var assetArrow=document.createElement("span");assetArrow.className="admin-collapse-arrow";assetArrow.innerHTML=_assetCollapsed?"&#9650;":"&#9660;";
+  var assetArrow=document.createElement("span");assetArrow.className="admin-collapse-arrow";assetArrow.innerHTML=_assetCollapsed?"<i class=wiu></i>":"<i class=wid></i>";
   secHdr.appendChild(h2);secHdr.appendChild(addBtn);secHdr.appendChild(assetArrow);
   secHdr.onclick=function(){uiState.schedSectionCollapsed["assets"]=!uiState.schedSectionCollapsed["assets"];saveUIState();renderSchedule();};
   secWrap.appendChild(secHdr);
@@ -3372,7 +3398,7 @@ function renderAssetSections(assetTasks){
     var names=Object.keys(byType[at]);
     var isTypeCollapsed=uiState.typeGroupCollapsed[at]===true;
     var typeRow=document.createElement("div");typeRow.className="type-group-hdr";
-    var typeArrow=document.createElement("span");typeArrow.className="type-group-arrow"+(isTypeCollapsed?"":" open");typeArrow.innerHTML="&#9658;";
+    var typeArrow=document.createElement("span");typeArrow.className="type-group-arrow"+(isTypeCollapsed?"":" open");typeArrow.innerHTML="<i class=wic></i>";
     var typeIcon=document.createElement("span");typeIcon.innerHTML=assetTypeIcon(at);typeIcon.style.fontSize=".9rem";
     var typeLbl=document.createElement("span");typeLbl.style.cssText="font-size:.78rem;font-weight:800;flex:1;";typeLbl.textContent=typeLabels[at];
     var typeCnt=document.createElement("span");typeCnt.style.cssText="font-size:.68rem;color:var(--text4);";typeCnt.textContent=names.length+" asset"+(names.length!==1?"s":"");
@@ -3395,7 +3421,7 @@ function renderAssetSections(assetTasks){
       var key=at+"|"+name;var isCollapsed=uiState.assetGroupCollapsed[key]!==false;
       var card=document.createElement("div");card.className="asset-card";
       var hdr=document.createElement("div");hdr.className="asset-card-hdr";
-      var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
+      var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="<i class=wic></i>";
       var nameSpan=document.createElement("span");nameSpan.className="asset-card-name";nameSpan.textContent=name;
       var anyActive=stageTasks.some(function(t){return t.status==="inprogress"||t.status==="review"||t.status==="done";});
       var badge=document.createElement("span");badge.className="asset-status-badge "+(isReady?"asb-ready":anyLate?"asb-blocked":"asb-inprog");
@@ -3494,7 +3520,7 @@ function renderOrgSections(orgTasks){
     var isCollapsed=uiState.assetGroupCollapsed[ckey]===true;
     var card=document.createElement("div");card.className="asset-card";
     var hdr=document.createElement("div");hdr.className="asset-card-hdr";
-    var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
+    var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="<i class=wic></i>";
     var dispK=byTeam?k:(initDisp[k]||k);
     var nameSpan=document.createElement("span");nameSpan.className="asset-card-name";nameSpan.textContent=byTeam?teamLabel(k):dispK;
     var st=done===total?["asb-ready","Done"]:anyLate?["asb-blocked","Overdue"]:anyActive?["asb-inprog","In Progress"]:["asb-inprog","Not Started"];
@@ -3505,7 +3531,7 @@ function renderOrgSections(orgTasks){
     var addT=document.createElement("button");addT.className="btn btn-ghost btn-sm";addT.style.cssText="font-size:.68rem;flex-shrink:0;";addT.textContent="+ Task";
     addT.onclick=function(e){e.stopPropagation();if(byTeam)openModal(null,"asset",k);else openModal(null,"asset",null,dispK);};
     var renB=null;
-    if(!byTeam&&dispK!=="General"){renB=document.createElement("button");renB.className="btn btn-ghost btn-sm init-ren";renB.textContent="Rename";renB.title="Rename, or merge into another initiative";renB.onclick=function(e){e.stopPropagation();renameInitiative(dispK);};}
+    if(!byTeam&&dispK!=="General"){renB=document.createElement("button");renB.className="btn btn-ghost btn-sm init-ren";renB.innerHTML="<i class=wi-act-edit></i>Rename";renB.title="Rename, or merge into another initiative";renB.onclick=function(e){e.stopPropagation();renameInitiative(dispK);};}
     hdr.appendChild(arrow);hdr.appendChild(nameSpan);if(renB)hdr.appendChild(renB);hdr.appendChild(badge);hdr.appendChild(pbar);hdr.appendChild(ppct);hdr.appendChild(addT);
     var body=document.createElement("div");body.style.display=isCollapsed?"none":"";
     hdr.onclick=function(e){if(addT.contains(e.target)||(renB&&renB.contains(e.target)))return;var show=body.style.display==="none";body.style.display=show?"":"none";arrow.classList.toggle("open",show);uiState.assetGroupCollapsed[ckey]=!show;saveUIState();};
@@ -3552,7 +3578,7 @@ function renderShotSection(){
   var shTitle=document.createElement("h2");shTitle.innerHTML='<i class="wi wi-sec-shots"></i>Shot Progression';
   var addSeqBtn=document.createElement("button");addSeqBtn.className="btn btn-ghost btn-sm";addSeqBtn.textContent="+ Add Sequence";
   addSeqBtn.onclick=function(e){e.stopPropagation();openSeqModal(null,activeProject?activeProject.id:null);};
-  var shotArrow=document.createElement("span");shotArrow.className="admin-collapse-arrow";shotArrow.innerHTML=_shotCollapsed?"&#9650;":"&#9660;";
+  var shotArrow=document.createElement("span");shotArrow.className="admin-collapse-arrow";shotArrow.innerHTML=_shotCollapsed?"<i class=wiu></i>":"<i class=wid></i>";
   sh2.appendChild(shTitle);sh2.appendChild(addSeqBtn);var _ft=document.createElement("span");_ft.style.cssText="flex:1;text-align:right;margin-right:12px";_ft.innerHTML=filmTimeHtml();sh2.appendChild(_ft);sh2.appendChild(shotArrow);
   sh2.onclick=function(){uiState.schedSectionCollapsed["shots"]=!uiState.schedSectionCollapsed["shots"];saveUIState();renderSchedule();};
   var sectionBody=document.createElement("div");sectionBody.style.display=_shotCollapsed?"none":"";
@@ -3571,7 +3597,7 @@ function renderShotSection(){
     });
     var isSeqCollapsed=uiState.seqShotCollapsed[seq.id]===true;
     var seqRow=document.createElement("div");seqRow.className="seq-shot-hdr";
-    var seqArrow=document.createElement("span");seqArrow.className="seq-shot-arrow"+(isSeqCollapsed?"":" open");seqArrow.innerHTML="&#9658;";
+    var seqArrow=document.createElement("span");seqArrow.className="seq-shot-arrow"+(isSeqCollapsed?"":" open");seqArrow.innerHTML="<i class=wic></i>";
     var seqLbl=document.createElement("span");seqLbl.className="seq-shot-label";
     seqLbl.textContent=seq.code+(seq.name?" — "+seq.name:"");
     var seqCnt=document.createElement("span");seqCnt.className="seq-shot-cnt";
@@ -3596,7 +3622,7 @@ function renderShotSection(){
       var isCollapsed=uiState.shotSectionCollapsed[sh.id]!==false;
       var card=document.createElement("div");card.className="asset-card";
       var hdr=document.createElement("div");hdr.className="asset-card-hdr";hdr.style.paddingLeft="28px";
-      var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="&#9658;";
+      var arrow=document.createElement("span");arrow.className="shot-arrow"+(isCollapsed?"":" open");arrow.innerHTML="<i class=wic></i>";
       var dot=document.createElement("span");dot.style.cssText="width:8px;height:8px;border-radius:50%;flex-shrink:0;background:"+shotStatusColor(sh.status);
       var code=document.createElement("span");code.style.cssText="font-size:.85rem;font-weight:800;color:var(--purple);";code.textContent=sh.code;
       var desc=document.createElement("span");desc.style.cssText="font-size:.75rem;color:var(--text3);flex:1;";desc.textContent=sh.description||"";
@@ -3690,7 +3716,7 @@ function renderAssetDeliverables(){
     el0.innerHTML=dl.map(function(t){
       var ready=t.status==="done",late=!ready&&t.due_date&&daysUntil(t.due_date)<0;
       var cls=ready?"a-ready":late?"a-late":"a-pend",lb=ready?"Ready":late?"Late":"Pending";
-      var nm=t.asset_url?'<a href="'+safeUrl(t.asset_url)+'" target="_blank" rel="noopener" style="color:var(--purple);text-decoration:none;font-weight:600">'+escH(t.asset)+' &#8599;</a>':'<span style="font-weight:600">'+escH(t.asset)+'</span>';
+      var nm=t.asset_url?'<a href="'+safeUrl(t.asset_url)+'" target="_blank" rel="noopener" style="color:var(--purple);text-decoration:none;font-weight:600">'+escH(t.asset)+'<i class=wi-act-link></i></a>':'<span style="font-weight:600">'+escH(t.asset)+'</span>';
       var meta=(t.category==="asset"?escH((t.asset_name||"General")+" · "+teamLabel(t.asset_type)):"General")+(t.due_date?' &middot; '+fmtDate(t.due_date):'');
       return '<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+meta+'</div></div><div class="'+cls+'">'+lb+'</div></div>';
     }).join("");
@@ -3707,14 +3733,14 @@ function renderAssetDeliverables(){
   if(!all.length){el.innerHTML='<div style="text-align:center;padding:18px;color:var(--text3);font-size:.8rem">No completed assets yet.</div>';return;}
   var html="";
   done.forEach(function(t){
-    var nm=t.asset_url?'<a href="'+safeUrl(t.asset_url)+'" target="_blank" rel="noopener" style="color:var(--purple);text-decoration:none;font-weight:600">'+escH(t.name)+' &#8599;</a>':'<span style="font-weight:600">'+escH(t.name)+'</span>';
+    var nm=t.asset_url?'<a href="'+safeUrl(t.asset_url)+'" target="_blank" rel="noopener" style="color:var(--purple);text-decoration:none;font-weight:600">'+escH(t.name)+'<i class=wi-act-link></i></a>':'<span style="font-weight:600">'+escH(t.name)+'</span>';
     var typeLbl=assetTypeLabel(t.asset_type)||t.asset_type||'Asset';
     html+='<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+escH(typeLbl)+(t.lead?' &middot; '+escH(t.lead):'')+'</div></div><div class="a-ready">Ready</div></div>';
   });
   general.forEach(function(t){
     var ready=t.status==="done",missing=t.status!=="done"&&t.due_date&&daysUntil(t.due_date)<0;
     var cls=ready?"a-ready":missing?"a-late":"a-pend",lbl=ready?"Ready":missing?"Late":"Pending";
-    var nm=t.asset_url?'<a href="'+safeUrl(t.asset_url)+'" target="_blank" rel="noopener" style="color:var(--purple);text-decoration:none;font-weight:600">'+escH(t.asset)+' &#8599;</a>':'<span style="font-weight:600">'+escH(t.asset)+'</span>';
+    var nm=t.asset_url?'<a href="'+safeUrl(t.asset_url)+'" target="_blank" rel="noopener" style="color:var(--purple);text-decoration:none;font-weight:600">'+escH(t.asset)+'<i class=wi-act-link></i></a>':'<span style="font-weight:600">'+escH(t.asset)+'</span>';
     html+='<div class="aitem"><div><div class="aname">'+nm+'</div><div class="ameta">'+escH(t.lead||"Unassigned")+' &middot; '+fmtDate(t.due_date)+'</div></div><div class="'+cls+'">'+lbl+'</div></div>';
   });
   el.innerHTML=html;
@@ -3725,8 +3751,8 @@ document.addEventListener("click",function(){document.querySelectorAll(".status-
 window.toggleAdv = function() {
   var el = document.getElementById("general-extra-fields");
   var tog = document.getElementById("adv-toggle");
-  if (el.style.display === "none") { el.style.display = "block"; tog.innerHTML = "&#9660; Hide Advanced Options"; } 
-  else { el.style.display = "none"; tog.innerHTML = "&#9658; Show Advanced Options"; }
+  if (el.style.display === "none") { el.style.display = "block"; tog.innerHTML = "<i class=wid></i> Hide Advanced Options"; } 
+  else { el.style.display = "none"; tog.innerHTML = "<i class=wic></i> Show Advanced Options"; }
 };
 
 window.selectCat=function(cat,el){
@@ -3735,7 +3761,7 @@ window.selectCat=function(cat,el){
   el.classList.add("active");
   document.getElementById("asset-fields").style.display=cat==="asset"?"block":"none";
   if (false) { document.getElementById("adv-toggle").style.display = "none"; document.getElementById("general-extra-fields").style.display = "none"; } 
-  else { document.getElementById("adv-toggle").style.display = "inline-block"; document.getElementById("general-extra-fields").style.display = "none"; document.getElementById("adv-toggle").innerHTML = "&#9658; Show Advanced Options"; }
+  else { document.getElementById("adv-toggle").style.display = "inline-block"; document.getElementById("general-extra-fields").style.display = "none"; document.getElementById("adv-toggle").innerHTML = "<i class=wic></i> Show Advanced Options"; }
   if(cat==="asset")updatePipelineStages();
 };
 
@@ -3775,7 +3801,7 @@ window.openModal=function(id,forceCat,forceAssetType,forceAssetName){
       if (true) {
          document.getElementById("adv-toggle").style.display = "inline-block";
          document.getElementById("general-extra-fields").style.display = hasAdv ? "block" : "none";
-         document.getElementById("adv-toggle").innerHTML = hasAdv ? "&#9660; Hide Advanced Options" : "&#9658; Show Advanced Options";
+         document.getElementById("adv-toggle").innerHTML = hasAdv ? "<i class=wid></i> Hide Advanced Options" : "<i class=wic></i> Show Advanced Options";
       } else { document.getElementById("adv-toggle").style.display = "none"; document.getElementById("general-extra-fields").style.display = "none"; }
       document.getElementById("f-name").value=t.name;
       var ld = document.getElementById("f-lead");
@@ -3798,7 +3824,7 @@ window.openModal=function(id,forceCat,forceAssetType,forceAssetName){
     if (true) {
        document.getElementById("adv-toggle").style.display = "inline-block";
        document.getElementById("general-extra-fields").style.display = "none";
-       document.getElementById("adv-toggle").innerHTML = "&#9658; Show Advanced Options";
+       document.getElementById("adv-toggle").innerHTML = "<i class=wic></i> Show Advanced Options";
     } else { document.getElementById("adv-toggle").style.display = "none"; document.getElementById("general-extra-fields").style.display = "none"; }
     document.getElementById("f-name").value="";
     document.getElementById("f-lead").value="";
@@ -4040,7 +4066,7 @@ function renderGantt() {
   function mkSecHdr(title, icon, collapsed, toggleFn) {
     var lbl = document.createElement("div");
     lbl.style.cssText = "display:flex;align-items:center;gap:6px;padding:4px 8px;height:32px;background:var(--bg3);border-bottom:2px solid var(--border);cursor:pointer;";
-    var arr = document.createElement("span"); arr.className = "gantt-section-arrow" + (collapsed ? "" : " open"); arr.innerHTML = "&#9658;";
+    var arr = document.createElement("span"); arr.className = "gantt-section-arrow" + (collapsed ? "" : " open"); arr.innerHTML = "<i class=wic></i>";
     var ico = document.createElement("span"); ico.style.fontSize = ".85rem"; ico.innerHTML = icon;
     var ttl = document.createElement("span"); ttl.className = "gantt-section-title"; ttl.textContent = title;
     lbl.appendChild(arr); lbl.appendChild(ico); lbl.appendChild(ttl);
@@ -4406,7 +4432,7 @@ function renderMyWork(){
   items.forEach(function(x){var g=!x.due?3:daysUntil(x.due)<0?0:daysUntil(x.due)<=7?1:2;groups[g][1].push(x);});
   groups.forEach(function(g){g[1].sort(function(a,b){return String(a.due||"").localeCompare(String(b.due||""));});});
   if(hand.length)html+='<div class="mw-group"><div class="mw-gh mw-gh-ready">Ready for you to start</div>'+hand.map(function(x){return '<div class="mw-row"><div class="mw-main" onclick="openModal(\''+x.taskId+'\')"><div class="mw-title">'+escH(x.title)+'</div><div class="mw-ctx">'+escH(x.from)+' finished the step before yours</div></div><button class="btn btn-ghost btn-sm" onclick="gotItHandoff(\''+x.key+'\')">Got it</button></div>';}).join("")+'</div>';
-  if(!items.length&&!hand.length)html+='<div style="padding:28px;text-align:center;color:var(--text3);font-size:.85rem">Nothing assigned to you right now. &#127881;</div>';
+  if(!items.length&&!hand.length)html+='<div style="padding:28px;text-align:center;color:var(--text3);font-size:.85rem">Nothing assigned to you right now. <i class=wi-ui-celebrate></i></div>';
   groups.forEach(function(g,gi){
     if(!g[1].length)return;
     html+='<div class="mw-group"><div class="mw-gh'+(gi===0?' mw-gh-late':'')+'">'+g[0]+' <span>'+g[1].length+'</span></div>'+g[1].map(function(x){
@@ -4549,7 +4575,7 @@ function offerFollowerShift(id){
 function actionToast(msg,label,fn){
   var old=document.getElementById("undo-toast");if(old)old.remove();
   var t=document.createElement("div");t.id="undo-toast";t.className="undo-toast";
-  t.innerHTML='<span>'+escH(msg)+'</span><button type="button">'+escH(label)+'</button><button type="button" aria-label="Dismiss" style="border:none;padding:3px 6px">&#10005;</button>';
+  t.innerHTML='<span>'+escH(msg)+'</span><button type="button">'+escH(label)+'</button><button type="button" aria-label="Dismiss" style="border:none;padding:3px 6px"><i class=wi-ui-close></i></button>';
   var bs=t.querySelectorAll("button");bs[0].onclick=function(){t.remove();fn();};bs[1].onclick=function(){t.remove();};
   document.body.appendChild(t);setTimeout(function(){if(t.parentNode)t.remove();},20000);
 }
@@ -4557,7 +4583,7 @@ function rerenderActive(){var a=document.querySelector(".tab-content.active"),n=
 function depLabel(t){
   if(!t.depends_on)return "";var p=tasks.find(function(x){return x.id===t.depends_on;});if(!p)return "";
   var st=t.start_date||t.due_date,clash=p.due_date&&st&&st<=p.due_date&&p.status!=="done";
-  return '<div class="dep-note'+(clash?' dep-clash':'')+'" title="'+(clash?'Starts before the task it follows is due':'')+'">&#8627; after '+escH(isOrg()&&!clash?shortTaskName(p):taskTitle(p))+(clash?' &#9888;':'')+'</div>';
+  return '<div class="dep-note'+(clash?' dep-clash':'')+'" title="'+(clash?'Starts before the task it follows is due':'')+'"><i class=wi-meta-depends></i>after '+escH(isOrg()&&!clash?shortTaskName(p):taskTitle(p))+(clash?' <i class=wi-note-overdue></i>':'')+'</div>';
 }
 // Draw arrows between linked bars on the Gantt chart
 function drawGanttLinks(rowsDiv){
@@ -4782,7 +4808,7 @@ function seqTimeHtml(seq){
 }
 function filmTimeHtml(){
   var t=filmTime(),fps=projFps();if(!t.timed)return "";
-  return '<span class="rt rt-film" title="'+escH(t.frames+" frames at "+fps+" fps"+(t.timed<t.total?" · "+(t.total-t.timed)+" shots without a frame count":""))+'">Running time '+fmtDur(t.frames,fps)+(t.timed<t.total?'<i>+</i>':'')+'</span>';
+  return '<span class="rt rt-film" title="'+escH(t.frames+" frames at "+fps+" fps"+(t.timed<t.total?" · "+(t.total-t.timed)+" shots without a frame count":""))+'"><i class=wi-meta-time></i>Running time '+fmtDur(t.frames,fps)+(t.timed<t.total?'<i>+</i>':'')+'</span>';
 }
 
 // ── Shot and sequence codes: filled in for you ──
@@ -4960,9 +4986,9 @@ function filesHtml(i,files){
   if(!files)return '<button type="button" class="media-add" onclick="editFiles('+i+')">+ Add files location</button>';
   var isUrl=/^https?:\/\//i.test(files),host="";
   if(isUrl){try{host=new URL(files).hostname.replace(/^www\./,"");}catch(e){}}
-  return '<span class="media-lbl">Files</span>'+(isUrl
-    ?'<a class="media-open" href="'+escH(files)+'" target="_blank" rel="noopener">Open'+(host?' <span>'+escH(host)+'</span>':'')+' &#8599;</a>'
-    :'<code class="media-path" title="'+escH(files)+'">'+escH(files)+'</code><button type="button" class="media-add" onclick="copyText(mediaFiles('+i+'))">Copy path</button>')
+  return '<span class="media-lbl"><i class=wi-meta-files></i>Files</span>'+(isUrl
+    ?'<a class="media-open" href="'+escH(files)+'" target="_blank" rel="noopener">Open'+(host?' <span>'+escH(host)+'</span>':'')+'<i class=wi-act-link></i></a>'
+    :'<code class="media-path" title="'+escH(files)+'">'+escH(files)+'</code><button type="button" class="media-add" onclick="copyText(mediaFiles('+i+'))"><i class=wi-act-copy></i>Copy path</button>')
     +'<button type="button" class="media-add" onclick="editFiles('+i+')">Change</button>';
 }
 // The picture frame plus the files line
@@ -4971,7 +4997,7 @@ function mediaStripHtml(kind,ref,big){
   var m=metaFor(kind,ref),src=m.thumb_url||reviewThumb(kind,ref),auto=!m.thumb_url&&!!src;
   var frame='<div class="thumb-drop'+(big?' big':'')+(src?' has':'')+'" tabindex="0" data-mi="'+i+'" onclick="armThumb(this,event)" onpaste="pasteThumb(event,'+i+')" ondragover="event.preventDefault();this.classList.add(\'over\')" ondragleave="this.classList.remove(\'over\')" ondrop="dropThumb(event,'+i+')">'
     +(src?'<img src="'+escH(src)+'" alt="" onerror="this.parentNode.classList.remove(\'has\');this.remove()">':'')
-    +'<div class="thumb-hint"><b>Paste or drop a frame</b><span>or an image link · click, then Ctrl+V</span></div>'
+    +'<div class="thumb-hint"><i class=wi-ui-picture></i><b>Paste or drop a frame</b><span>or an image link · click, then Ctrl+V</span></div>'
     +'<div class="thumb-armed">Press <b>Ctrl+V</b> to paste an image or a link<br><button type="button" onclick="event.stopPropagation();pickThumbFile('+i+')">or choose a file</button></div>'
     +(src?'<div class="thumb-tools">'+(auto?'<span title="Taken from the latest review video">From review</span>':'<button type="button" onclick="event.stopPropagation();setThumb('+i+',null)">Remove</button>')+'</div>':'')
     +'</div>';
@@ -5545,10 +5571,10 @@ window.renderMilestones=function(){
       var editBtn=document.createElement("button");editBtn.className="btn btn-ghost btn-sm";editBtn.style.fontSize=".68rem";editBtn.textContent="Edit";
       editBtn.onclick=(function(pid){return function(){openProjectModal(pid);};})(p.id);
       
-      var expBtn=document.createElement("button");expBtn.className="btn btn-ghost btn-sm";expBtn.style.fontSize=".68rem";expBtn.innerHTML="⬇ Export Archive (JSON)";
+      var expBtn=document.createElement("button");expBtn.className="btn btn-ghost btn-sm";expBtn.style.fontSize=".68rem";expBtn.innerHTML="<i class=wi-act-download></i>Export Archive (JSON)";
       expBtn.onclick=(function(pid){return function(){exportProject(pid);};})(p.id);
 
-      var csvBtn=document.createElement("button");csvBtn.className="btn btn-ghost btn-sm";csvBtn.style.fontSize=".68rem";csvBtn.innerHTML="⬇ Export Report (CSV)";
+      var csvBtn=document.createElement("button");csvBtn.className="btn btn-ghost btn-sm";csvBtn.style.fontSize=".68rem";csvBtn.innerHTML="<i class=wi-act-download></i>Export Report (CSV)";
       csvBtn.onclick=(function(pid){return function(){exportCSV(pid);};})(p.id);
       
       var inviteBtn=document.createElement("button");inviteBtn.className="btn btn-ghost btn-sm";inviteBtn.style.fontSize=".68rem";inviteBtn.innerHTML='<i class="wi wi-ui-invite"></i>Invite';
@@ -5559,7 +5585,7 @@ window.renderMilestones=function(){
       if(activeProject&&activeProject.id===p.id)entry.classList.add("is-active");
       entry.title="Show this project's team and admin lists";
       entry.onclick=(function(pid){return function(e){if(e.target.closest("button"))return;adminPickProject(pid);};})(p.id);
-      entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(csvBtn);entry.appendChild(inviteBtn);if(isProjOwner(p)&&"wrapped_at" in p){var wrB=document.createElement("button");wrB.className="btn btn-ghost btn-sm";wrB.style.fontSize=".68rem";wrB.textContent=p.wrapped_at?"Unwrap":"Wrap";wrB.title=p.wrapped_at?"Open this project for changes again":"Mark the film as finished: read-only, moved to Wrapped";wrB.onclick=(function(pid,w){return function(){if(w)unwrapProject(pid);else openWrapModal(pid);};})(p.id,!!p.wrapped_at);entry.appendChild(wrB);}if(_isOwner)entry.appendChild(delBtn);
+      entry.appendChild(dot);entry.appendChild(main);entry.appendChild(editBtn);entry.appendChild(expBtn);entry.appendChild(csvBtn);entry.appendChild(inviteBtn);if(isProjOwner(p)&&"wrapped_at" in p){var wrB=document.createElement("button");wrB.className="btn btn-ghost btn-sm";wrB.style.fontSize=".68rem";wrB.innerHTML="<i class=wi-act-wrap></i>"+(p.wrapped_at?"Unwrap":"Wrap");wrB.title=p.wrapped_at?"Open this project for changes again":"Mark the film as finished: read-only, moved to Wrapped";wrB.onclick=(function(pid,w){return function(){if(w)unwrapProject(pid);else openWrapModal(pid);};})(p.id,!!p.wrapped_at);entry.appendChild(wrB);}if(_isOwner)entry.appendChild(delBtn);
       projList.appendChild(entry);
     });
   }
@@ -5619,7 +5645,7 @@ window.renderMilestones=function(){
       if (cat === "team") pri.style.display = "none";
       var eb=document.createElement("button");eb.className="btn btn-ghost btn-sm";eb.style.fontSize=".68rem";eb.textContent="Edit";
       eb.onclick=(function(tid,c2){return function(){openAdminModal(c2,tid);};})(t.id,cat);
-      var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.textContent="✕";
+      var db=document.createElement("button");db.className="btn btn-sm btn-del";db.style.fontSize=".68rem";db.innerHTML="<i class=wi-act-delete></i>";
       db.onclick=(function(tid){return function(){deleteTask(tid);};})(t.id);
       entry.appendChild(main);entry.appendChild(pri);if(_isOwner){entry.appendChild(eb);entry.appendChild(db);}
       cont.appendChild(entry);
@@ -6109,7 +6135,7 @@ window.closeCelebration = function() {
 
     <div id="confirm-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;align-items:center;justify-content:center;">
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:28px 28px 22px;max-width:380px;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.5);">
-        <div style="font-size:2rem;text-align:center;margin-bottom:10px;">&#9888;&#65039;</div>
+        <div style="font-size:2.2rem;text-align:center;margin-bottom:10px;color:var(--late)"><i class=wi-note-overdue></i></div>
         <h3 id="confirm-title" style="font-size:1rem;font-weight:800;margin:0 0 8px;text-align:center;"></h3>
         <p id="confirm-msg" style="font-size:.82rem;color:var(--text3);text-align:center;margin:0 0 22px;line-height:1.5;"></p>
         <div style="display:flex;gap:10px;justify-content:center;">
@@ -6123,7 +6149,7 @@ window.closeCelebration = function() {
       <div class="modal" style="width:92%;max-width:460px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
           <h3 id="admin-modal-title" style="margin:0">New Entry</h3>
-          <button onclick="closeAdminModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">&#215;</button>
+          <button onclick="closeAdminModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)" aria-label="Close"><i class=wi-ui-close></i></button>
         </div>
         <div style="display:flex;flex-direction:column;gap:12px">
           <div><label class="flbl" id="lbl-af-title">Title</label><input id="af-title" class="inp"></div>
@@ -6158,7 +6184,7 @@ window.closeCelebration = function() {
       <div class="modal" style="width:92%;max-width:420px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
           <h3 style="margin:0">Enter Invite Code</h3>
-          <button onclick="closeInviteCodeModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">×</button>
+          <button onclick="closeInviteCodeModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)" aria-label="Close"><i class=wi-ui-close></i></button>
         </div>
         <div style="margin-bottom:16px">
           <input id="invite-code-input" class="inp" placeholder="e.g. abc123xyz" style="text-align:center;font-size:1.1rem;letter-spacing:2px">
@@ -6175,7 +6201,7 @@ window.closeCelebration = function() {
       <div class="modal" style="width:92%;max-width:540px">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
           <h3 style="margin:0">Invite Team Members</h3>
-          <button onclick="closeInviteModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)">×</button>
+          <button onclick="closeInviteModal()" style="background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--text3)" aria-label="Close"><i class=wi-ui-close></i></button>
         </div>
         
         <div style="margin-bottom:20px">
