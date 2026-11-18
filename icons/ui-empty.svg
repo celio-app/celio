@@ -1,0 +1,1 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="currentColor"><defs><mask id="ui-empty-knockout" maskUnits="userSpaceOnUse" x="0" y="0" width="32" height="32"><rect width="32" height="32" fill="white"/><g fill="black" color="black"><circle cx="16" cy="16" r="9"/></g></mask></defs><g mask="url(#ui-empty-knockout)"><circle cx="16" cy="16" r="13"/></g></svg>
